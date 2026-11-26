@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import IconoCategoria from './IconoCategoria';
+import { urlDeImagen } from '../api/api';
 
 export default function ImagenProducto({ producto, className = '', tamanoIcono = 'size-14' }) {
   const [urlFallida, setUrlFallida] = useState(null);
@@ -8,7 +9,7 @@ export default function ImagenProducto({ producto, className = '', tamanoIcono =
   if (mostrarImagen) {
     return (
       <img
-        src={producto.imagen_url}
+        src={urlDeImagen(producto.imagen_url)}
         alt={producto.nombre}
         className={`w-full bg-white object-contain ${className}`}
         onError={() => setUrlFallida(producto.imagen_url)}
