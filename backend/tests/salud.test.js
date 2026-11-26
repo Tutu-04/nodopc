@@ -11,3 +11,12 @@ describe('GET /api/salud', () => {
     expect(respuesta.body).toEqual({ estado: 'ok', baseDeDatos: 'ok' });
   });
 });
+
+describe('Encabezados de seguridad', () => {
+  it('no revelan que el servidor usa Express y agregan las protecciones de helmet', async () => {
+    const respuesta = await api().get('/api/salud');
+    expect(respuesta.headers['x-powered-by']).toBeUndefined();
+    expect(respuesta.headers['x-content-type-options']).toBe('nosniff');
+    expect(respuesta.headers['content-security-policy']).toBeDefined();
+  });
+});

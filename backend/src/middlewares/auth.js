@@ -1,25 +1,28 @@
-import jwt from 'jsonwebtoken';
-import { config } from '../config.js';
+import * as Usuario from '../models/usuario.model.js';
+import { NOMBRE_COOKIE, leerToken } from '../utils/sesion.js';
 
 export function verificarToken(req, res, next) {
-  const cabecera = req.headers.authorization;
+  const token = req.cookies?.[NOMBRE_COOKIE];
 
-  if (!cabecera || !cabecera.startsWith('Bearer ')) {
+  if (!token) {
     return res.status(401).json({ error: 'Tenés que iniciar sesión' });
   }
 
-  const token = cabecera.split(' ')[1];
-
   try {
-    req.usuario = jwt.verify(token, config.jwtSecret);
+    req.usuario = leerToken(token);
     next();
   } catch {
     res.status(401).json({ error: 'La sesión no es válida o venció. Volvé a iniciar sesión' });
   }
 }
 
-export function soloAdmin(req, res, next) {
+export async function soloAdmin(req, res, next) {
   if (req.usuario.rol !== 'admin') {
+    return res.status(403).json({ error: 'No tenés permiso para hacer esto' });
+  }
+
+  const usuario = await Usuario.obtenerPorId(req.usuario.id);
+  if (usuario?.rol !== 'admin') {
     return res.status(403).json({ error: 'No tenés permiso para hacer esto' });
   }
   next();

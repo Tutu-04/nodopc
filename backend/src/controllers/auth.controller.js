@@ -1,8 +1,9 @@
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
 import * as Usuario from '../models/usuario.model.js';
-import { esTextoValido, esEmailValido } from '../utils/validaciones.js';
-import { config } from '../config.js';
+import { esTextoValido, esEmailValido, validarPassword } from '../utils/validaciones.js';
+import { borrarSesion, guardarSesion } from '../utils/sesion.js';
+
+const HASH_DE_RELLENO = '$2b$10$2cpuXqFIhYURbXTkjXf7LucR5/8yel6thdZDhRNYPU39LNhM3G9Ui';
 
 export async function registrar(req, res) {
   const { nombre, email, password } = req.body;
@@ -13,8 +14,9 @@ export async function registrar(req, res) {
   if (!esEmailValido(email)) {
     return res.status(400).json({ error: 'El email no tiene un formato válido' });
   }
-  if (!esTextoValido(password, 6, 72)) {
-    return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+  const errorPassword = validarPassword(password);
+  if (errorPassword) {
+    return res.status(400).json({ error: errorPassword });
   }
 
   const existente = await Usuario.obtenerPorEmail(email);
@@ -39,18 +41,29 @@ export async function iniciarSesion(req, res) {
 
   const usuario = await Usuario.obtenerPorEmail(email);
 
-  const passwordCorrecta = usuario && (await bcrypt.compare(password, usuario.password));
+  const passwordCorrecta = await bcrypt.compare(password, usuario?.password ?? HASH_DE_RELLENO);
 
-  if (!passwordCorrecta) {
+  if (!usuario || !passwordCorrecta) {
     return res.status(401).json({ error: 'Email o contraseña incorrectos' });
   }
 
-  const token = jwt.sign({ id: usuario.id, nombre: usuario.nombre, rol: usuario.rol }, config.jwtSecret, {
-    expiresIn: '8h',
-  });
+  guardarSesion(res, usuario);
 
   res.json({
-    token,
     usuario: { id: usuario.id, nombre: usuario.nombre, email: usuario.email, rol: usuario.rol },
   });
+}
+
+export async function obtenerSesion(req, res) {
+  const usuario = await Usuario.obtenerPorId(req.usuario.id);
+  if (!usuario) {
+    borrarSesion(res);
+    return res.status(401).json({ error: 'La cuenta ya no existe' });
+  }
+  res.json({ usuario: { id: usuario.id, nombre: usuario.nombre, email: usuario.email, rol: usuario.rol } });
+}
+
+export function cerrarSesion(req, res) {
+  borrarSesion(res);
+  res.json({ mensaje: 'Sesión cerrada' });
 }

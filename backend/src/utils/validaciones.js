@@ -17,3 +17,13 @@ export function esNumero(valor) {
 export function esEnteroValido(valor, minimo) {
   return esNumero(valor) && Number.isInteger(Number(valor)) && Number(valor) >= minimo;
 }
+
+export function validarPassword(valor) {
+  if (typeof valor !== 'string' || valor.length < 8 || valor.length > 72) {
+    return 'La contraseña tiene que tener entre 8 y 72 caracteres';
+  }
+  if (!/[a-zA-Z]/.test(valor) || !/\d/.test(valor)) {
+    return 'La contraseña tiene que tener al menos una letra y un número';
+  }
+  return null;
+}

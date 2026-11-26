@@ -3,20 +3,13 @@ import { useAuthStore } from '../store/authStore';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
-});
-
-api.interceptors.request.use((config) => {
-  const token = useAuthStore.getState().token;
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
+  withCredentials: true,
 });
 
 api.interceptors.response.use(
   (respuesta) => respuesta,
   (error) => {
-    if (error.response?.status === 401 && useAuthStore.getState().token) {
+    if (error.response?.status === 401 && useAuthStore.getState().usuario) {
       useAuthStore.getState().cerrarSesion();
     }
     return Promise.reject(error);

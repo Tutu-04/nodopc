@@ -1,5 +1,7 @@
 import express from 'express';
+import cookieParser from 'cookie-parser';
 import cors from 'cors';
+import helmet from 'helmet';
 
 import authRoutes from './routes/auth.routes.js';
 import categoriasRoutes from './routes/categorias.routes.js';
@@ -14,8 +16,10 @@ import { config } from './config.js';
 
 const app = express();
 
-app.use(cors({ origin: config.frontendUrl }));
+app.use(helmet());
+app.use(cors({ origin: config.frontendUrl, credentials: true }));
 app.use(express.json());
+app.use(cookieParser());
 
 app.use((req, res, next) => {
   if (!req.body) req.body = {};

@@ -170,7 +170,7 @@ nodopc/
 │       └── utils/             Validaciones y mensajes de error de MySQL
 └── frontend/src/
     ├── App.jsx                Mapa de rutas
-    ├── api/                   Cliente Axios que agrega el token a cada pedido
+    ├── api/                   Cliente Axios que manda la cookie de sesión
     ├── store/                 Estado global con Zustand (sesión y carrito)
     ├── components/            Menú, rutas protegidas, gráficos y piezas reutilizables
     ├── pages/                 Una vista por archivo
@@ -193,7 +193,8 @@ nodopc/
 ## Decisiones técnicas
 
 - **Consultas parametrizadas.** Todos los valores viajan como parámetros (`?`), nunca pegados al texto de la consulta. Así se evita la inyección SQL.
-- **Contraseñas con bcrypt y sesión con JWT.** La base guarda solo el hash de cada contraseña. El login devuelve un token firmado que dura 8 horas y viaja en la cabecera `Authorization` de cada pedido.
+- **Contraseñas con bcrypt y sesión con JWT en una cookie `httpOnly`.** La base guarda solo el hash de cada contraseña. El token firmado dura 8 horas y viaja en una cookie que JavaScript no puede leer, así un script inyectado no puede robar la sesión.
+- **Defensas del login.** Límite de intentos fallidos, contraseñas de al menos 8 caracteres con letras y números, y el mismo tiempo de respuesta exista o no el email.
 - **Protección doble.** El frontend oculta y redirige las rutas privadas, y el backend vuelve a verificar el token y el rol en cada endpoint. Aunque alguien cambie su rol en el navegador, la API lo rechaza.
 - **El precio lo pone el servidor.** Al comprar, el frontend manda solo el id y la cantidad de cada producto. El backend lee el precio y el stock de la base.
 - **Pedidos con transacciones.** Crear un pedido toca tres tablas. Si algo falla en el medio, se deshace todo.
@@ -205,7 +206,7 @@ nodopc/
 ## Documentación
 
 - [API y rutas del frontend](docs/api.md): todos los endpoints, quién puede usarlos y las vistas de la aplicación.
-- [Seguridad](docs/seguridad.md): dónde están bcrypt y JWT en el código, y cómo comprobar que funcionan.
+- [Seguridad](docs/seguridad.md): cada protección, dónde está en el código y cómo comprobar que funciona.
 - [Guía de instalación](GUIA_DE_INSTALACION.md): paso a paso en Windows.
 
 ## Hoja de ruta
@@ -213,7 +214,7 @@ nodopc/
 - [x] Catálogo, carrito, pedidos, roles y panel con métricas
 - [x] Migraciones, tests automáticos e integración continua con GitHub Actions
 - [x] Levantar todo con un comando usando Docker Compose
-- [ ] Seguridad: encabezados con helmet, límite de intentos de login y token en cookie `httpOnly`
+- [x] Seguridad: helmet, límite de intentos, sesión en cookie `httpOnly` y rol verificado en la base
 - [ ] Pagos con Mercado Pago en modo prueba
 - [ ] Emails de confirmación de pedido y de recuperación de contraseña
 - [ ] Subida de imágenes desde el panel del administrador

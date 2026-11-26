@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { AYUDA_PASSWORD, PATRON_PASSWORD } from '../../../utils/password';
 
 export default function UsuarioForm({ inicial, onGuardar, guardando }) {
   const esEdicion = Boolean(inicial);
@@ -55,14 +56,13 @@ export default function UsuarioForm({ inicial, onGuardar, guardando }) {
           type="password"
           className="campo"
           required={!esEdicion}
-          minLength={6}
+          pattern={PATRON_PASSWORD}
+          title={AYUDA_PASSWORD}
           autoComplete="new-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
-        <p className="ayuda">
-          {esEdicion ? 'Dejala vacía para no cambiarla. Mínimo 6 caracteres.' : 'Mínimo 6 caracteres.'}
-        </p>
+        <p className="ayuda">{esEdicion ? `Dejala vacía para no cambiarla. ${AYUDA_PASSWORD}` : AYUDA_PASSWORD}</p>
       </div>
 
       <div>
