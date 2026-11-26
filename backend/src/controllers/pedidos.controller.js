@@ -1,5 +1,7 @@
 import * as Pedido from '../models/pedido.model.js';
 import { esTextoValido, esEnteroValido } from '../utils/validaciones.js';
+import { esProvinciaValida, METODOS_DE_ENTREGA } from '../utils/envios.js';
+import { config } from '../config.js';
 
 const ESTADOS = ['pendiente', 'enviado', 'entregado'];
 
@@ -24,11 +26,28 @@ export async function obtener(req, res) {
   res.json(pedido);
 }
 
-export async function crear(req, res) {
-  const { direccion_envio, items } = req.body;
-
+function leerEntrega({ metodo_entrega, provincia, direccion_envio }) {
+  if (!METODOS_DE_ENTREGA.includes(metodo_entrega)) {
+    return { error: 'Elegí si el pedido se envía o se retira en el local' };
+  }
+  if (metodo_entrega === 'retiro') {
+    return { metodoEntrega: 'retiro', provincia: null, direccionEnvio: null };
+  }
+  if (!esProvinciaValida(provincia)) {
+    return { error: 'Elegí una provincia de la lista' };
+  }
   if (!esTextoValido(direccion_envio, 5, 200)) {
-    return res.status(400).json({ error: 'La dirección de envío es obligatoria (entre 5 y 200 caracteres)' });
+    return { error: 'La dirección de envío es obligatoria (entre 5 y 200 caracteres)' };
+  }
+  return { metodoEntrega: 'envio', provincia, direccionEnvio: direccion_envio.trim() };
+}
+
+export async function crear(req, res) {
+  const { items } = req.body;
+
+  const entrega = leerEntrega(req.body);
+  if (entrega.error) {
+    return res.status(400).json({ error: entrega.error });
   }
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'El pedido tiene que tener al menos un producto' });
@@ -44,7 +63,11 @@ export async function crear(req, res) {
     cantidad: Number(item.cantidad),
   }));
 
-  const id = await Pedido.crear(req.usuario.id, direccion_envio.trim(), itemsLimpios);
+  const id = await Pedido.crear(req.usuario.id, {
+    ...entrega,
+    items: itemsLimpios,
+    minutosParaPagar: config.minutosParaPagar,
+  });
 
   res.status(201).json(await Pedido.obtenerPorId(id));
 }

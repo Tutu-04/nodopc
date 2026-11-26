@@ -1,4 +1,5 @@
 import pool from '../db.js';
+import { calcularCostoDeEnvio } from '../utils/envios.js';
 
 function crearError(status, mensaje) {
   const error = new Error(mensaje);
@@ -39,13 +40,13 @@ export async function obtenerPorId(id) {
   return pedido;
 }
 
-export async function crear(usuarioId, direccionEnvio, items) {
+export async function crear(usuarioId, { metodoEntrega, provincia, direccionEnvio, items, minutosParaPagar }) {
   const conexion = await pool.getConnection();
 
   try {
     await conexion.beginTransaction();
 
-    let total = 0;
+    let subtotal = 0;
     const renglones = [];
 
     for (const item of items) {
@@ -62,7 +63,7 @@ export async function crear(usuarioId, direccionEnvio, items) {
         throw crearError(409, `No hay stock suficiente de "${producto.nombre}" (quedan ${producto.stock})`);
       }
 
-      total += producto.precio * item.cantidad;
+      subtotal += producto.precio * item.cantidad;
       renglones.push({
         producto_id: producto.id,
         producto_nombre: producto.nombre,
@@ -71,9 +72,12 @@ export async function crear(usuarioId, direccionEnvio, items) {
       });
     }
 
+    const costoEnvio = calcularCostoDeEnvio({ metodo: metodoEntrega, provincia, subtotal });
+
     const [resultado] = await conexion.execute(
-      'INSERT INTO pedidos (usuario_id, direccion_envio, total) VALUES (?, ?, ?)',
-      [usuarioId, direccionEnvio, total]
+      `INSERT INTO pedidos (usuario_id, metodo_entrega, provincia, direccion_envio, costo_envio, total, vence_en)
+       VALUES (?, ?, ?, ?, ?, ?, NOW() + INTERVAL ? MINUTE)`,
+      [usuarioId, metodoEntrega, provincia, direccionEnvio, costoEnvio, subtotal + costoEnvio, minutosParaPagar]
     );
     const pedidoId = resultado.insertId;
 
