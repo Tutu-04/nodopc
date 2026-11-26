@@ -22,7 +22,7 @@ describe('Gestión de usuarios', () => {
   });
 
   it.each([
-    ['un rol que no existe', { nombre: 'Pepe', email: 'pepe@x.com', password: '123456', rol: 'jefe' }],
+    ['un rol que no existe', { nombre: 'Pepe', email: 'pepe@x.com', password: 'clave1234', rol: 'jefe' }],
     ['sin contraseña', { nombre: 'Pepe', email: 'pepe@x.com', rol: 'admin' }],
   ])('rechaza crear un usuario con %s', async (_caso, datos) => {
     const respuesta = await api().post('/api/usuarios').set(conToken(admin)).send(datos);
@@ -33,7 +33,7 @@ describe('Gestión de usuarios', () => {
     const creado = await api()
       .post('/api/usuarios')
       .set(conToken(admin))
-      .send({ nombre: 'Pepe Admin', email: 'pepe@x.com', password: '123456', rol: 'admin' });
+      .send({ nombre: 'Pepe Admin', email: 'pepe@x.com', password: 'clave1234', rol: 'admin' });
     expect(creado.status).toBe(201);
 
     const sinPassword = await api()
@@ -41,13 +41,13 @@ describe('Gestión de usuarios', () => {
       .set(conToken(admin))
       .send({ nombre: 'Pepe', email: 'pepe@x.com', rol: 'cliente', password: '' });
     expect(sinPassword.body.rol).toBe('cliente');
-    expect((await login('pepe@x.com', '123456')).status).toBe(200);
+    expect((await login('pepe@x.com', 'clave1234')).status).toBe(200);
 
     await api()
       .put(`/api/usuarios/${creado.body.id}`)
       .set(conToken(admin))
       .send({ nombre: 'Pepe', email: 'pepe@x.com', rol: 'cliente', password: 'nueva123' });
-    expect((await login('pepe@x.com', '123456')).status).toBe(401);
+    expect((await login('pepe@x.com', 'clave1234')).status).toBe(401);
     expect((await login('pepe@x.com', 'nueva123')).status).toBe(200);
 
     const eliminado = await api().delete(`/api/usuarios/${creado.body.id}`).set(conToken(admin));
@@ -58,7 +58,7 @@ describe('Gestión de usuarios', () => {
     const respuesta = await api()
       .post('/api/usuarios')
       .set(conToken(admin))
-      .send({ nombre: 'Otra', email: 'maria@nodopc.com', password: '123456', rol: 'cliente' });
+      .send({ nombre: 'Otra', email: 'maria@nodopc.com', password: 'clave1234', rol: 'cliente' });
     expect(respuesta.status).toBe(409);
   });
 

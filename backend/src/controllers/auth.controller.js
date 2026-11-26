@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import * as Usuario from '../models/usuario.model.js';
-import { esTextoValido, esEmailValido } from '../utils/validaciones.js';
+import { esTextoValido, esEmailValido, validarPassword } from '../utils/validaciones.js';
 import { config } from '../config.js';
 
 export async function registrar(req, res) {
@@ -13,8 +13,9 @@ export async function registrar(req, res) {
   if (!esEmailValido(email)) {
     return res.status(400).json({ error: 'El email no tiene un formato válido' });
   }
-  if (!esTextoValido(password, 6, 72)) {
-    return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+  const errorPassword = validarPassword(password);
+  if (errorPassword) {
+    return res.status(400).json({ error: errorPassword });
   }
 
   const existente = await Usuario.obtenerPorEmail(email);

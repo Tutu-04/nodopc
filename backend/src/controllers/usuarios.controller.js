@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import * as Usuario from '../models/usuario.model.js';
-import { esTextoValido, esEmailValido } from '../utils/validaciones.js';
+import { esTextoValido, esEmailValido, validarPassword } from '../utils/validaciones.js';
 
 const ROLES = ['admin', 'cliente'];
 
@@ -37,8 +37,9 @@ export async function crear(req, res) {
   if (error) {
     return res.status(400).json({ error });
   }
-  if (!esTextoValido(password, 6, 72)) {
-    return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+  const errorPassword = validarPassword(password);
+  if (errorPassword) {
+    return res.status(400).json({ error: errorPassword });
   }
 
   const hash = await bcrypt.hash(password, 10);
@@ -60,8 +61,9 @@ export async function actualizar(req, res) {
   if (error) {
     return res.status(400).json({ error });
   }
-  if (password && !esTextoValido(password, 6, 72)) {
-    return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+  const errorPassword = password ? validarPassword(password) : null;
+  if (errorPassword) {
+    return res.status(400).json({ error: errorPassword });
   }
   if (id === req.usuario.id && rol !== 'admin') {
     return res.status(400).json({ error: 'No podés quitarte a vos mismo el rol de administrador' });

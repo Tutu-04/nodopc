@@ -37,9 +37,11 @@ describe('POST /api/auth/login', () => {
 
 describe('POST /api/auth/registro', () => {
   it.each([
-    ['nombre muy corto', { nombre: 'a', email: 'x@x.com', password: '123456' }],
-    ['email inválido', { nombre: 'Ana', email: 'xx', password: '123456' }],
-    ['contraseña muy corta', { nombre: 'Ana', email: 'ana@x.com', password: '123' }],
+    ['nombre muy corto', { nombre: 'a', email: 'x@x.com', password: 'clave1234' }],
+    ['email inválido', { nombre: 'Ana', email: 'xx', password: 'clave1234' }],
+    ['contraseña muy corta', { nombre: 'Ana', email: 'ana@x.com', password: 'abc123' }],
+    ['contraseña sin números', { nombre: 'Ana', email: 'ana@x.com', password: 'solamenteletras' }],
+    ['contraseña sin letras', { nombre: 'Ana', email: 'ana@x.com', password: '1234567890' }],
   ])('rechaza un %s', async (_caso, datos) => {
     const respuesta = await api().post('/api/auth/registro').send(datos);
     expect(respuesta.status).toBe(400);
@@ -48,7 +50,7 @@ describe('POST /api/auth/registro', () => {
   it('rechaza un email que ya está registrado', async () => {
     const respuesta = await api()
       .post('/api/auth/registro')
-      .send({ nombre: 'Ana', email: 'admin@nodopc.com', password: '123456' });
+      .send({ nombre: 'Ana', email: 'admin@nodopc.com', password: 'clave1234' });
     expect(respuesta.status).toBe(409);
   });
 
