@@ -2,13 +2,18 @@
   "name": "nodopc",
   "version": "1.0.0",
   "private": true,
-  "description": "Atajos para manejar backend y frontend desde la carpeta principal",
+  "description": "Tienda online de hardware: atajos para manejar backend y frontend desde la carpeta principal",
   "author": "Gonzalo Romeo Lazarte",
   "license": "MIT",
   "scripts": {
-    "instalar": "npm install --prefix backend && npm install --prefix frontend",
+    "instalar": "npm install && npm install --prefix backend && npm install --prefix frontend",
     "crear-base": "npm run crear-base --prefix backend",
     "backend": "npm run dev --prefix backend",
-    "frontend": "npm run dev --prefix frontend"
+    "frontend": "npm run dev --prefix frontend",
+    "formatear": "prettier --write .",
+    "formato": "prettier --check ."
+  },
+  "devDependencies": {
+    "prettier": "^3.10.1"
   }
 }
