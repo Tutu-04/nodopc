@@ -11,7 +11,9 @@
     "start": "node src/index.js",
     "migrar": "node scripts/migrar.js",
     "crear-base": "node scripts/crearBase.js",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
