@@ -38,13 +38,13 @@ NodoPC vende componentes de PC, PC armadas, monitores y periféricos. Los visita
 
 - Portada con los productos más vendidos, las categorías y las últimas novedades.
 - Catálogo paginado con búsqueda por palabras, filtros por categoría, marca, precio y stock, y orden por precio o nombre. Los filtros quedan en la URL, así se pueden compartir.
+- **Armador de PC**: elige procesador, motherboard, memoria, placa de video, almacenamiento, fuente y gabinete, y avisa al instante si algo no es compatible (socket, tipo de memoria, tamaño del gabinete, potencia de la fuente). El armado se comparte con un enlace y se agrega entero al carrito.
+- Ficha técnica en el detalle de cada componente.
 - Carrito que se guarda en el navegador y se actualiza con el precio y el stock reales.
 
 **Cliente**
 
 - Registro e inicio de sesión.
-- **Armador de PC**: elige procesador, motherboard, memoria, placa de video, almacenamiento, fuente y gabinete, y avisa al instante si algo no es compatible (socket, tipo de memoria, tamaño del gabinete, potencia de la fuente). El armado se comparte con un enlace y se agrega entero al carrito.
-- Ficha técnica en el detalle de cada componente.
 - Checkout con envío a domicilio (costo por provincia, gratis desde $1.500.000) o retiro en el local.
 - Pago con Mercado Pago (Checkout Pro en modo prueba) o con una tarjeta de prueba simulada.
 - Seguimiento de cada pedido, desde el pago hasta la entrega, y cancelación mientras está pendiente.
@@ -54,7 +54,7 @@ NodoPC vende componentes de PC, PC armadas, monitores y periféricos. Los visita
 **Administrador**
 
 - Panel con métricas: ventas por mes, ventas por categoría, pedidos por estado, productos más vendidos, mejores clientes y productos con poco stock.
-- Alta, edición y baja de productos, categorías, marcas y usuarios, con subida de imágenes y vista previa.
+- Alta, edición y baja de productos, categorías, marcas y usuarios, con subida de imágenes, vista previa y ficha técnica de cada componente.
 - Gestión de pedidos con filtro por estado: solo ofrece el paso siguiente del recorrido (pagado, enviado, entregado), y permite cancelar o eliminar cancelados.
 - Las métricas cuentan solo lo cobrado.
 
@@ -181,8 +181,8 @@ Todos se corren desde la carpeta principal.
 
 ## Tests
 
-- **Backend:** Vitest y Supertest prueban la API de punta a punta contra MySQL: autenticación, permisos por rol, validaciones, stock, transacciones y métricas. Usan una base aparte, `tienda_hardware_test`, que se reinicia antes de cada archivo de tests y se crea sola la primera vez.
-- **Frontend:** Vitest y Testing Library prueban el carrito, el formato de precios y componentes como las rutas protegidas.
+- **Backend (más de 200 tests):** Vitest y Supertest prueban la API de punta a punta contra MySQL: autenticación, permisos por rol, validaciones, stock y compras simultáneas, envíos, vencimiento de pedidos, pagos simulados y de Mercado Pago (con `fetch` reemplazado), firma de los webhooks, correos, recuperación de contraseña, reglas del armador y métricas. Usan una base aparte, `tienda_hardware_test`, que se reinicia antes de cada archivo de tests y se crea sola la primera vez.
+- **Frontend (más de 70 tests):** Vitest y Testing Library prueban el carrito, el armador, el checkout, el pago simulado, el detalle de los pedidos, la recuperación de contraseña, el formulario de productos y componentes como las rutas protegidas.
 - **Integración continua:** GitHub Actions corre el formato, el lint, el chequeo de tipos, todos los tests, el build y Docker Compose en cada push.
 
 ## Estructura del proyecto
@@ -354,6 +354,14 @@ Los cambios de estructura viven en `database/migraciones` y se aplican solos al 
 - [x] Correos de bienvenida, pagos y estado de los pedidos, y recuperación de contraseña
 - [x] Armador de PC con chequeo de compatibilidad
 - [x] Frontend, backend, scripts y tests en TypeScript estricto
+
+Ideas para seguir:
+
+- [ ] Publicarlo online con una base administrada y Mercado Pago con notificaciones reales
+- [ ] Reseñas y calificaciones de productos
+- [ ] Lista de favoritos y aviso cuando vuelve el stock
+- [ ] Cupones de descuento
+- [ ] Tests de punta a punta con Playwright en el CI
 
 ## Autor
 
