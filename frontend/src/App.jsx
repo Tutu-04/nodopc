@@ -1,3 +1,4 @@
+import { lazy } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 import Layout from './components/Layout';
@@ -19,20 +20,20 @@ import Salir from './pages/Salir';
 import MiCuenta from './pages/MiCuenta';
 import NoEncontrada from './pages/NoEncontrada';
 
-import CategoriasLista from './pages/admin/categorias/CategoriasLista';
-import CategoriaNueva from './pages/admin/categorias/CategoriaNueva';
-import CategoriaEditar from './pages/admin/categorias/CategoriaEditar';
-import MarcasLista from './pages/admin/marcas/MarcasLista';
-import MarcaNueva from './pages/admin/marcas/MarcaNueva';
-import MarcaEditar from './pages/admin/marcas/MarcaEditar';
-import ProductosLista from './pages/admin/productos/ProductosLista';
-import ProductoNuevo from './pages/admin/productos/ProductoNuevo';
-import ProductoEditar from './pages/admin/productos/ProductoEditar';
-import UsuariosLista from './pages/admin/usuarios/UsuariosLista';
-import UsuarioNuevo from './pages/admin/usuarios/UsuarioNuevo';
-import UsuarioEditar from './pages/admin/usuarios/UsuarioEditar';
-import PedidosLista from './pages/admin/pedidos/PedidosLista';
-import PedidoEditar from './pages/admin/pedidos/PedidoEditar';
+const CategoriasLista = lazy(() => import('./pages/admin/categorias/CategoriasLista'));
+const CategoriaNueva = lazy(() => import('./pages/admin/categorias/CategoriaNueva'));
+const CategoriaEditar = lazy(() => import('./pages/admin/categorias/CategoriaEditar'));
+const MarcasLista = lazy(() => import('./pages/admin/marcas/MarcasLista'));
+const MarcaNueva = lazy(() => import('./pages/admin/marcas/MarcaNueva'));
+const MarcaEditar = lazy(() => import('./pages/admin/marcas/MarcaEditar'));
+const ProductosLista = lazy(() => import('./pages/admin/productos/ProductosLista'));
+const ProductoNuevo = lazy(() => import('./pages/admin/productos/ProductoNuevo'));
+const ProductoEditar = lazy(() => import('./pages/admin/productos/ProductoEditar'));
+const UsuariosLista = lazy(() => import('./pages/admin/usuarios/UsuariosLista'));
+const UsuarioNuevo = lazy(() => import('./pages/admin/usuarios/UsuarioNuevo'));
+const UsuarioEditar = lazy(() => import('./pages/admin/usuarios/UsuarioEditar'));
+const PedidosLista = lazy(() => import('./pages/admin/pedidos/PedidosLista'));
+const PedidoEditar = lazy(() => import('./pages/admin/pedidos/PedidoEditar'));
 
 export default function App() {
   return (

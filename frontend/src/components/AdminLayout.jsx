@@ -1,5 +1,7 @@
+import { Suspense } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import Icono from './Icono';
+import Cargando from './Cargando';
 
 const SECCIONES = [
   { ruta: '/admin/productos', texto: 'Productos', icono: 'productos' },
@@ -29,7 +31,9 @@ export default function AdminLayout() {
       </aside>
 
       <section className="min-w-0 flex-1 basis-xl">
-        <Outlet />
+        <Suspense fallback={<Cargando />}>
+          <Outlet />
+        </Suspense>
       </section>
     </div>
   );
