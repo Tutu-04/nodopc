@@ -1,38 +1,75 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import api, { obtenerMensajeError } from '../../../api/api';
 import { useCarritoStore } from '../../../store/carritoStore';
 import { formatearPrecio } from '../../../utils/formato';
 import Cargando from '../../../components/Cargando';
 import MensajeError from '../../../components/MensajeError';
 import BotonEliminar from '../../../components/BotonEliminar';
+import Paginacion from '../../../components/Paginacion';
+
+const POR_PAGINA = 20;
 
 export default function ProductosLista() {
   const quitarDelCarrito = useCarritoStore((estado) => estado.quitar);
-  const [productos, setProductos] = useState([]);
+  const [parametros, setParametros] = useSearchParams();
+  const buscar = parametros.get('buscar') ?? '';
+  const pagina = Math.max(1, Number(parametros.get('pagina')) || 1);
+
+  const [texto, setTexto] = useState(buscar);
+  const [resultado, setResultado] = useState({ productos: [], total: 0, paginas: 0 });
+  const [recargas, setRecargas] = useState(0);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
+    setTexto(buscar);
+  }, [buscar]);
+
+  useEffect(() => {
+    let vigente = true;
+
     async function cargarProductos() {
+      setCargando(true);
       try {
-        const respuesta = await api.get('/productos', { params: { porPagina: 100 } });
-        setProductos(respuesta.data.productos);
+        const respuesta = await api.get('/productos', {
+          params: { buscar: buscar || undefined, pagina, porPagina: POR_PAGINA },
+        });
+        if (vigente) setResultado(respuesta.data);
       } catch (e) {
-        setError(obtenerMensajeError(e));
+        if (vigente) setError(obtenerMensajeError(e));
       } finally {
-        setCargando(false);
+        if (vigente) setCargando(false);
       }
     }
 
     cargarProductos();
-  }, []);
+
+    return () => {
+      vigente = false;
+    };
+  }, [buscar, pagina, recargas]);
+
+  function manejarBusqueda(evento) {
+    evento.preventDefault();
+    const nuevos = new URLSearchParams();
+    if (texto.trim()) nuevos.set('buscar', texto.trim());
+    setParametros(nuevos);
+  }
+
+  function enlaceAPagina(numero) {
+    const nuevos = new URLSearchParams(parametros);
+    if (numero === 1) nuevos.delete('pagina');
+    else nuevos.set('pagina', numero);
+    const textoConsulta = nuevos.toString();
+    return textoConsulta ? `?${textoConsulta}` : '?';
+  }
 
   async function eliminar(producto) {
     setError('');
     try {
       await api.delete(`/productos/${producto.id}`);
-      setProductos((actuales) => actuales.filter((p) => p.id !== producto.id));
+      setRecargas((cantidad) => cantidad + 1);
       quitarDelCarrito(producto.id);
     } catch (e) {
       setError(obtenerMensajeError(e));
@@ -47,6 +84,28 @@ export default function ProductosLista() {
           Nuevo producto
         </Link>
       </div>
+
+      <form onSubmit={manejarBusqueda} role="search" className="mb-5 flex flex-wrap gap-2">
+        <label htmlFor="buscar-producto" className="sr-only">
+          Buscar productos
+        </label>
+        <input
+          id="buscar-producto"
+          type="search"
+          className="campo max-w-sm"
+          placeholder="Buscar por nombre, marca o categoría"
+          value={texto}
+          onChange={(e) => setTexto(e.target.value)}
+        />
+        <button type="submit" className="btn btn-secundario">
+          Buscar
+        </button>
+        {!cargando && (
+          <span className="flex items-center text-sm text-neutral-500">
+            {resultado.total} {resultado.total === 1 ? 'producto' : 'productos'}
+          </span>
+        )}
+      </form>
 
       <MensajeError texto={error} />
 
@@ -67,7 +126,7 @@ export default function ProductosLista() {
               </tr>
             </thead>
             <tbody>
-              {productos.map((producto) => (
+              {resultado.productos.map((producto) => (
                 <tr key={producto.id}>
                   <td className="tabular-nums">{producto.id}</td>
                   <td className="font-bold">
@@ -97,9 +156,15 @@ export default function ProductosLista() {
               ))}
             </tbody>
           </table>
-          {productos.length === 0 && !error && <p className="py-6 text-neutral-600">No hay productos cargados.</p>}
+          {resultado.productos.length === 0 && !error && (
+            <p className="px-4 py-6 text-neutral-600">No hay productos que coincidan.</p>
+          )}
         </div>
       )}
+
+      <div className="mt-6">
+        <Paginacion pagina={pagina} paginas={resultado.paginas} enlace={enlaceAPagina} />
+      </div>
     </div>
   );
 }
