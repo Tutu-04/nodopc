@@ -1,3 +1,4 @@
+import * as Usuario from '../models/usuario.model.js';
 import { NOMBRE_COOKIE, leerToken } from '../utils/sesion.js';
 
 export function verificarToken(req, res, next) {
@@ -15,8 +16,13 @@ export function verificarToken(req, res, next) {
   }
 }
 
-export function soloAdmin(req, res, next) {
+export async function soloAdmin(req, res, next) {
   if (req.usuario.rol !== 'admin') {
+    return res.status(403).json({ error: 'No tenés permiso para hacer esto' });
+  }
+
+  const usuario = await Usuario.obtenerPorId(req.usuario.id);
+  if (usuario?.rol !== 'admin') {
     return res.status(403).json({ error: 'No tenés permiso para hacer esto' });
   }
   next();

@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { reiniciarBase } from '../src/migraciones.js';
-import { api, conSesion, ingresarComoAdmin } from './ayudantes.js';
+import { api, conSesion, ingresar, ingresarComoAdmin } from './ayudantes.js';
 
 let admin;
 
@@ -76,5 +76,25 @@ describe('Gestión de usuarios', () => {
   it('no elimina un usuario que tiene pedidos', async () => {
     const respuesta = await api().delete('/api/usuarios/2').set(conSesion(admin));
     expect(respuesta.status).toBe(409);
+  });
+});
+
+describe('Cambio de rol con la sesión abierta', () => {
+  it('un administrador al que le quitan el rol pierde el acceso enseguida', async () => {
+    await api()
+      .post('/api/usuarios')
+      .set(conSesion(admin))
+      .send({ nombre: 'Lola Admin', email: 'lola@x.com', password: 'clave1234', rol: 'admin' });
+    const lola = await ingresar('lola@x.com', 'clave1234');
+    expect((await api().get('/api/usuarios').set(conSesion(lola))).status).toBe(200);
+
+    const usuarios = await api().get('/api/usuarios').set(conSesion(admin));
+    const { id } = usuarios.body.find((usuario) => usuario.email === 'lola@x.com');
+    await api()
+      .put(`/api/usuarios/${id}`)
+      .set(conSesion(admin))
+      .send({ nombre: 'Lola', email: 'lola@x.com', rol: 'cliente' });
+
+    expect((await api().get('/api/usuarios').set(conSesion(lola))).status).toBe(403);
   });
 });
