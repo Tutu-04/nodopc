@@ -1,0 +1,84 @@
+import { beforeAll, describe, expect, it } from 'vitest';
+import { reiniciarBase } from '../src/migraciones.js';
+import { api, conToken } from './ayudantes.js';
+
+beforeAll(reiniciarBase);
+
+describe('POST /api/auth/login', () => {
+  it('rechaza un pedido sin datos', async () => {
+    const respuesta = await api().post('/api/auth/login');
+    expect(respuesta.status).toBe(400);
+  });
+
+  it('rechaza un JSON mal armado', async () => {
+    const respuesta = await api().post('/api/auth/login').set('Content-Type', 'application/json').send('{mal');
+    expect(respuesta.status).toBe(400);
+    expect(respuesta.body.error).toMatch(/JSON/);
+  });
+
+  it('responde lo mismo si la contraseña es incorrecta o el email no existe', async () => {
+    const malaPassword = await api().post('/api/auth/login').send({ email: 'admin@nodopc.com', password: 'nope' });
+    const sinCuenta = await api().post('/api/auth/login').send({ email: 'nadie@nodopc.com', password: 'nope' });
+
+    expect(malaPassword.status).toBe(401);
+    expect(sinCuenta.status).toBe(401);
+    expect(malaPassword.body.error).toBe(sinCuenta.body.error);
+  });
+
+  it('devuelve un token y el usuario sin la contraseña', async () => {
+    const respuesta = await api().post('/api/auth/login').send({ email: 'admin@nodopc.com', password: 'admin123' });
+
+    expect(respuesta.status).toBe(200);
+    expect(respuesta.body.token.split('.')).toHaveLength(3);
+    expect(respuesta.body.usuario).toMatchObject({ email: 'admin@nodopc.com', rol: 'admin' });
+    expect(respuesta.body.usuario).not.toHaveProperty('password');
+  });
+});
+
+describe('POST /api/auth/registro', () => {
+  it.each([
+    ['nombre muy corto', { nombre: 'a', email: 'x@x.com', password: '123456' }],
+    ['email inválido', { nombre: 'Ana', email: 'xx', password: '123456' }],
+    ['contraseña muy corta', { nombre: 'Ana', email: 'ana@x.com', password: '123' }],
+  ])('rechaza un %s', async (_caso, datos) => {
+    const respuesta = await api().post('/api/auth/registro').send(datos);
+    expect(respuesta.status).toBe(400);
+  });
+
+  it('rechaza un email que ya está registrado', async () => {
+    const respuesta = await api()
+      .post('/api/auth/registro')
+      .send({ nombre: 'Ana', email: 'admin@nodopc.com', password: '123456' });
+    expect(respuesta.status).toBe(409);
+  });
+
+  it('crea siempre un cliente aunque se pida otro rol, y la cuenta puede ingresar', async () => {
+    const registro = await api()
+      .post('/api/auth/registro')
+      .send({ nombre: 'Ana Nueva', email: 'ana@prueba.com', password: 'secreta1', rol: 'admin' });
+
+    expect(registro.status).toBe(201);
+    expect(registro.body.rol).toBe('cliente');
+    expect(registro.body).not.toHaveProperty('password');
+
+    const login = await api().post('/api/auth/login').send({ email: 'ana@prueba.com', password: 'secreta1' });
+    expect(login.status).toBe(200);
+  });
+});
+
+describe('Rutas protegidas', () => {
+  it('piden iniciar sesión si no hay token', async () => {
+    const respuesta = await api().get('/api/pedidos/mios');
+    expect(respuesta.status).toBe(401);
+  });
+
+  it('rechazan un token inventado', async () => {
+    const respuesta = await api().get('/api/pedidos/mios').set(conToken('abc.def.ghi'));
+    expect(respuesta.status).toBe(401);
+  });
+
+  it('responden 404 en una ruta que no existe', async () => {
+    const respuesta = await api().get('/api/nada');
+    expect(respuesta.status).toBe(404);
+  });
+});
