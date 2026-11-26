@@ -1,5 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { reiniciarBase } from '../src/migraciones.js';
 import { api } from './ayudantes.js';
+
+beforeAll(reiniciarBase);
 
 describe('GET /api/salud', () => {
   it('confirma que la API y la base responden', async () => {
