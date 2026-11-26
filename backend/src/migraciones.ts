@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import mysql from 'mysql2/promise';
+import type { RowDataPacket } from 'mysql2';
 import path from 'node:path';
 import { config } from './config.js';
 import { archivoDatosDePrueba, carpetaMigraciones } from './rutas.js';
@@ -15,7 +16,7 @@ function conectar({ conBase = true } = {}) {
   });
 }
 
-export async function crearBase({ borrarAntes = false } = {}) {
+export async function crearBase({ borrarAntes = false } = {}): Promise<void> {
   const conexion = await conectar({ conBase: false });
   const nombre = mysql.escapeId(config.db.database);
   try {
@@ -28,7 +29,7 @@ export async function crearBase({ borrarAntes = false } = {}) {
   }
 }
 
-export async function aplicarMigraciones() {
+export async function aplicarMigraciones(): Promise<string[]> {
   const conexion = await conectar();
   try {
     await conexion.query(
@@ -38,12 +39,12 @@ export async function aplicarMigraciones() {
       )`
     );
 
-    const [filas] = await conexion.query('SELECT nombre FROM migraciones');
+    const [filas] = await conexion.query<RowDataPacket[]>('SELECT nombre FROM migraciones');
     const yaAplicadas = new Set(filas.map((fila) => fila.nombre));
 
     const archivos = (await fs.readdir(carpetaMigraciones)).filter((archivo) => archivo.endsWith('.sql')).sort();
 
-    const aplicadasAhora = [];
+    const aplicadasAhora: string[] = [];
     for (const archivo of archivos) {
       if (yaAplicadas.has(archivo)) continue;
 
@@ -59,7 +60,7 @@ export async function aplicarMigraciones() {
   }
 }
 
-export async function cargarDatosDePrueba() {
+export async function cargarDatosDePrueba(): Promise<void> {
   const conexion = await conectar();
   try {
     const sql = await fs.readFile(archivoDatosDePrueba, 'utf-8');
@@ -69,17 +70,17 @@ export async function cargarDatosDePrueba() {
   }
 }
 
-export async function estaVacia() {
+export async function estaVacia(): Promise<boolean> {
   const conexion = await conectar();
   try {
-    const [filas] = await conexion.query('SELECT COUNT(*) AS cantidad FROM usuarios');
+    const [filas] = await conexion.query<RowDataPacket[]>('SELECT COUNT(*) AS cantidad FROM usuarios');
     return filas[0].cantidad === 0;
   } finally {
     await conexion.end();
   }
 }
 
-export async function reiniciarBase() {
+export async function reiniciarBase(): Promise<void> {
   await crearBase({ borrarAntes: true });
   await aplicarMigraciones();
   await cargarDatosDePrueba();

@@ -1,6 +1,7 @@
 import { config } from '../config.js';
+import type { ErrorConStatus } from '../tipos.js';
 
-export function explicarErrorMysql(error) {
+export function explicarErrorMysql(error: ErrorConStatus): string {
   const servidor = `${config.db.host}:${config.db.port}`;
 
   switch (error.code) {
