@@ -24,6 +24,9 @@ const ICONOS = {
   alerta: 'M12 3l10 18H2z M12 10v4 M12 17.5h.01',
   cerrar: 'M6 6l12 12 M18 6L6 18',
   inicio: 'M3 11l9-7 9 7 M5 10v10h14V10',
+  anterior: 'M15 6l-6 6 6 6',
+  siguiente: 'M9 6l6 6-6 6',
+  menu: 'M4 7h16 M4 12h16 M4 17h16',
 };
 
 export default function Icono({ nombre, className = 'size-5', grosor = 2 }) {
