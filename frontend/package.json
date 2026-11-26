@@ -2,6 +2,8 @@
   "name": "nodopc-frontend",
   "private": true,
   "version": "1.0.0",
+  "author": "Gonzalo Romeo Lazarte",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "vite",
