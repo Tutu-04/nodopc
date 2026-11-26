@@ -12,19 +12,25 @@ Tienda online de hardware full stack, hecha con **React, Express y MySQL**.
 ![MySQL](https://img.shields.io/badge/MySQL-4479A1?logo=mysql&logoColor=white)
 ![Licencia MIT](https://img.shields.io/badge/licencia-MIT-c2410c)
 
-NodoPC vende componentes de PC, PC armadas, monitores y periféricos. Los visitantes recorren el catálogo y arman un carrito, los clientes compran y siguen sus pedidos, y el administrador gestiona la tienda desde un panel con métricas de ventas.
+NodoPC vende componentes de PC, PC armadas, monitores y periféricos. Los visitantes recorren el catálogo o arman una PC pieza por pieza con chequeo de compatibilidad; los clientes compran con envío a domicilio o retiro, pagan con Mercado Pago (modo prueba) o con una tarjeta simulada y siguen cada pedido; y el administrador gestiona la tienda desde un panel con métricas de ventas.
 
 > Proyecto de demostración: no se venden productos reales.
 
+## Demo
+
+![Recorrido por la tienda: armado de una PC compatible, compra con envío, pago de prueba y gestión del pedido desde el panel](docs/demo.gif)
+
 ## Capturas
 
-| Inicio                                                     | Catálogo                                             |
-| ---------------------------------------------------------- | ---------------------------------------------------- |
-| ![Inicio](docs/capturas/inicio.png)                        | ![Catálogo con filtros](docs/capturas/catalogo.png)  |
-| **Detalle de producto**                                    | **Carrito**                                          |
-| ![Detalle de producto](docs/capturas/detalle.png)          | ![Carrito](docs/capturas/carrito.png)                |
-| **Gestión de productos**                                   | **Panel del administrador**                          |
-| ![Gestión de productos](docs/capturas/admin-productos.png) | ![Panel con métricas](docs/capturas/panel-admin.png) |
+| Inicio                                                                          | Catálogo                                                            |
+| ------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| ![Inicio](docs/capturas/inicio.png)                                             | ![Catálogo con filtros](docs/capturas/catalogo.png)                 |
+| **Armador de PC**                                                               | **Detalle con ficha técnica**                                       |
+| ![Armador de PC con un aviso por la fuente](docs/capturas/armador.png)          | ![Detalle de producto con ficha técnica](docs/capturas/detalle.png) |
+| **Checkout**                                                                    | **Pedido pagado**                                                   |
+| ![Checkout con envío por provincia y medio de pago](docs/capturas/checkout.png) | ![Detalle del pedido con el seguimiento](docs/capturas/pedido.png)  |
+| **Panel del administrador**                                                     | **Gestión de productos**                                            |
+| ![Panel con métricas](docs/capturas/panel-admin.png)                            | ![Gestión de productos](docs/capturas/admin-productos.png)          |
 
 ## Funcionalidades
 
