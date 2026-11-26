@@ -11,7 +11,8 @@
     "backend": "npm run dev --prefix backend",
     "frontend": "npm run dev --prefix frontend",
     "formatear": "prettier --write .",
-    "formato": "prettier --check ."
+    "formato": "prettier --check .",
+    "lint": "npm run lint --prefix backend && npm run lint --prefix frontend"
   },
   "devDependencies": {
     "prettier": "^3.10.1"
