@@ -26,6 +26,7 @@ export default function Navbar() {
   const enlaces = [
     { a: '/', texto: 'Inicio', exacto: true },
     { a: '/catalogo', texto: 'Catálogo' },
+    { a: '/armador', texto: 'Armá tu PC' },
     ...(usuario
       ? [
           { a: '/dashboard', texto: 'Mi panel' },
