@@ -1,5 +1,6 @@
 import * as Producto from '../models/producto.model.js';
 import { esTextoValido, esNumero, esEnteroValido } from '../utils/validaciones.js';
+import { borrarImagen, detectarTipoDeImagen, guardarImagen } from '../utils/imagenes.js';
 
 function validar({ nombre, descripcion, precio, stock, imagen_url, categoria_id, marca_id }) {
   if (!esTextoValido(nombre, 2, 150)) {
@@ -132,14 +133,55 @@ export async function actualizar(req, res) {
     return res.status(400).json({ error });
   }
 
-  await Producto.actualizar(id, prepararDatos(req.body));
+  const datos = prepararDatos(req.body);
+  await Producto.actualizar(id, datos);
+  if (existente.imagen_url !== datos.imagen_url) {
+    await borrarImagen(existente.imagen_url);
+  }
+
   res.json(await Producto.obtenerPorId(id));
 }
 
 export async function eliminar(req, res) {
-  const borrados = await Producto.eliminar(req.params.id);
-  if (borrados === 0) {
+  const producto = await Producto.obtenerPorId(req.params.id);
+  if (!producto) {
     return res.status(404).json({ error: 'El producto no existe' });
   }
+
+  await Producto.eliminar(producto.id);
+  await borrarImagen(producto.imagen_url);
   res.json({ mensaje: 'Producto eliminado' });
+}
+
+export async function subirImagen(req, res) {
+  const producto = await Producto.obtenerPorId(req.params.id);
+  if (!producto) {
+    return res.status(404).json({ error: 'El producto no existe' });
+  }
+  if (!req.file) {
+    return res.status(400).json({ error: 'Elegí una imagen para subir' });
+  }
+
+  const extension = detectarTipoDeImagen(req.file.buffer);
+  if (!extension) {
+    return res.status(400).json({ error: 'La imagen tiene que ser JPG, PNG o WebP' });
+  }
+
+  const url = await guardarImagen(producto.id, req.file.buffer, extension);
+  await Producto.actualizarImagen(producto.id, url);
+  await borrarImagen(producto.imagen_url);
+
+  res.json(await Producto.obtenerPorId(producto.id));
+}
+
+export async function quitarImagen(req, res) {
+  const producto = await Producto.obtenerPorId(req.params.id);
+  if (!producto) {
+    return res.status(404).json({ error: 'El producto no existe' });
+  }
+
+  await Producto.actualizarImagen(producto.id, null);
+  await borrarImagen(producto.imagen_url);
+
+  res.json(await Producto.obtenerPorId(producto.id));
 }

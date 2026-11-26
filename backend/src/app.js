@@ -27,6 +27,15 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use(
+  '/uploads',
+  (req, res, next) => {
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    next();
+  },
+  express.static(config.uploadsDir, { maxAge: '7d' })
+);
+
 app.use('/api/salud', saludRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/cuenta', cuentaRoutes);
