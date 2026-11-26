@@ -4,13 +4,15 @@ import api, { obtenerMensajeError, subirImagenDeProducto } from '../../../api/ap
 import Cargando from '../../../components/Cargando';
 import MensajeError from '../../../components/MensajeError';
 import ProductoForm from './ProductoForm';
+import type { Producto } from '../../../tipos';
+import type { DatosDeProducto } from './ProductoForm';
 
 export default function ProductoEditar() {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [producto, setProducto] = useState(null);
+  const [producto, setProducto] = useState<Producto | null>(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(location.state?.error ?? '');
   const [guardando, setGuardando] = useState(false);
@@ -30,13 +32,13 @@ export default function ProductoEditar() {
     cargarProducto();
   }, [id]);
 
-  async function guardar(datos, archivo) {
+  async function guardar(datos: DatosDeProducto, archivo: File | null) {
     setError('');
     setGuardando(true);
     try {
       await api.put(`/productos/${id}`, datos);
       if (archivo) {
-        await subirImagenDeProducto(id, archivo);
+        await subirImagenDeProducto(Number(id), archivo);
       }
       navigate('/admin/productos');
     } catch (e) {

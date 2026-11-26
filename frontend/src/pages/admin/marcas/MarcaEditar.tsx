@@ -4,12 +4,14 @@ import api, { obtenerMensajeError } from '../../../api/api';
 import Cargando from '../../../components/Cargando';
 import MensajeError from '../../../components/MensajeError';
 import MarcaForm from './MarcaForm';
+import type { Marca } from '../../../tipos';
+import type { DatosDeMarca } from './MarcaForm';
 
 export default function MarcaEditar() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [marca, setMarca] = useState(null);
+  const [marca, setMarca] = useState<Marca | null>(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [guardando, setGuardando] = useState(false);
@@ -29,7 +31,7 @@ export default function MarcaEditar() {
     cargarMarca();
   }, [id]);
 
-  async function guardar(datos) {
+  async function guardar(datos: DatosDeMarca) {
     setError('');
     setGuardando(true);
     try {

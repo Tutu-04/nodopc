@@ -6,11 +6,12 @@ import { formatearFecha } from '../../../utils/formato';
 import Cargando from '../../../components/Cargando';
 import MensajeError from '../../../components/MensajeError';
 import BotonEliminar from '../../../components/BotonEliminar';
+import type { Usuario } from '../../../tipos';
 
 export default function UsuariosLista() {
   const usuarioActual = useAuthStore((estado) => estado.usuario);
 
-  const [usuarios, setUsuarios] = useState([]);
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
 
@@ -29,7 +30,7 @@ export default function UsuariosLista() {
     cargarUsuarios();
   }, []);
 
-  async function eliminar(usuario) {
+  async function eliminar(usuario: Usuario) {
     setError('');
     try {
       await api.delete(`/usuarios/${usuario.id}`);
@@ -78,7 +79,7 @@ export default function UsuariosLista() {
                       <Link to={`/admin/usuarios/${usuario.id}/editar`} className="btn btn-secundario btn-chico">
                         Editar
                       </Link>
-                      {usuario.id !== usuarioActual.id && <BotonEliminar onConfirmar={() => eliminar(usuario)} />}
+                      {usuario.id !== usuarioActual?.id && <BotonEliminar onConfirmar={() => eliminar(usuario)} />}
                     </div>
                   </td>
                 </tr>

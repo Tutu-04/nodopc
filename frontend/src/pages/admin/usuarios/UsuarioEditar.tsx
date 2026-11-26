@@ -5,6 +5,8 @@ import { useAuthStore } from '../../../store/authStore';
 import Cargando from '../../../components/Cargando';
 import MensajeError from '../../../components/MensajeError';
 import UsuarioForm from './UsuarioForm';
+import type { Usuario } from '../../../tipos';
+import type { DatosDeUsuario } from './UsuarioForm';
 
 export default function UsuarioEditar() {
   const { id } = useParams();
@@ -13,7 +15,7 @@ export default function UsuarioEditar() {
   const usuarioActual = useAuthStore((estado) => estado.usuario);
   const iniciarSesion = useAuthStore((estado) => estado.iniciarSesion);
 
-  const [usuario, setUsuario] = useState(null);
+  const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [guardando, setGuardando] = useState(false);
@@ -33,14 +35,14 @@ export default function UsuarioEditar() {
     cargarUsuario();
   }, [id]);
 
-  async function guardar(datos) {
+  async function guardar(datos: DatosDeUsuario) {
     setError('');
     setGuardando(true);
     try {
       const respuesta = await api.put(`/usuarios/${id}`, datos);
       const editado = respuesta.data;
 
-      if (editado.id === usuarioActual.id) {
+      if (editado.id === usuarioActual?.id) {
         iniciarSesion({ id: editado.id, nombre: editado.nombre, email: editado.email, rol: editado.rol });
       }
 

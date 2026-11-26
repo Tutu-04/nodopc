@@ -2,19 +2,20 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api, { obtenerMensajeError } from '../../../api/api';
 import MensajeError from '../../../components/MensajeError';
-import MarcaForm from './MarcaForm';
+import CategoriaForm from './CategoriaForm';
+import type { DatosDeCategoria } from './CategoriaForm';
 
-export default function MarcaNueva() {
+export default function CategoriaNueva() {
   const navigate = useNavigate();
   const [error, setError] = useState('');
   const [guardando, setGuardando] = useState(false);
 
-  async function guardar(datos) {
+  async function guardar(datos: DatosDeCategoria) {
     setError('');
     setGuardando(true);
     try {
-      await api.post('/marcas', datos);
-      navigate('/admin/marcas');
+      await api.post('/categorias', datos);
+      navigate('/admin/categorias');
     } catch (e) {
       setError(obtenerMensajeError(e));
       setGuardando(false);
@@ -23,9 +24,9 @@ export default function MarcaNueva() {
 
   return (
     <div>
-      <h1 className="titulo mb-6">Nueva marca</h1>
+      <h1 className="titulo mb-6">Nueva categoría</h1>
       <MensajeError texto={error} />
-      <MarcaForm onGuardar={guardar} guardando={guardando} />
+      <CategoriaForm onGuardar={guardar} guardando={guardando} />
     </div>
   );
 }

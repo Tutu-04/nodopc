@@ -5,13 +5,15 @@ import { MemoryRouter } from 'react-router-dom';
 import api from '../../../api/api';
 import ProductoForm from './ProductoForm';
 import { prepararFicha } from './CamposFicha';
+import type * as ModuloApi from '../../../api/api';
+import type { CamposDeFicha, Producto } from '../../../tipos';
 
 vi.mock('../../../api/api', async (original) => {
-  const modulo = await original();
+  const modulo = await original<typeof ModuloApi>();
   return { ...modulo, default: { get: vi.fn() } };
 });
 
-const CAMPOS = {
+const CAMPOS: Record<string, CamposDeFicha> = {
   procesador: {
     socket: { tipo: 'texto', etiqueta: 'Socket' },
     consumo: { tipo: 'numero', etiqueta: 'Consumo máximo (W)' },
@@ -21,7 +23,7 @@ const CAMPOS = {
   almacenamiento: {},
 };
 
-const RESPUESTAS = {
+const RESPUESTAS: Record<string, unknown> = {
   '/categorias': [
     { id: 1, nombre: 'Procesadores', componente: 'procesador' },
     { id: 8, nombre: 'Periféricos', componente: null },
@@ -31,11 +33,11 @@ const RESPUESTAS = {
   '/armador/campos': CAMPOS,
 };
 
-function mostrar(inicial) {
+function mostrar(inicial: Partial<Producto>) {
   const onGuardar = vi.fn();
   render(
     <MemoryRouter>
-      <ProductoForm inicial={inicial} onGuardar={onGuardar} guardando={false} />
+      <ProductoForm inicial={inicial as Producto} onGuardar={onGuardar} guardando={false} />
     </MemoryRouter>
   );
   return onGuardar;

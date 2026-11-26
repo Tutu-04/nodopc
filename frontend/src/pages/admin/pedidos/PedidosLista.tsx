@@ -6,12 +6,13 @@ import EstadoPedido, { textoDeEstado } from '../../../components/EstadoPedido';
 import Cargando from '../../../components/Cargando';
 import MensajeError from '../../../components/MensajeError';
 import BotonEliminar from '../../../components/BotonEliminar';
+import type { EstadoPedido as Estado, Pedido } from '../../../tipos';
 
-const ESTADOS = ['pendiente', 'pagado', 'enviado', 'entregado', 'cancelado'];
+const ESTADOS: Estado[] = ['pendiente', 'pagado', 'enviado', 'entregado', 'cancelado'];
 
 export default function PedidosLista() {
   const [parametros, setParametros] = useSearchParams();
-  const [pedidos, setPedidos] = useState([]);
+  const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
 
@@ -32,11 +33,11 @@ export default function PedidosLista() {
     cargarPedidos();
   }, []);
 
-  function filtrar(estado) {
+  function filtrar(estado: string) {
     setParametros(estado ? { estado } : {}, { replace: true });
   }
 
-  async function cancelar(pedido) {
+  async function cancelar(pedido: Pedido) {
     setError('');
     try {
       const respuesta = await api.post(`/pedidos/${pedido.id}/cancelar`);
@@ -46,7 +47,7 @@ export default function PedidosLista() {
     }
   }
 
-  async function eliminar(pedido) {
+  async function eliminar(pedido: Pedido) {
     setError('');
     try {
       await api.delete(`/pedidos/${pedido.id}`);
@@ -57,7 +58,7 @@ export default function PedidosLista() {
   }
 
   const visibles = filtro ? pedidos.filter((pedido) => pedido.estado === filtro) : pedidos;
-  const cantidad = (estado) => pedidos.filter((pedido) => pedido.estado === estado).length;
+  const cantidad = (estado: Estado) => pedidos.filter((pedido) => pedido.estado === estado).length;
 
   return (
     <div>

@@ -2,19 +2,20 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api, { obtenerMensajeError } from '../../../api/api';
 import MensajeError from '../../../components/MensajeError';
-import CategoriaForm from './CategoriaForm';
+import UsuarioForm from './UsuarioForm';
+import type { DatosDeUsuario } from './UsuarioForm';
 
-export default function CategoriaNueva() {
+export default function UsuarioNuevo() {
   const navigate = useNavigate();
   const [error, setError] = useState('');
   const [guardando, setGuardando] = useState(false);
 
-  async function guardar(datos) {
+  async function guardar(datos: DatosDeUsuario) {
     setError('');
     setGuardando(true);
     try {
-      await api.post('/categorias', datos);
-      navigate('/admin/categorias');
+      await api.post('/usuarios', datos);
+      navigate('/admin/usuarios');
     } catch (e) {
       setError(obtenerMensajeError(e));
       setGuardando(false);
@@ -23,9 +24,9 @@ export default function CategoriaNueva() {
 
   return (
     <div>
-      <h1 className="titulo mb-6">Nueva categoría</h1>
+      <h1 className="titulo mb-6">Nuevo usuario</h1>
       <MensajeError texto={error} />
-      <CategoriaForm onGuardar={guardar} guardando={guardando} />
+      <UsuarioForm onGuardar={guardar} guardando={guardando} />
     </div>
   );
 }

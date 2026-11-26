@@ -1,11 +1,24 @@
+import type { FormEvent } from 'react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import type { Marca } from '../../../tipos';
 
-export default function MarcaForm({ inicial, onGuardar, guardando }) {
+export interface DatosDeMarca {
+  nombre: string;
+  pais: string;
+}
+
+interface Props {
+  inicial?: Marca | null;
+  onGuardar: (datos: DatosDeMarca) => void;
+  guardando: boolean;
+}
+
+export default function MarcaForm({ inicial, onGuardar, guardando }: Props) {
   const [nombre, setNombre] = useState(inicial?.nombre ?? '');
   const [pais, setPais] = useState(inicial?.pais ?? '');
 
-  function manejarSubmit(evento) {
+  function manejarSubmit(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     onGuardar({ nombre, pais });
   }

@@ -1,4 +1,15 @@
-function Campo({ nombre, campo, valor, onCambiar }) {
+import type { CampoDeFicha, CamposDeFicha, Especificaciones } from '../../../tipos';
+
+export type FichaEnEdicion = Record<string, unknown>;
+
+interface PropsDeCampo {
+  nombre: string;
+  campo: CampoDeFicha;
+  valor: unknown;
+  onCambiar: (nombre: string, valor: unknown) => void;
+}
+
+function Campo({ nombre, campo, valor, onCambiar }: PropsDeCampo) {
   const id = `ficha-${nombre}`;
 
   if (campo.tipo === 'lista') {
@@ -7,7 +18,7 @@ function Campo({ nombre, campo, valor, onCambiar }) {
       <fieldset>
         <legend className="etiqueta">{campo.etiqueta}</legend>
         <div className="flex flex-wrap gap-x-5 gap-y-2">
-          {campo.opciones.map((opcion) => (
+          {(campo.opciones ?? []).map((opcion) => (
             <label key={opcion} className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
@@ -45,9 +56,14 @@ function Campo({ nombre, campo, valor, onCambiar }) {
           <option value="false">No</option>
         </select>
       ) : campo.opciones ? (
-        <select id={id} className="campo" value={valor ?? ''} onChange={(e) => onCambiar(nombre, e.target.value)}>
+        <select
+          id={id}
+          className="campo"
+          value={String(valor ?? '')}
+          onChange={(e) => onCambiar(nombre, e.target.value)}
+        >
           <option value="">Elegir...</option>
-          {campo.opciones.map((opcion) => (
+          {(campo.opciones ?? []).map((opcion) => (
             <option key={opcion} value={opcion}>
               {opcion}
             </option>
@@ -61,7 +77,7 @@ function Campo({ nombre, campo, valor, onCambiar }) {
           min={campo.tipo === 'numero' ? 1 : undefined}
           step={campo.tipo === 'numero' ? 1 : undefined}
           maxLength={campo.tipo === 'numero' ? undefined : 30}
-          value={valor ?? ''}
+          value={String(valor ?? '')}
           onChange={(e) => onCambiar(nombre, e.target.value)}
         />
       )}
@@ -69,27 +85,33 @@ function Campo({ nombre, campo, valor, onCambiar }) {
   );
 }
 
-export function prepararFicha(campos, ficha) {
+export function prepararFicha(campos: CamposDeFicha | undefined, ficha: FichaEnEdicion): Especificaciones | null {
   if (!campos || Object.keys(campos).length === 0) return null;
 
-  const valores = Object.entries(campos).map(([nombre, campo]) => {
+  const valores = (Object.entries(campos) as [string, CampoDeFicha][]).map(([nombre, campo]) => {
     const valor = ficha[nombre];
     if (campo.tipo === 'numero') return [nombre, valor === '' || valor === undefined ? undefined : Number(valor)];
-    if (campo.tipo === 'lista') return [nombre, valor?.length ? valor : undefined];
+    if (campo.tipo === 'lista') return [nombre, Array.isArray(valor) && valor.length ? valor : undefined];
     return [nombre, valor === '' ? undefined : valor];
   });
 
   if (valores.every(([, valor]) => valor === undefined)) return null;
-  return Object.fromEntries(valores);
+  return Object.fromEntries(valores) as Especificaciones;
 }
 
-export default function CamposFicha({ campos, ficha, onCambiar }) {
+interface Props {
+  campos: CamposDeFicha;
+  ficha: FichaEnEdicion;
+  onCambiar: (nombre: string, valor: unknown) => void;
+}
+
+export default function CamposFicha({ campos, ficha, onCambiar }: Props) {
   return (
     <fieldset className="flex flex-col gap-4 rounded-xl border border-neutral-200 p-4">
       <legend className="px-1 text-sm font-bold">Ficha técnica</legend>
       <p className="ayuda mt-0">Completala para que el producto aparezca en el armador de PC.</p>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {Object.entries(campos).map(([nombre, campo]) => (
+        {(Object.entries(campos) as [string, CampoDeFicha][]).map(([nombre, campo]) => (
           <Campo key={nombre} nombre={nombre} campo={campo} valor={ficha[nombre]} onCambiar={onCambiar} />
         ))}
       </div>

@@ -1,16 +1,31 @@
+import type { FormEvent } from 'react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AYUDA_PASSWORD, PATRON_PASSWORD } from '../../../utils/password';
+import type { Rol, Usuario } from '../../../tipos';
 
-export default function UsuarioForm({ inicial, onGuardar, guardando }) {
+export interface DatosDeUsuario {
+  nombre: string;
+  email: string;
+  password: string;
+  rol: Rol;
+}
+
+interface Props {
+  inicial?: Usuario | null;
+  onGuardar: (datos: DatosDeUsuario) => void;
+  guardando: boolean;
+}
+
+export default function UsuarioForm({ inicial, onGuardar, guardando }: Props) {
   const esEdicion = Boolean(inicial);
 
   const [nombre, setNombre] = useState(inicial?.nombre ?? '');
   const [email, setEmail] = useState(inicial?.email ?? '');
   const [password, setPassword] = useState('');
-  const [rol, setRol] = useState(inicial?.rol ?? 'cliente');
+  const [rol, setRol] = useState<Rol>(inicial?.rol ?? 'cliente');
 
-  function manejarSubmit(evento) {
+  function manejarSubmit(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     onGuardar({ nombre, email, password, rol });
   }
@@ -69,7 +84,7 @@ export default function UsuarioForm({ inicial, onGuardar, guardando }) {
         <label htmlFor="rol" className="etiqueta">
           Rol
         </label>
-        <select id="rol" className="campo" value={rol} onChange={(e) => setRol(e.target.value)}>
+        <select id="rol" className="campo" value={rol} onChange={(e) => setRol(e.target.value as Rol)}>
           <option value="cliente">Cliente</option>
           <option value="admin">Administrador</option>
         </select>

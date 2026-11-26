@@ -8,8 +8,6 @@
     "types": ["vite/client"],
     "strict": true,
     "noFallthroughCasesInSwitch": true,
-    "allowJs": true,
-    "checkJs": false,
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
     "resolveJsonModule": true,

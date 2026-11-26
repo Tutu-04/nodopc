@@ -4,12 +4,14 @@ import api, { obtenerMensajeError } from '../../../api/api';
 import Cargando from '../../../components/Cargando';
 import MensajeError from '../../../components/MensajeError';
 import CategoriaForm from './CategoriaForm';
+import type { Categoria } from '../../../tipos';
+import type { DatosDeCategoria } from './CategoriaForm';
 
 export default function CategoriaEditar() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [categoria, setCategoria] = useState(null);
+  const [categoria, setCategoria] = useState<Categoria | null>(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [guardando, setGuardando] = useState(false);
@@ -29,7 +31,7 @@ export default function CategoriaEditar() {
     cargarCategoria();
   }, [id]);
 
-  async function guardar(datos) {
+  async function guardar(datos: DatosDeCategoria) {
     setError('');
     setGuardando(true);
     try {

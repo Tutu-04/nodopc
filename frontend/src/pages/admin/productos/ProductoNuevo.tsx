@@ -3,13 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import api, { obtenerMensajeError, subirImagenDeProducto } from '../../../api/api';
 import MensajeError from '../../../components/MensajeError';
 import ProductoForm from './ProductoForm';
+import type { DatosDeProducto } from './ProductoForm';
 
 export default function ProductoNuevo() {
   const navigate = useNavigate();
   const [error, setError] = useState('');
   const [guardando, setGuardando] = useState(false);
 
-  async function guardar(datos, archivo) {
+  async function guardar(datos: DatosDeProducto, archivo: File | null) {
     setError('');
     setGuardando(true);
 

@@ -1,11 +1,24 @@
+import type { FormEvent } from 'react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import type { Categoria } from '../../../tipos';
 
-export default function CategoriaForm({ inicial, onGuardar, guardando }) {
+export interface DatosDeCategoria {
+  nombre: string;
+  descripcion: string;
+}
+
+interface Props {
+  inicial?: Categoria | null;
+  onGuardar: (datos: DatosDeCategoria) => void;
+  guardando: boolean;
+}
+
+export default function CategoriaForm({ inicial, onGuardar, guardando }: Props) {
   const [nombre, setNombre] = useState(inicial?.nombre ?? '');
   const [descripcion, setDescripcion] = useState(inicial?.descripcion ?? '');
 
-  function manejarSubmit(evento) {
+  function manejarSubmit(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     onGuardar({ nombre, descripcion });
   }

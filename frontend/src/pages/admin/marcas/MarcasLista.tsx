@@ -4,17 +4,18 @@ import api, { obtenerMensajeError } from '../../../api/api';
 import Cargando from '../../../components/Cargando';
 import MensajeError from '../../../components/MensajeError';
 import BotonEliminar from '../../../components/BotonEliminar';
+import type { Marca } from '../../../tipos';
 
-export default function CategoriasLista() {
-  const [categorias, setCategorias] = useState([]);
+export default function MarcasLista() {
+  const [marcas, setMarcas] = useState<Marca[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    async function cargarCategorias() {
+    async function cargarMarcas() {
       try {
-        const respuesta = await api.get('/categorias');
-        setCategorias(respuesta.data);
+        const respuesta = await api.get('/marcas');
+        setMarcas(respuesta.data);
       } catch (e) {
         setError(obtenerMensajeError(e));
       } finally {
@@ -22,14 +23,14 @@ export default function CategoriasLista() {
       }
     }
 
-    cargarCategorias();
+    cargarMarcas();
   }, []);
 
-  async function eliminar(categoria) {
+  async function eliminar(marca: Marca) {
     setError('');
     try {
-      await api.delete(`/categorias/${categoria.id}`);
-      setCategorias((actuales) => actuales.filter((c) => c.id !== categoria.id));
+      await api.delete(`/marcas/${marca.id}`);
+      setMarcas((actuales) => actuales.filter((m) => m.id !== marca.id));
     } catch (e) {
       setError(obtenerMensajeError(e));
     }
@@ -38,9 +39,9 @@ export default function CategoriasLista() {
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="titulo">Categorías</h1>
-        <Link to="/admin/categorias/nueva" className="btn btn-acento">
-          Nueva categoría
+        <h1 className="titulo">Marcas</h1>
+        <Link to="/admin/marcas/nueva" className="btn btn-acento">
+          Nueva marca
         </Link>
       </div>
 
@@ -55,29 +56,29 @@ export default function CategoriasLista() {
               <tr>
                 <th>ID</th>
                 <th>Nombre</th>
-                <th>Descripción</th>
+                <th>País</th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
-              {categorias.map((categoria) => (
-                <tr key={categoria.id}>
-                  <td className="tabular-nums">{categoria.id}</td>
-                  <td className="font-bold">{categoria.nombre}</td>
-                  <td>{categoria.descripcion}</td>
+              {marcas.map((marca) => (
+                <tr key={marca.id}>
+                  <td className="tabular-nums">{marca.id}</td>
+                  <td className="font-bold">{marca.nombre}</td>
+                  <td>{marca.pais}</td>
                   <td>
                     <div className="flex justify-end gap-2">
-                      <Link to={`/admin/categorias/${categoria.id}/editar`} className="btn btn-secundario btn-chico">
+                      <Link to={`/admin/marcas/${marca.id}/editar`} className="btn btn-secundario btn-chico">
                         Editar
                       </Link>
-                      <BotonEliminar onConfirmar={() => eliminar(categoria)} />
+                      <BotonEliminar onConfirmar={() => eliminar(marca)} />
                     </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          {categorias.length === 0 && !error && <p className="py-6 text-neutral-600">No hay categorías cargadas.</p>}
+          {marcas.length === 0 && !error && <p className="py-6 text-neutral-600">No hay marcas cargadas.</p>}
         </div>
       )}
     </div>

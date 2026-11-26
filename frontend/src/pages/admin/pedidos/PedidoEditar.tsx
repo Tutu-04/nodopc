@@ -1,3 +1,4 @@
+import type { FormEvent } from 'react';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import api, { obtenerMensajeError } from '../../../api/api';
@@ -5,12 +6,13 @@ import { formatearFecha, formatearPrecio } from '../../../utils/formato';
 import EstadoPedido, { textoDeEstado } from '../../../components/EstadoPedido';
 import Cargando from '../../../components/Cargando';
 import MensajeError from '../../../components/MensajeError';
+import type { PedidoConItems } from '../../../tipos';
 
 export default function PedidoEditar() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [pedido, setPedido] = useState(null);
+  const [pedido, setPedido] = useState<PedidoConItems | null>(null);
   const [estado, setEstado] = useState('');
   const [direccion, setDireccion] = useState('');
 
@@ -37,7 +39,7 @@ export default function PedidoEditar() {
 
   const puedeCambiarDireccion = pedido?.metodo_entrega === 'envio' && ['pendiente', 'pagado'].includes(pedido.estado);
 
-  async function manejarSubmit(evento) {
+  async function manejarSubmit(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     setError('');
     setGuardando(true);
@@ -99,10 +101,10 @@ export default function PedidoEditar() {
                 className="campo"
                 value={estado}
                 onChange={(e) => setEstado(e.target.value)}
-                disabled={pedido.estados_siguientes.length === 0}
+                disabled={(pedido.estados_siguientes ?? []).length === 0}
               >
                 <option value={pedido.estado}>{textoDeEstado(pedido.estado)} (sin cambios)</option>
-                {pedido.estados_siguientes.map((siguiente) => (
+                {(pedido.estados_siguientes ?? []).map((siguiente) => (
                   <option key={siguiente} value={siguiente}>
                     {textoDeEstado(siguiente)}
                   </option>

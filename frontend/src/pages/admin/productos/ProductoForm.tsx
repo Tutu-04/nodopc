@@ -1,30 +1,51 @@
+import type { FormEvent } from 'react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api, { obtenerMensajeError, urlDeImagen } from '../../../api/api';
 import MensajeError from '../../../components/MensajeError';
 import IconoCategoria from '../../../components/IconoCategoria';
 import CamposFicha, { prepararFicha } from './CamposFicha';
+import type { ChangeEvent } from 'react';
+import type { Categoria, CamposDeFicha, Componente, Especificaciones, Marca, Producto } from '../../../tipos';
+import type { FichaEnEdicion } from './CamposFicha';
 
 const TIPOS_DE_IMAGEN = ['image/jpeg', 'image/png', 'image/webp'];
 const TAMANO_MAXIMO = 2 * 1024 * 1024;
 
-export default function ProductoForm({ inicial, onGuardar, guardando }) {
+export interface DatosDeProducto {
+  nombre: string;
+  descripcion: string;
+  precio: number | string;
+  stock: number | string;
+  imagen_url: string;
+  categoria_id: number | string;
+  marca_id: number | string;
+  especificaciones: Especificaciones | null;
+}
+
+interface Props {
+  inicial?: Producto | null;
+  onGuardar: (datos: DatosDeProducto, archivo: File | null) => void;
+  guardando: boolean;
+}
+
+export default function ProductoForm({ inicial, onGuardar, guardando }: Props) {
   const [nombre, setNombre] = useState(inicial?.nombre ?? '');
   const [descripcion, setDescripcion] = useState(inicial?.descripcion ?? '');
-  const [precio, setPrecio] = useState(inicial?.precio ?? '');
-  const [stock, setStock] = useState(inicial?.stock ?? '');
+  const [precio, setPrecio] = useState<number | string>(inicial?.precio ?? '');
+  const [stock, setStock] = useState<number | string>(inicial?.stock ?? '');
   const [imagenUrl, setImagenUrl] = useState(inicial?.imagen_url ?? '');
-  const [categoriaId, setCategoriaId] = useState(inicial?.categoria_id ?? '');
-  const [marcaId, setMarcaId] = useState(inicial?.marca_id ?? '');
-  const [ficha, setFicha] = useState(inicial?.especificaciones ?? {});
+  const [categoriaId, setCategoriaId] = useState<number | string>(inicial?.categoria_id ?? '');
+  const [marcaId, setMarcaId] = useState<number | string>(inicial?.marca_id ?? '');
+  const [ficha, setFicha] = useState<FichaEnEdicion>({ ...inicial?.especificaciones });
 
-  const [archivo, setArchivo] = useState(null);
+  const [archivo, setArchivo] = useState<File | null>(null);
   const [vistaPrevia, setVistaPrevia] = useState('');
   const [errorImagen, setErrorImagen] = useState('');
 
-  const [categorias, setCategorias] = useState([]);
-  const [marcas, setMarcas] = useState([]);
-  const [camposPorComponente, setCamposPorComponente] = useState({});
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [marcas, setMarcas] = useState<Marca[]>([]);
+  const [camposPorComponente, setCamposPorComponente] = useState<Partial<Record<Componente, CamposDeFicha>>>({});
   const [errorListas, setErrorListas] = useState('');
 
   useEffect(() => {
@@ -56,8 +77,8 @@ export default function ProductoForm({ inicial, onGuardar, guardando }) {
     return () => URL.revokeObjectURL(url);
   }, [archivo]);
 
-  function elegirArchivo(evento) {
-    const elegido = evento.target.files[0];
+  function elegirArchivo(evento: ChangeEvent<HTMLInputElement>) {
+    const elegido = evento.target.files?.[0];
     setErrorImagen('');
 
     if (!elegido) return;
@@ -81,14 +102,14 @@ export default function ProductoForm({ inicial, onGuardar, guardando }) {
 
   const categoriaElegida = categorias.find((categoria) => String(categoria.id) === String(categoriaId));
   const imagenActual = vistaPrevia || urlDeImagen(imagenUrl);
-  const camposDeFicha = camposPorComponente[categoriaElegida?.componente];
+  const camposDeFicha = categoriaElegida?.componente ? camposPorComponente[categoriaElegida.componente] : undefined;
   const tieneFicha = camposDeFicha && Object.keys(camposDeFicha).length > 0;
 
-  function cambiarFicha(campo, valor) {
+  function cambiarFicha(campo: string, valor: unknown) {
     setFicha((actual) => ({ ...actual, [campo]: valor }));
   }
 
-  function manejarSubmit(evento) {
+  function manejarSubmit(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     onGuardar(
       {

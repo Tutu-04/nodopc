@@ -1,3 +1,4 @@
+import type { FormEvent } from 'react';
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import api, { obtenerMensajeError } from '../../../api/api';
@@ -7,6 +8,7 @@ import Cargando from '../../../components/Cargando';
 import MensajeError from '../../../components/MensajeError';
 import BotonEliminar from '../../../components/BotonEliminar';
 import Paginacion from '../../../components/Paginacion';
+import type { Producto } from '../../../tipos';
 
 const POR_PAGINA = 20;
 
@@ -17,7 +19,11 @@ export default function ProductosLista() {
   const pagina = Math.max(1, Number(parametros.get('pagina')) || 1);
 
   const [texto, setTexto] = useState(buscar);
-  const [resultado, setResultado] = useState({ productos: [], total: 0, paginas: 0 });
+  const [resultado, setResultado] = useState<{ productos: Producto[]; total: number; paginas: number }>({
+    productos: [],
+    total: 0,
+    paginas: 0,
+  });
   const [recargas, setRecargas] = useState(0);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
@@ -50,22 +56,22 @@ export default function ProductosLista() {
     };
   }, [buscar, pagina, recargas]);
 
-  function manejarBusqueda(evento) {
+  function manejarBusqueda(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     const nuevos = new URLSearchParams();
     if (texto.trim()) nuevos.set('buscar', texto.trim());
     setParametros(nuevos);
   }
 
-  function enlaceAPagina(numero) {
+  function enlaceAPagina(numero: number): string {
     const nuevos = new URLSearchParams(parametros);
     if (numero === 1) nuevos.delete('pagina');
-    else nuevos.set('pagina', numero);
+    else nuevos.set('pagina', String(numero));
     const textoConsulta = nuevos.toString();
     return textoConsulta ? `?${textoConsulta}` : '?';
   }
 
-  async function eliminar(producto) {
+  async function eliminar(producto: Producto) {
     setError('');
     try {
       await api.delete(`/productos/${producto.id}`);
