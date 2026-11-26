@@ -12,6 +12,8 @@ import ProductoDetalle from './pages/ProductoDetalle';
 import Carrito from './pages/Carrito';
 import Login from './pages/Login';
 import Registro from './pages/Registro';
+import OlvidePassword from './pages/OlvidePassword';
+import RestablecerPassword from './pages/RestablecerPassword';
 import Dashboard from './pages/Dashboard';
 import Checkout from './pages/Checkout';
 import MisPedidos from './pages/MisPedidos';
@@ -51,6 +53,8 @@ export default function App() {
           <Route element={<RutaSoloInvitados />}>
             <Route path="/login" element={<Login />} />
             <Route path="/registro" element={<Registro />} />
+            <Route path="/olvide-password" element={<OlvidePassword />} />
+            <Route path="/restablecer-password" element={<RestablecerPassword />} />
           </Route>
 
           <Route element={<RutaProtegida />}>

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api, { obtenerMensajeError } from '../api/api';
 import MensajeError from '../components/MensajeError';
+import EncabezadoAcceso from '../components/EncabezadoAcceso';
 import { AYUDA_PASSWORD, PATRON_PASSWORD } from '../utils/password';
 
 export default function Registro() {
@@ -36,13 +37,7 @@ export default function Registro() {
 
   return (
     <div className="mx-auto w-full max-w-md py-4">
-      <div className="mb-6 flex flex-col items-center gap-3 text-center">
-        <span className="flex size-12 items-center justify-center rounded-xl bg-neutral-950 text-xl font-black text-white">
-          N
-        </span>
-        <h1 className="titulo">Crear cuenta</h1>
-        <p className="text-sm text-neutral-500">Registrate para comprar y seguir tus pedidos.</p>
-      </div>
+      <EncabezadoAcceso titulo="Crear cuenta" descripcion="Registrate para comprar y seguir tus pedidos." />
 
       <MensajeError texto={error} />
 
