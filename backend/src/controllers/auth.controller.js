@@ -2,6 +2,8 @@ import bcrypt from 'bcrypt';
 import * as Usuario from '../models/usuario.model.js';
 import { esTextoValido, esEmailValido, validarPassword } from '../utils/validaciones.js';
 import { borrarSesion, guardarSesion } from '../utils/sesion.js';
+import { enviarCorreo } from '../services/correo.js';
+import { bienvenida } from '../correos/mensajes.js';
 
 const HASH_DE_RELLENO = '$2b$10$2cpuXqFIhYURbXTkjXf7LucR5/8yel6thdZDhRNYPU39LNhM3G9Ui';
 
@@ -28,6 +30,8 @@ export async function registrar(req, res) {
 
   const id = await Usuario.crear({ nombre: nombre.trim(), email, password: hash, rol: 'cliente' });
   const usuario = await Usuario.obtenerPorId(id);
+
+  enviarCorreo({ para: usuario.email, ...bienvenida(usuario) });
 
   res.status(201).json(usuario);
 }
