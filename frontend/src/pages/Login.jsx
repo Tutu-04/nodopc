@@ -23,7 +23,7 @@ export default function Login() {
     try {
       const respuesta = await api.post('/auth/login', { email, password });
 
-      iniciarSesion(respuesta.data.usuario, respuesta.data.token);
+      iniciarSesion(respuesta.data.usuario);
     } catch (e) {
       setError(obtenerMensajeError(e));
       setEnviando(false);

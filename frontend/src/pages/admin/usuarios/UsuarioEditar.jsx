@@ -11,7 +11,6 @@ export default function UsuarioEditar() {
   const navigate = useNavigate();
 
   const usuarioActual = useAuthStore((estado) => estado.usuario);
-  const token = useAuthStore((estado) => estado.token);
   const iniciarSesion = useAuthStore((estado) => estado.iniciarSesion);
 
   const [usuario, setUsuario] = useState(null);
@@ -42,7 +41,7 @@ export default function UsuarioEditar() {
       const editado = respuesta.data;
 
       if (editado.id === usuarioActual.id) {
-        iniciarSesion({ id: editado.id, nombre: editado.nombre, email: editado.email, rol: editado.rol }, token);
+        iniciarSesion({ id: editado.id, nombre: editado.nombre, email: editado.email, rol: editado.rol });
       }
 
       navigate('/admin/usuarios');
