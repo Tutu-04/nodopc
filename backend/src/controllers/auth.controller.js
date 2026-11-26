@@ -3,9 +3,14 @@ import * as Usuario from '../models/usuario.model.js';
 import { esTextoValido, esEmailValido, validarPassword } from '../utils/validaciones.js';
 import { borrarSesion, guardarSesion } from '../utils/sesion.js';
 import { enviarCorreo } from '../services/correo.js';
-import { bienvenida } from '../correos/mensajes.js';
+import { bienvenida, recuperarPassword } from '../correos/mensajes.js';
+import * as Recuperacion from '../models/recuperacion.model.js';
+import { crearTokenAlAzar, hashearToken } from '../utils/tokens.js';
+import { enlace } from '../correos/plantilla.js';
 
 const HASH_DE_RELLENO = '$2b$10$2cpuXqFIhYURbXTkjXf7LucR5/8yel6thdZDhRNYPU39LNhM3G9Ui';
+const MINUTOS_PARA_RESTABLECER = 60;
+const RESPUESTA_RECUPERACION = 'Si el email tiene una cuenta, te mandamos un enlace para elegir una contraseña nueva.';
 
 export async function registrar(req, res) {
   const { nombre, email, password } = req.body;
@@ -70,4 +75,55 @@ export async function obtenerSesion(req, res) {
 export function cerrarSesion(req, res) {
   borrarSesion(res);
   res.json({ mensaje: 'Sesión cerrada' });
+}
+
+async function prepararRecuperacion(email) {
+  const usuario = await Usuario.obtenerPorEmail(email);
+  if (!usuario) return;
+
+  const token = crearTokenAlAzar();
+  await Recuperacion.crear(usuario.id, hashearToken(token), MINUTOS_PARA_RESTABLECER);
+
+  const url = enlace(`/restablecer-password?token=${token}`);
+  await enviarCorreo({
+    para: usuario.email,
+    ...recuperarPassword(usuario, { url, minutos: MINUTOS_PARA_RESTABLECER }),
+  });
+}
+
+export async function pedirRecuperacion(req, res) {
+  const { email } = req.body;
+  if (!esEmailValido(email)) {
+    return res.status(400).json({ error: 'El email no tiene un formato válido' });
+  }
+
+  res.json({ mensaje: RESPUESTA_RECUPERACION });
+
+  try {
+    await prepararRecuperacion(email);
+  } catch (error) {
+    console.error('No se pudo preparar la recuperación de contraseña:', error.message);
+  }
+}
+
+export async function restablecerPassword(req, res) {
+  const { token, password } = req.body;
+
+  if (!esTextoValido(token, 20, 200)) {
+    return res.status(400).json({ error: 'El enlace no es válido. Pedí uno nuevo.' });
+  }
+  const errorPassword = validarPassword(password);
+  if (errorPassword) {
+    return res.status(400).json({ error: errorPassword });
+  }
+
+  const recuperacion = await Recuperacion.buscarVigente(hashearToken(token));
+  if (!recuperacion) {
+    return res.status(400).json({ error: 'El enlace venció o ya se usó. Pedí uno nuevo.' });
+  }
+
+  await Usuario.actualizarPassword(recuperacion.usuario_id, await bcrypt.hash(password, 10));
+  await Recuperacion.anularDelUsuario(recuperacion.usuario_id);
+
+  res.json({ mensaje: 'Listo, ya podés ingresar con tu contraseña nueva.' });
 }

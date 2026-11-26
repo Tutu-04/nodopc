@@ -114,3 +114,18 @@ export function pedidoCancelado(pedido, { motivo = 'tienda', estabaPagado = fals
     }),
   };
 }
+
+export function recuperarPassword(usuario, { url, minutos }) {
+  return {
+    asunto: 'Restablecé tu contraseña de NodoPC',
+    ...armarCorreo({
+      titulo: 'Restablecer la contraseña',
+      parrafos: [
+        `Hola, ${primerNombre(usuario.nombre)}. Pediste restablecer la contraseña de tu cuenta.`,
+        `Usá el botón para elegir una nueva. El enlace sirve una sola vez y vence en ${minutos} minutos.`,
+      ],
+      boton: { texto: 'Elegir una contraseña nueva', url },
+      notaFinal: 'Si no lo pediste vos, ignorá este correo: tu contraseña no cambia.',
+    }),
+  };
+}
