@@ -1,9 +1,10 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { reiniciarBase } from '../src/migraciones.js';
-import { api, conSesion, ingresarComoAdmin, ingresarComoCliente } from './ayudantes.js';
+import { api, conSesion, ingresar, ingresarComoAdmin, ingresarComoCliente } from './ayudantes.js';
 
 let admin;
 let cliente;
+let maria;
 
 async function stockDe(id) {
   const respuesta = await api().get(`/api/productos/${id}`);
@@ -16,10 +17,19 @@ function crearPedido(token, datos) {
   return api().post('/api/pedidos').set(conSesion(token)).send(datos);
 }
 
+function cancelarPedido(token, id) {
+  return api().post(`/api/pedidos/${id}/cancelar`).set(conSesion(token));
+}
+
+function cambiarPedido(id, datos) {
+  return api().put(`/api/pedidos/${id}`).set(conSesion(admin)).send(datos);
+}
+
 beforeAll(async () => {
   await reiniciarBase();
   admin = await ingresarComoAdmin();
   cliente = await ingresarComoCliente();
+  maria = await ingresar('maria@nodopc.com', 'cliente123');
 });
 
 describe('Consulta de pedidos', () => {
@@ -148,24 +158,88 @@ describe('Compras al mismo tiempo', () => {
   });
 });
 
-describe('Gestión del administrador', () => {
-  it('cambia el estado de un pedido y valida los valores', async () => {
-    const invalido = await api()
-      .put('/api/pedidos/26')
-      .set(conSesion(admin))
-      .send({ estado: 'volando', direccion_envio: 'Calle 123' });
-    expect(invalido.status).toBe(400);
+describe('Cancelación', () => {
+  it('el cliente cancela su pedido pendiente y el stock vuelve', async () => {
+    const stockInicial = await stockDe(21);
+    const creado = await crearPedido(cliente, { ...ENVIO_A_TUCUMAN, items: [{ producto_id: 21, cantidad: 2 }] });
+    expect(await stockDe(21)).toBe(stockInicial - 2);
 
-    const enviado = await api()
-      .put('/api/pedidos/26')
-      .set(conSesion(admin))
-      .send({ estado: 'enviado', direccion_envio: 'San Martín 456, Rosario' });
-    expect(enviado.status).toBe(200);
-    expect(enviado.body.estado).toBe('enviado');
+    expect((await cancelarPedido(maria, creado.body.id)).status).toBe(403);
+
+    const cancelado = await cancelarPedido(cliente, creado.body.id);
+    expect(cancelado.status).toBe(200);
+    expect(cancelado.body).toMatchObject({ estado: 'cancelado', vence_en: null });
+    expect(await stockDe(21)).toBe(stockInicial);
+
+    expect((await cancelarPedido(cliente, creado.body.id)).status).toBe(409);
+    expect(await stockDe(21)).toBe(stockInicial);
   });
 
-  it('no deja eliminar un pedido que ya salió', async () => {
-    const respuesta = await api().delete('/api/pedidos/26').set(conSesion(admin));
+  it('el cliente no puede cancelar un pedido que ya pagó, el administrador sí', async () => {
+    const stockInicial = await stockDe(22);
+
+    expect((await cancelarPedido(cliente, 24)).status).toBe(409);
+
+    const cancelado = await cancelarPedido(admin, 24);
+    expect(cancelado.status).toBe(200);
+    expect(await stockDe(22)).toBe(stockInicial + 1);
+  });
+
+  it('nadie puede cancelar un pedido que ya salió', async () => {
+    expect((await cancelarPedido(admin, 27)).status).toBe(409);
+    expect((await cancelarPedido(admin, 1)).status).toBe(409);
+  });
+});
+
+describe('Gestión del administrador', () => {
+  it('rechaza estados que no existen', async () => {
+    const respuesta = await cambiarPedido(26, { estado: 'volando' });
+    expect(respuesta.status).toBe(400);
+  });
+
+  it('sigue el recorrido de un envío: pagado, enviado y entregado', async () => {
+    expect((await cambiarPedido(26, { estado: 'entregado' })).status).toBe(409);
+    expect((await cambiarPedido(26, { estado: 'pendiente' })).status).toBe(409);
+
+    const enviado = await cambiarPedido(26, { estado: 'enviado' });
+    expect(enviado.status).toBe(200);
+    expect(enviado.body).toMatchObject({ estado: 'enviado', estados_siguientes: ['entregado'] });
+
+    const entregado = await cambiarPedido(26, { estado: 'entregado' });
+    expect(entregado.body).toMatchObject({ estado: 'entregado', estados_siguientes: [] });
+  });
+
+  it('un retiro en el local pasa de pagado a entregado sin envío', async () => {
+    const creado = await crearPedido(cliente, { metodo_entrega: 'retiro', items: [{ producto_id: 23, cantidad: 1 }] });
+
+    const pagado = await cambiarPedido(creado.body.id, { estado: 'pagado' });
+    expect(pagado.status).toBe(200);
+    expect(pagado.body.pagado_en).not.toBeNull();
+    expect(pagado.body.estados_siguientes).toEqual(['entregado']);
+
+    expect((await cambiarPedido(creado.body.id, { estado: 'enviado' })).status).toBe(409);
+    expect((await cambiarPedido(creado.body.id, { estado: 'entregado' })).status).toBe(200);
+  });
+
+  it('cancelar se hace con su propia ruta para devolver el stock', async () => {
+    const respuesta = await cambiarPedido(28, { estado: 'cancelado' });
     expect(respuesta.status).toBe(409);
+  });
+
+  it('corrige la dirección solo mientras el pedido no salió', async () => {
+    const corregido = await cambiarPedido(28, { direccion_envio: 'Rivadavia 2200, Buenos Aires' });
+    expect(corregido.status).toBe(200);
+    expect(corregido.body).toMatchObject({ estado: 'pagado', direccion_envio: 'Rivadavia 2200, Buenos Aires' });
+
+    expect((await cambiarPedido(28, { direccion_envio: 'abc' })).status).toBe(400);
+    expect((await cambiarPedido(27, { direccion_envio: 'Otra dirección 123' })).status).toBe(409);
+  });
+
+  it('elimina solo pedidos cancelados', async () => {
+    expect((await api().delete('/api/pedidos/27').set(conSesion(admin))).status).toBe(409);
+
+    const eliminado = await api().delete('/api/pedidos/25').set(conSesion(admin));
+    expect(eliminado.status).toBe(200);
+    expect((await api().get('/api/pedidos/25').set(conSesion(admin))).status).toBe(404);
   });
 });

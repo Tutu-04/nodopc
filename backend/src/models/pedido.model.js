@@ -102,15 +102,26 @@ export async function crear(usuarioId, { metodoEntrega, provincia, direccionEnvi
   }
 }
 
-export async function actualizar(id, { estado, direccion_envio }) {
-  await pool.execute('UPDATE pedidos SET estado = ?, direccion_envio = ? WHERE id = ?', [estado, direccion_envio, id]);
+export async function actualizar(id, { estado, direccionEnvio }) {
+  await pool.execute(
+    `UPDATE pedidos
+     SET estado = ?, direccion_envio = ?, pagado_en = IF(? = 'pagado' AND pagado_en IS NULL, NOW(), pagado_en)
+     WHERE id = ?`,
+    [estado, direccionEnvio, estado, id]
+  );
 }
 
-export async function eliminar(id) {
+export async function cancelar(id, estadosCancelables = ['pendiente', 'pagado']) {
   const conexion = await pool.getConnection();
 
   try {
     await conexion.beginTransaction();
+
+    const [filas] = await conexion.execute('SELECT estado FROM pedidos WHERE id = ? FOR UPDATE', [id]);
+    if (!estadosCancelables.includes(filas[0]?.estado)) {
+      await conexion.rollback();
+      return false;
+    }
 
     const [items] = await conexion.execute(
       'SELECT producto_id, cantidad FROM detalle_pedido WHERE pedido_id = ? AND producto_id IS NOT NULL',
@@ -119,14 +130,18 @@ export async function eliminar(id) {
     for (const item of items) {
       await conexion.execute('UPDATE productos SET stock = stock + ? WHERE id = ?', [item.cantidad, item.producto_id]);
     }
-
-    await conexion.execute('DELETE FROM pedidos WHERE id = ?', [id]);
+    await conexion.execute("UPDATE pedidos SET estado = 'cancelado', vence_en = NULL WHERE id = ?", [id]);
 
     await conexion.commit();
+    return true;
   } catch (error) {
     await conexion.rollback();
     throw error;
   } finally {
     conexion.release();
   }
+}
+
+export async function eliminar(id) {
+  await pool.execute('DELETE FROM pedidos WHERE id = ?', [id]);
 }
