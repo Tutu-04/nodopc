@@ -3,6 +3,7 @@
 Tienda online de hardware full stack, hecha con **React, Express y MySQL**.
 
 [![CI](https://github.com/Tutu-04/nodopc/actions/workflows/ci.yml/badge.svg)](https://github.com/Tutu-04/nodopc/actions/workflows/ci.yml)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
 ![React](https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB)
 ![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-0F172A?logo=tailwindcss&logoColor=38BDF8)
@@ -53,13 +54,14 @@ NodoPC vende componentes de PC, PC armadas, monitores y periféricos. Los visita
 
 ## Tecnologías
 
-| Parte         | Tecnologías                                                            |
-| ------------- | ---------------------------------------------------------------------- |
-| Frontend      | React 19, Vite, React Router, Zustand, Axios, Tailwind CSS 4, Recharts |
-| Backend       | Node.js, Express 5, mysql2, bcrypt, jsonwebtoken                       |
-| Base de datos | MySQL 8                                                                |
-| Calidad       | Vitest, Supertest, Testing Library, ESLint, Prettier, GitHub Actions   |
-| Entorno       | Docker Compose, nginx                                                  |
+| Parte         | Tecnologías                                                               |
+| ------------- | ------------------------------------------------------------------------- |
+| Lenguaje      | TypeScript (estricto) en el frontend, el backend, los scripts y los tests |
+| Frontend      | React 19, Vite, React Router, Zustand, Axios, Tailwind CSS 4, Recharts    |
+| Backend       | Node.js, Express 5, mysql2, bcrypt, jsonwebtoken, Nodemailer, tsx         |
+| Base de datos | MySQL 8                                                                   |
+| Calidad       | Vitest, Supertest, Testing Library, ESLint, Prettier, GitHub Actions      |
+| Entorno       | Docker Compose, nginx                                                     |
 
 ## Arquitectura
 
@@ -168,13 +170,14 @@ Todos se corren desde la carpeta principal.
 | `npm run frontend`   | Arranca la tienda con Vite                                       |
 | `npm test`           | Corre los tests del backend y del frontend                       |
 | `npm run lint`       | Revisa el código con ESLint                                      |
+| `npm run tipos`      | Revisa los tipos de TypeScript del backend y del frontend        |
 | `npm run formatear`  | Ordena el código con Prettier (`npm run formato` solo lo revisa) |
 
 ## Tests
 
 - **Backend:** Vitest y Supertest prueban la API de punta a punta contra MySQL: autenticación, permisos por rol, validaciones, stock, transacciones y métricas. Usan una base aparte, `tienda_hardware_test`, que se reinicia antes de cada archivo de tests y se crea sola la primera vez.
 - **Frontend:** Vitest y Testing Library prueban el carrito, el formato de precios y componentes como las rutas protegidas.
-- **Integración continua:** GitHub Actions corre el formato, el lint, todos los tests y el build en cada push.
+- **Integración continua:** GitHub Actions corre el formato, el lint, el chequeo de tipos, todos los tests, el build y Docker Compose en cada push.
 
 ## Estructura del proyecto
 
@@ -192,23 +195,29 @@ nodopc/
 │   ├── uploads/               Imágenes subidas (no se suben a Git)
 │   ├── tests/                 Tests de la API
 │   └── src/
-│       ├── app.js             Aplicación Express: middlewares y rutas
-│       ├── index.js           Arranque del servidor
-│       ├── config.js          Variables de entorno
-│       ├── db.js              Conexión a MySQL
-│       ├── migraciones.js     Aplica las migraciones y los datos de prueba
+│       ├── app.ts             Aplicación Express: middlewares y rutas
+│       ├── index.ts           Arranque del servidor
+│       ├── tipos.ts           Tipos del dominio: productos, pedidos, usuarios
+│       ├── config.ts          Variables de entorno
+│       ├── db.ts              Conexión a MySQL
+│       ├── migraciones.ts     Aplica las migraciones y los datos de prueba
 │       ├── routes/            Qué URL y qué método llama a cada función
 │       ├── controllers/       Validan los datos y arman la respuesta
 │       ├── models/            Consultas SQL
-│       ├── middlewares/       Token, rol y manejo de errores
-│       └── utils/             Validaciones y mensajes de error de MySQL
+│       ├── middlewares/       Token, rol, límites y manejo de errores
+│       ├── services/          Mercado Pago, correo y avisos de pedidos
+│       ├── correos/           Plantilla y textos de cada correo
+│       ├── armador/           Reglas de compatibilidad y fichas técnicas
+│       └── utils/             Validaciones, envíos, tarjetas, sesión e imágenes
 └── frontend/src/
-    ├── App.jsx                Mapa de rutas
+    ├── App.tsx                Mapa de rutas
+    ├── tipos.ts               Tipos de lo que devuelve la API
     ├── api/                   Cliente Axios que manda la cookie de sesión
     ├── store/                 Estado global con Zustand (sesión y carrito)
+    ├── hooks/                 Cuenta regresiva y revalidación de la sesión
     ├── components/            Menú, rutas protegidas, gráficos y piezas reutilizables
     ├── pages/                 Una vista por archivo
-    └── utils/                 Formato de precios y fechas, colores de los gráficos
+    └── utils/                 Formato, envíos, tarjetas, ficha técnica y colores
 ```
 
 ## Base de datos
@@ -238,9 +247,10 @@ Los cambios de estructura viven en `database/migraciones` y se aplican solos al 
 - **Pedidos con transacciones.** Crear un pedido toca tres tablas. Si algo falla en el medio, se deshace todo. Cada producto se bloquea con `SELECT ... FOR UPDATE`, así dos compras simultáneas no pueden vender la misma última unidad.
 - **Reserva de stock con vencimiento.** Un pedido sin pagar reserva el stock durante 30 minutos; después se cancela solo y el stock vuelve al catálogo. El tiempo restante lo calcula MySQL, así no depende de la zona horaria de cada máquina.
 - **Pagos que no se creen a ciegas.** Ni la vuelta de Mercado Pago ni su notificación marcan un pedido como pagado por sí solas: la API consulta el pago con su credencial y lo acredita solo si el monto y la moneda coinciden. Las notificaciones se validan con la firma HMAC de Mercado Pago, y acreditar el mismo pago dos veces no tiene efecto.
+- **TypeScript estricto en todo el proyecto.** El backend y el frontend comparten la forma de los datos (`tipos.ts` en cada uno): un pedido, un producto o el resultado del armador tienen el mismo tipo en el modelo, en el controlador y en la pantalla que los muestra. Las validaciones son _type guards_, las consultas declaran la forma de sus filas y los estados de React su tipo. En desarrollo el backend corre con `tsx`, sin compilar; para producción se compila a `dist/` en una imagen de Docker de dos etapas.
 - **Correos que no frenan nada.** Se mandan sin esperar la respuesta del servidor de correo y un error al enviarlos queda en el log sin cortar la compra. Sin SMTP se muestran en la terminal; con Docker llegan a Mailpit. Todo dato del usuario se escapa antes de ponerlo en el HTML.
 - **Recuperación de contraseña sin filtrar cuentas.** Responde igual exista o no el email, guarda solo el hash del token y cada enlace sirve una vez durante una hora.
-- **Reglas del armador separadas de Express.** `armador/reglas.js` recibe componentes y devuelve problemas: no sabe de HTTP ni de MySQL, así que se testea con objetos simples. La API las usa para verificar un armado y para marcar, antes de elegirlas, las opciones que no encajan. El frontend no repite ninguna regla.
+- **Reglas del armador separadas de Express.** `armador/reglas.ts` recibe componentes y devuelve problemas: no sabe de HTTP ni de MySQL, así que se testea con objetos simples. La API las usa para verificar un armado y para marcar, antes de elegirlas, las opciones que no encajan. El frontend no repite ninguna regla.
 - **Fichas técnicas en JSON.** Cada componente guarda sus datos en una columna JSON, porque un procesador y un gabinete no comparten campos. La API valida la ficha según el tipo de componente, y el panel arma el formulario con la misma descripción de campos.
 - **Integración sin SDK y testeable.** Mercado Pago se usa por su API REST con `fetch`. En los tests `fetch` se reemplaza, así la suite corre sin red ni cuenta.
 - **Historial intacto.** `detalle_pedido` guarda el nombre y el precio de cada producto al momento de la compra, así los pedidos viejos no cambian si después se modifica o se elimina el producto.
@@ -267,7 +277,7 @@ Los cambios de estructura viven en `database/migraciones` y se aplican solos al 
 - [x] Envíos por provincia, pagos con Mercado Pago en modo prueba y pago simulado
 - [x] Correos de bienvenida, pagos y estado de los pedidos, y recuperación de contraseña
 - [x] Armador de PC con chequeo de compatibilidad
-- [ ] Migración del frontend y el backend a TypeScript
+- [x] Frontend, backend, scripts y tests en TypeScript estricto
 
 ## Autor
 
