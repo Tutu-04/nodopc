@@ -15,6 +15,7 @@ import Dashboard from './pages/Dashboard';
 import Checkout from './pages/Checkout';
 import MisPedidos from './pages/MisPedidos';
 import PedidoDetalle from './pages/PedidoDetalle';
+import Salir from './pages/Salir';
 
 import CategoriasLista from './pages/admin/categorias/CategoriasLista';
 import CategoriaNueva from './pages/admin/categorias/CategoriaNueva';
@@ -41,6 +42,7 @@ export default function App() {
           <Route path="/catalogo/categoria/:categoriaId" element={<Catalogo />} />
           <Route path="/producto/:id" element={<ProductoDetalle />} />
           <Route path="/carrito" element={<Carrito />} />
+          <Route path="/salir" element={<Salir />} />
 
           <Route element={<RutaSoloInvitados />}>
             <Route path="/login" element={<Login />} />

@@ -11,16 +11,13 @@ function claseLink({ isActive }) {
 export default function Navbar() {
   const navigate = useNavigate();
   const usuario = useAuthStore((estado) => estado.usuario);
-  const cerrarSesion = useAuthStore((estado) => estado.cerrarSesion);
   const items = useCarritoStore((estado) => estado.items);
-  const vaciarCarrito = useCarritoStore((estado) => estado.vaciar);
 
   const [busqueda, setBusqueda] = useState('');
   const cantidadCarrito = contarProductos(items);
 
   function salir() {
-    cerrarSesion();
-    vaciarCarrito();
+    navigate('/salir');
   }
 
   function buscar(evento) {
