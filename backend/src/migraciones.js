@@ -1,9 +1,8 @@
 import fs from 'node:fs/promises';
 import mysql from 'mysql2/promise';
+import path from 'node:path';
 import { config } from './config.js';
-
-const carpetaMigraciones = new URL('../../database/migraciones/', import.meta.url);
-const archivoDatosDePrueba = new URL('../../database/semillas/datos_prueba.sql', import.meta.url);
+import { archivoDatosDePrueba, carpetaMigraciones } from './rutas.js';
 
 function conectar({ conBase = true } = {}) {
   return mysql.createConnection({
@@ -48,7 +47,7 @@ export async function aplicarMigraciones() {
     for (const archivo of archivos) {
       if (yaAplicadas.has(archivo)) continue;
 
-      const sql = await fs.readFile(new URL(archivo, carpetaMigraciones), 'utf-8');
+      const sql = await fs.readFile(path.join(carpetaMigraciones, archivo), 'utf-8');
       await conexion.query(sql);
       await conexion.query('INSERT INTO migraciones (nombre) VALUES (?)', [archivo]);
       aplicadasAhora.push(archivo);

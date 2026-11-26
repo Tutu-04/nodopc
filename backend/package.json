@@ -7,11 +7,13 @@
   "type": "module",
   "main": "src/index.js",
   "scripts": {
-    "dev": "node --watch src/index.js",
-    "start": "node src/index.js",
-    "migrar": "node scripts/migrar.js",
-    "crear-base": "node scripts/crearBase.js",
-    "preparar": "node scripts/preparar.js",
+    "dev": "tsx watch src/index.js",
+    "start": "node dist/src/index.js",
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc",
+    "migrar": "tsx scripts/migrar.js",
+    "crear-base": "tsx scripts/crearBase.js",
+    "preparar": "tsx scripts/preparar.js",
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest"
@@ -31,9 +33,21 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
+    "@types/bcrypt": "^6.0.0",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.3.0",
+    "@types/node": "^22.20.7",
+    "@types/nodemailer": "^8.0.2",
+    "@types/supertest": "^7.2.1",
     "eslint": "^9.39.5",
     "globals": "^17.14.0",
     "supertest": "^7.3.2",
+    "tsx": "^4.23.15",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.74.0",
     "vitest": "^5.1.2"
   }
 }

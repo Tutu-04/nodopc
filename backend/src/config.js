@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { fileURLToPath } from 'node:url';
+import path from 'node:path';
 
 export const config = {
   puerto: Number(process.env.PORT) || 3000,
@@ -21,7 +21,7 @@ export const config = {
     remitente: process.env.MAIL_FROM || 'NodoPC <no-responder@nodopc.local>',
     mostrarEnConsola: process.env.NODE_ENV !== 'test',
   },
-  uploadsDir: process.env.UPLOADS_DIR || fileURLToPath(new URL('../uploads', import.meta.url)),
+  uploadsDir: process.env.UPLOADS_DIR || path.resolve('uploads'),
   db: {
     host: process.env.DB_HOST,
     port: Number(process.env.DB_PORT) || 3306,
