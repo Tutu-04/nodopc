@@ -9,6 +9,9 @@ COPY backend/src ./src
 COPY backend/scripts ./scripts
 COPY database /app/database
 
+RUN mkdir -p uploads && chown node:node uploads
+USER node
+
 ENV NODE_ENV=production
 EXPOSE 3000
 
