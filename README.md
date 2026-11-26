@@ -43,7 +43,7 @@ NodoPC vende componentes de PC, PC armadas, monitores y periféricos. Los visita
 **Administrador**
 
 - Panel con métricas: ventas por mes, ventas por categoría, pedidos por estado, productos más vendidos, mejores clientes y productos con poco stock.
-- Alta, edición y baja de productos, categorías, marcas y usuarios.
+- Alta, edición y baja de productos, categorías, marcas y usuarios, con subida de imágenes y vista previa.
 - Gestión de pedidos y de su estado (pendiente, enviado, entregado).
 
 ## Tecnologías
@@ -156,7 +156,8 @@ nodopc/
 │   └── semillas/              Datos de prueba
 ├── docs/                      Diagrama de la base, capturas y documentación
 ├── backend/
-│   ├── scripts/               migrar y crear-base
+│   ├── scripts/               migrar, preparar y crear-base
+│   ├── uploads/               Imágenes subidas (no se suben a Git)
 │   ├── tests/                 Tests de la API
 │   └── src/
 │       ├── app.js             Aplicación Express: middlewares y rutas
@@ -202,6 +203,7 @@ nodopc/
 - **Historial intacto.** `detalle_pedido` guarda el nombre y el precio de cada producto al momento de la compra, así los pedidos viejos no cambian si después se modifica o se elimina el producto.
 - **Buscador sin consultas de más.** Busca cada palabra por separado en el nombre, la descripción, la marca y la categoría. Espera a que el usuario deje de escribir antes de consultar la API, y descarta las respuestas que llegan fuera de orden.
 - **Métricas accesibles.** Cada gráfico de Recharts tiene al lado su tabla con los números exactos.
+- **Imágenes validadas por su contenido.** Al subir una imagen, la API mira los primeros bytes del archivo para confirmar que es JPG, PNG o WebP, en lugar de confiar en la extensión. Al reemplazarla o eliminar el producto, se borra el archivo viejo.
 - **Carga bajo demanda.** Las páginas de administración y los gráficos se descargan solo cuando se usan: el JavaScript inicial pesa menos de la mitad.
 - **Interfaz sin librerías de componentes.** Los estilos que se repiten están definidos una sola vez en `index.css`, y los íconos son SVG propios. Si un producto no tiene foto, se muestra el ícono de su categoría.
 
@@ -218,9 +220,9 @@ nodopc/
 - [x] Levantar todo con un comando usando Docker Compose
 - [x] Seguridad: helmet, límite de intentos, sesión en cookie `httpOnly` y rol verificado en la base
 - [x] Catálogo paginado con orden y filtro por precio, Mi cuenta, menú para celulares y página 404
+- [x] Subida de imágenes desde el panel del administrador
 - [ ] Pagos con Mercado Pago en modo prueba
 - [ ] Emails de confirmación de pedido y de recuperación de contraseña
-- [ ] Subida de imágenes desde el panel del administrador
 
 ## Autor
 

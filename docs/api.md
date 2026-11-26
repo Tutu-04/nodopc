@@ -19,6 +19,8 @@ Todas las rutas empiezan con `http://localhost:3000/api`.
 | GET                    | `/productos/:id`                 | Público       | Devuelve un producto                                                                                                                             |
 | GET                    | `/productos/mas-vendidos`        | Público       | Los 3 productos con más unidades vendidas (para la portada)                                                                                      |
 | POST, PUT, DELETE      | `/productos`, `/productos/:id`   | Admin         | Crea, edita o elimina                                                                                                                            |
+| POST                   | `/productos/:id/imagen`          | Admin         | Sube la imagen del producto (campo `imagen`, JPG, PNG o WebP de hasta 2 MB) y borra la anterior                                                  |
+| DELETE                 | `/productos/:id/imagen`          | Admin         | Quita la imagen y borra el archivo                                                                                                               |
 | GET, POST, PUT, DELETE | `/usuarios`, `/usuarios/:id`     | Admin         | Gestión completa de usuarios                                                                                                                     |
 | PUT                    | `/cuenta`                        | Con sesión    | Cambia el nombre y el email propios, y renueva la cookie                                                                                         |
 | PUT                    | `/cuenta/password`               | Con sesión    | Cambia la contraseña propia; pide la actual                                                                                                      |
@@ -30,7 +32,7 @@ Todas las rutas empiezan con `http://localhost:3000/api`.
 | DELETE                 | `/pedidos/:id`                   | Dueño o admin | Elimina un pedido pendiente y devuelve el stock                                                                                                  |
 | GET                    | `/dashboard`                     | Admin         | Métricas: totales, ventas por mes, productos más vendidos, ventas por categoría, pedidos por estado, mejores clientes y productos con poco stock |
 
-Códigos de respuesta que usa la API: `200` correcto, `201` creado, `400` datos inválidos, `401` sin sesión o sesión inválida, `403` sin permiso, `404` no existe, `409` conflicto (dato repetido, registro en uso o sin stock), `429` demasiados intentos y `500` error inesperado.
+Códigos de respuesta que usa la API: `200` correcto, `201` creado, `400` datos inválidos, `401` sin sesión o sesión inválida, `403` sin permiso, `404` no existe, `409` conflicto (dato repetido, registro en uso o sin stock), `413` archivo demasiado grande, `429` demasiados intentos y `500` error inesperado.
 
 La sesión viaja en una cookie `httpOnly`. Para probar la API con Thunder Client o Postman, primero hacé el login: el programa guarda la cookie y la manda sola en los pedidos siguientes.
 
@@ -49,6 +51,10 @@ La sesión viaja en una cookie `httpOnly`. Para probar la API con Thunder Client
 | `pagina`, `porPagina`    | Página desde 1 y tamaño de 1 a 100 (por defecto 12)                      |
 
 Responde `{ productos, total, pagina, porPagina, paginas }`. Un valor inválido responde `400`.
+
+### Imágenes
+
+Las imágenes subidas se sirven desde `http://localhost:3000/uploads/productos/...`, fuera de `/api`. El campo `imagen_url` de un producto puede ser una de esas rutas, una dirección externa (`https://...`) o una ruta de `frontend/public`.
 
 ## Vistas del frontend
 
