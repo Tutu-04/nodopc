@@ -1,10 +1,66 @@
 import pool from '../db.js';
+import type { EstadoPedido, Fila } from '../tipos.js';
+
+export interface Resumen {
+  productos: number;
+  productos_poco_stock: number;
+  productos_sin_stock: number;
+  categorias: number;
+  marcas: number;
+  usuarios: number;
+  clientes: number;
+  pedidos: number;
+  pedidos_pendientes: number;
+  pedidos_para_despachar: number;
+  pedidos_cobrados: number;
+  total_vendido: number;
+  ticket_promedio: number;
+  unidades_vendidas: number;
+}
+
+export interface VentaDelMes {
+  mes: string;
+  pedidos: number;
+  total: number;
+}
+
+export interface PedidosPorEstado {
+  estado: EstadoPedido;
+  cantidad: number;
+  total: number;
+}
+
+export interface ProductoVendido {
+  producto: string;
+  unidades: number;
+  ingresos: number;
+}
+
+export interface VentaPorCategoria {
+  categoria: string;
+  unidades: number;
+  ingresos: number;
+}
+
+export interface MejorCliente {
+  cliente: string;
+  email: string;
+  pedidos: number;
+  total: number;
+}
+
+export interface ProductoConPocoStock {
+  id: number;
+  nombre: string;
+  stock: number;
+  categoria: string;
+}
 
 const COBRADO = "estado IN ('pagado', 'enviado', 'entregado')";
 const DETALLE_COBRADO = `detalle_pedido d JOIN pedidos pe ON pe.id = d.pedido_id AND pe.${COBRADO}`;
 
-export async function obtenerResumen() {
-  const [filas] = await pool.execute(`
+export async function obtenerResumen(): Promise<Resumen> {
+  const [filas] = await pool.execute<Fila<Resumen>[]>(`
     SELECT
       (SELECT COUNT(*) FROM productos)                          AS productos,
       (SELECT COUNT(*) FROM productos WHERE stock <= 5)         AS productos_poco_stock,
@@ -24,8 +80,8 @@ export async function obtenerResumen() {
   return filas[0];
 }
 
-export async function obtenerVentasPorMes() {
-  const [filas] = await pool.execute(`
+export async function obtenerVentasPorMes(): Promise<VentaDelMes[]> {
+  const [filas] = await pool.execute<Fila<VentaDelMes>[]>(`
     SELECT DATE_FORMAT(fecha, '%Y-%m') AS mes, COUNT(*) AS pedidos, SUM(total) AS total
     FROM pedidos
     WHERE ${COBRADO}
@@ -36,8 +92,8 @@ export async function obtenerVentasPorMes() {
   return filas.reverse();
 }
 
-export async function obtenerPedidosPorEstado() {
-  const [filas] = await pool.execute(`
+export async function obtenerPedidosPorEstado(): Promise<PedidosPorEstado[]> {
+  const [filas] = await pool.execute<Fila<PedidosPorEstado>[]>(`
     SELECT estado, COUNT(*) AS cantidad, SUM(total) AS total
     FROM pedidos
     GROUP BY estado
@@ -46,8 +102,8 @@ export async function obtenerPedidosPorEstado() {
   return filas;
 }
 
-export async function obtenerProductosMasVendidos() {
-  const [filas] = await pool.execute(`
+export async function obtenerProductosMasVendidos(): Promise<ProductoVendido[]> {
+  const [filas] = await pool.execute<Fila<ProductoVendido>[]>(`
     SELECT d.producto_nombre AS producto,
            SUM(d.cantidad) AS unidades,
            SUM(d.cantidad * d.precio_unitario) AS ingresos
@@ -59,8 +115,8 @@ export async function obtenerProductosMasVendidos() {
   return filas;
 }
 
-export async function obtenerVentasPorCategoria() {
-  const [filas] = await pool.execute(`
+export async function obtenerVentasPorCategoria(): Promise<VentaPorCategoria[]> {
+  const [filas] = await pool.execute<Fila<VentaPorCategoria>[]>(`
     SELECT COALESCE(c.nombre, 'Productos eliminados') AS categoria,
            SUM(d.cantidad) AS unidades,
            SUM(d.cantidad * d.precio_unitario) AS ingresos
@@ -73,8 +129,8 @@ export async function obtenerVentasPorCategoria() {
   return filas;
 }
 
-export async function obtenerMejoresClientes() {
-  const [filas] = await pool.execute(`
+export async function obtenerMejoresClientes(): Promise<MejorCliente[]> {
+  const [filas] = await pool.execute<Fila<MejorCliente>[]>(`
     SELECT u.nombre AS cliente, u.email, COUNT(p.id) AS pedidos, SUM(p.total) AS total
     FROM pedidos p
     JOIN usuarios u ON u.id = p.usuario_id
@@ -86,8 +142,8 @@ export async function obtenerMejoresClientes() {
   return filas;
 }
 
-export async function obtenerProductosPocoStock() {
-  const [filas] = await pool.execute(`
+export async function obtenerProductosPocoStock(): Promise<ProductoConPocoStock[]> {
+  const [filas] = await pool.execute<Fila<ProductoConPocoStock>[]>(`
     SELECT p.id, p.nombre, p.stock, c.nombre AS categoria
     FROM productos p
     JOIN categorias c ON c.id = p.categoria_id

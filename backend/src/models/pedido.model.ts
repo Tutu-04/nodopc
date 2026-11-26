@@ -1,8 +1,32 @@
+import type { ResultSetHeader } from 'mysql2';
 import pool from '../db.js';
 import { calcularCostoDeEnvio } from '../utils/envios.js';
+import type {
+  ErrorConStatus,
+  EstadoPedido,
+  Fila,
+  ItemPedido,
+  MedioDePago,
+  MetodoEntrega,
+  Pedido,
+  PedidoConItems,
+} from '../tipos.js';
 
-function crearError(status, mensaje) {
-  const error = new Error(mensaje);
+export interface ItemNuevo {
+  producto_id: number;
+  cantidad: number;
+}
+
+export interface DatosDePedido {
+  metodoEntrega: MetodoEntrega;
+  provincia: string | null;
+  direccionEnvio: string | null;
+  items: ItemNuevo[];
+  minutosParaPagar: number;
+}
+
+function crearError(status: number, mensaje: string): ErrorConStatus {
+  const error: ErrorConStatus = new Error(mensaje);
   error.status = status;
   return error;
 }
@@ -16,44 +40,47 @@ const SELECT_PEDIDOS = `
   JOIN usuarios u ON u.id = p.usuario_id
 `;
 
-export async function obtenerTodos() {
-  const [filas] = await pool.execute(SELECT_PEDIDOS + ' ORDER BY p.fecha DESC, p.id DESC');
+export async function obtenerTodos(): Promise<Pedido[]> {
+  const [filas] = await pool.execute<Fila<Pedido>[]>(SELECT_PEDIDOS + ' ORDER BY p.fecha DESC, p.id DESC');
   return filas;
 }
 
-export async function obtenerPorUsuario(usuarioId) {
-  const [filas] = await pool.execute(SELECT_PEDIDOS + ' WHERE p.usuario_id = ? ORDER BY p.fecha DESC, p.id DESC', [
-    usuarioId,
-  ]);
+export async function obtenerPorUsuario(usuarioId: number): Promise<Pedido[]> {
+  const [filas] = await pool.execute<Fila<Pedido>[]>(
+    SELECT_PEDIDOS + ' WHERE p.usuario_id = ? ORDER BY p.fecha DESC, p.id DESC',
+    [usuarioId]
+  );
   return filas;
 }
 
-export async function obtenerPorId(id) {
-  const [filas] = await pool.execute(SELECT_PEDIDOS + ' WHERE p.id = ?', [id]);
+export async function obtenerPorId(id: number): Promise<PedidoConItems | undefined> {
+  const [filas] = await pool.execute<Fila<Pedido>[]>(SELECT_PEDIDOS + ' WHERE p.id = ?', [id]);
   const pedido = filas[0];
   if (!pedido) return undefined;
 
-  const [items] = await pool.execute(
+  const [items] = await pool.execute<Fila<ItemPedido>[]>(
     `SELECT d.*, d.producto_nombre AS producto
      FROM detalle_pedido d
      WHERE d.pedido_id = ?`,
     [id]
   );
-  pedido.items = items;
-  return pedido;
+  return { ...pedido, items };
 }
 
-export async function crear(usuarioId, { metodoEntrega, provincia, direccionEnvio, items, minutosParaPagar }) {
+export async function crear(
+  usuarioId: number,
+  { metodoEntrega, provincia, direccionEnvio, items, minutosParaPagar }: DatosDePedido
+): Promise<number> {
   const conexion = await pool.getConnection();
 
   try {
     await conexion.beginTransaction();
 
     let subtotal = 0;
-    const renglones = [];
+    const renglones: Omit<ItemPedido, 'id' | 'pedido_id' | 'producto'>[] = [];
 
     for (const item of items) {
-      const [filas] = await conexion.execute(
+      const [filas] = await conexion.execute<Fila<{ id: number; nombre: string; precio: number; stock: number }>[]>(
         'SELECT id, nombre, precio, stock FROM productos WHERE id = ? FOR UPDATE',
         [item.producto_id]
       );
@@ -77,7 +104,7 @@ export async function crear(usuarioId, { metodoEntrega, provincia, direccionEnvi
 
     const costoEnvio = calcularCostoDeEnvio({ metodo: metodoEntrega, provincia, subtotal });
 
-    const [resultado] = await conexion.execute(
+    const [resultado] = await conexion.execute<ResultSetHeader>(
       `INSERT INTO pedidos (usuario_id, metodo_entrega, provincia, direccion_envio, costo_envio, total, vence_en)
        VALUES (?, ?, ?, ?, ?, ?, NOW() + INTERVAL ? MINUTE)`,
       [usuarioId, metodoEntrega, provincia, direccionEnvio, costoEnvio, subtotal + costoEnvio, minutosParaPagar]
@@ -105,7 +132,10 @@ export async function crear(usuarioId, { metodoEntrega, provincia, direccionEnvi
   }
 }
 
-export async function actualizar(id, { estado, direccionEnvio }) {
+export async function actualizar(
+  id: number,
+  { estado, direccionEnvio }: { estado: EstadoPedido; direccionEnvio: string | null }
+): Promise<void> {
   await pool.execute(
     `UPDATE pedidos
      SET estado = ?, direccion_envio = ?, pagado_en = IF(? = 'pagado' AND pagado_en IS NULL, NOW(), pagado_en)
@@ -114,19 +144,26 @@ export async function actualizar(id, { estado, direccionEnvio }) {
   );
 }
 
-export async function cancelar(id, estadosCancelables = ['pendiente', 'pagado']) {
+export async function cancelar(
+  id: number,
+  estadosCancelables: EstadoPedido[] = ['pendiente', 'pagado']
+): Promise<boolean> {
   const conexion = await pool.getConnection();
 
   try {
     await conexion.beginTransaction();
 
-    const [filas] = await conexion.execute('SELECT estado FROM pedidos WHERE id = ? FOR UPDATE', [id]);
-    if (!estadosCancelables.includes(filas[0]?.estado)) {
+    const [filas] = await conexion.execute<Fila<{ estado: EstadoPedido }>[]>(
+      'SELECT estado FROM pedidos WHERE id = ? FOR UPDATE',
+      [id]
+    );
+    const estado = filas[0]?.estado;
+    if (!estado || !estadosCancelables.includes(estado)) {
       await conexion.rollback();
       return false;
     }
 
-    const [items] = await conexion.execute(
+    const [items] = await conexion.execute<Fila<{ producto_id: number; cantidad: number }>[]>(
       'SELECT producto_id, cantidad FROM detalle_pedido WHERE pedido_id = ? AND producto_id IS NOT NULL',
       [id]
     );
@@ -145,24 +182,27 @@ export async function cancelar(id, estadosCancelables = ['pendiente', 'pagado'])
   }
 }
 
-export async function eliminar(id) {
+export async function eliminar(id: number): Promise<void> {
   await pool.execute('DELETE FROM pedidos WHERE id = ?', [id]);
 }
 
-export async function cancelarVencidos() {
-  const [filas] = await pool.execute(
+export async function cancelarVencidos(): Promise<number[]> {
+  const [filas] = await pool.execute<Fila<{ id: number }>[]>(
     "SELECT id FROM pedidos WHERE estado = 'pendiente' AND vence_en IS NOT NULL AND vence_en < NOW()"
   );
 
-  const cancelados = [];
+  const cancelados: number[] = [];
   for (const fila of filas) {
     if (await cancelar(fila.id, ['pendiente'])) cancelados.push(fila.id);
   }
   return cancelados;
 }
 
-export async function marcarPagado(id, { medio, pagoId }) {
-  const [resultado] = await pool.execute(
+export async function marcarPagado(
+  id: number,
+  { medio, pagoId }: { medio: MedioDePago; pagoId: string }
+): Promise<boolean> {
+  const [resultado] = await pool.execute<ResultSetHeader>(
     `UPDATE pedidos SET estado = 'pagado', medio_pago = ?, pago_id = ?, pagado_en = NOW(), vence_en = NULL
      WHERE id = ? AND estado = 'pendiente'`,
     [medio, pagoId, id]
@@ -170,6 +210,6 @@ export async function marcarPagado(id, { medio, pagoId }) {
   return resultado.affectedRows === 1;
 }
 
-export async function elegirMedioDePago(id, medio) {
+export async function elegirMedioDePago(id: number, medio: MedioDePago): Promise<void> {
   await pool.execute("UPDATE pedidos SET medio_pago = ? WHERE id = ? AND estado = 'pendiente'", [medio, id]);
 }

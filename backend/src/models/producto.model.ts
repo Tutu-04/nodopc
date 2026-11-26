@@ -1,4 +1,6 @@
+import type { ResultSetHeader } from 'mysql2';
 import pool from '../db.js';
+import type { Especificaciones, Fila, Producto } from '../tipos.js';
 
 const SELECT_PRODUCTOS = `
   SELECT p.*, c.nombre AS categoria, c.componente, m.nombre AS marca
@@ -7,7 +9,7 @@ const SELECT_PRODUCTOS = `
   JOIN marcas m ON m.id = p.marca_id
 `;
 
-const ORDENES = {
+const ORDENES: Record<string, string> = {
   recientes: 'p.id DESC',
   precio_asc: 'p.precio ASC, p.id DESC',
   precio_desc: 'p.precio DESC, p.id DESC',
@@ -16,9 +18,49 @@ const ORDENES = {
 
 export const ORDENES_VALIDOS = Object.keys(ORDENES);
 
-function armarFiltros({ categoria, marca, buscar, ids, conStock, precioMin, precioMax }) {
-  const condiciones = [];
-  const valores = [];
+export interface FiltrosDeProductos {
+  categoria?: number;
+  marca?: number;
+  buscar?: string;
+  ids?: number[];
+  conStock?: boolean;
+  precioMin?: number;
+  precioMax?: number;
+}
+
+export interface Busqueda extends FiltrosDeProductos {
+  orden?: string;
+  pagina?: number;
+  porPagina?: number;
+}
+
+export interface DatosDeProducto {
+  nombre: string;
+  descripcion: string | null;
+  especificaciones: Especificaciones | null;
+  precio: number;
+  stock: number;
+  imagen_url: string | null;
+  categoria_id: number;
+  marca_id: number;
+}
+
+export interface ProductoMasVendido {
+  id: number;
+  nombre: string;
+  precio: number;
+  stock: number;
+  imagen_url: string | null;
+  categoria: string;
+  vendidos: number;
+}
+
+function armarFiltros({ categoria, marca, buscar, ids, conStock, precioMin, precioMax }: FiltrosDeProductos): {
+  where: string;
+  valores: (string | number)[];
+} {
+  const condiciones: string[] = [];
+  const valores: (string | number)[] = [];
 
   if (categoria) {
     condiciones.push('p.categoria_id = ?');
@@ -57,10 +99,15 @@ function armarFiltros({ categoria, marca, buscar, ids, conStock, precioMin, prec
   return { where, valores };
 }
 
-export async function buscar({ orden = 'recientes', pagina = 1, porPagina = 12, ...filtros }) {
+export async function buscar({
+  orden = 'recientes',
+  pagina = 1,
+  porPagina = 12,
+  ...filtros
+}: Busqueda): Promise<{ productos: Producto[]; total: number }> {
   const { where, valores } = armarFiltros(filtros);
 
-  const [[{ total }]] = await pool.query(
+  const [[{ total }]] = await pool.query<Fila<{ total: number }>[]>(
     `SELECT COUNT(*) AS total
      FROM productos p
      JOIN categorias c ON c.id = p.categoria_id
@@ -68,21 +115,20 @@ export async function buscar({ orden = 'recientes', pagina = 1, porPagina = 12, 
     valores
   );
 
-  const [productos] = await pool.query(`${SELECT_PRODUCTOS}${where} ORDER BY ${ORDENES[orden]} LIMIT ? OFFSET ?`, [
-    ...valores,
-    porPagina,
-    (pagina - 1) * porPagina,
-  ]);
+  const [productos] = await pool.query<Fila<Producto>[]>(
+    `${SELECT_PRODUCTOS}${where} ORDER BY ${ORDENES[orden]} LIMIT ? OFFSET ?`,
+    [...valores, porPagina, (pagina - 1) * porPagina]
+  );
 
   return { productos, total };
 }
 
-export async function obtenerPorId(id) {
-  const [filas] = await pool.execute(SELECT_PRODUCTOS + ' WHERE p.id = ?', [id]);
+export async function obtenerPorId(id: number): Promise<Producto | undefined> {
+  const [filas] = await pool.execute<Fila<Producto>[]>(SELECT_PRODUCTOS + ' WHERE p.id = ?', [id]);
   return filas[0];
 }
 
-function aJson(especificaciones) {
+function aJson(especificaciones: Especificaciones | null): string | null {
   return especificaciones ? JSON.stringify(especificaciones) : null;
 }
 
@@ -95,8 +141,8 @@ export async function crear({
   imagen_url,
   categoria_id,
   marca_id,
-}) {
-  const [resultado] = await pool.execute(
+}: DatosDeProducto): Promise<number> {
+  const [resultado] = await pool.execute<ResultSetHeader>(
     `INSERT INTO productos (nombre, descripcion, especificaciones, precio, stock, imagen_url, categoria_id, marca_id)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [nombre, descripcion, aJson(especificaciones), precio, stock, imagen_url, categoria_id, marca_id]
@@ -105,9 +151,9 @@ export async function crear({
 }
 
 export async function actualizar(
-  id,
-  { nombre, descripcion, especificaciones, precio, stock, imagen_url, categoria_id, marca_id }
-) {
+  id: number,
+  { nombre, descripcion, especificaciones, precio, stock, imagen_url, categoria_id, marca_id }: DatosDeProducto
+): Promise<void> {
   await pool.execute(
     `UPDATE productos
      SET nombre = ?, descripcion = ?, especificaciones = ?, precio = ?, stock = ?, imagen_url = ?,
@@ -117,17 +163,17 @@ export async function actualizar(
   );
 }
 
-export async function actualizarImagen(id, imagenUrl) {
+export async function actualizarImagen(id: number, imagenUrl: string | null): Promise<void> {
   await pool.execute('UPDATE productos SET imagen_url = ? WHERE id = ?', [imagenUrl, id]);
 }
 
-export async function eliminar(id) {
-  const [resultado] = await pool.execute('DELETE FROM productos WHERE id = ?', [id]);
+export async function eliminar(id: number): Promise<number> {
+  const [resultado] = await pool.execute<ResultSetHeader>('DELETE FROM productos WHERE id = ?', [id]);
   return resultado.affectedRows;
 }
 
-export async function obtenerMasVendidos() {
-  const [filas] = await pool.execute(
+export async function obtenerMasVendidos(): Promise<ProductoMasVendido[]> {
+  const [filas] = await pool.execute<Fila<ProductoMasVendido>[]>(
     `SELECT p.id, p.nombre, p.precio, p.stock, p.imagen_url, c.nombre AS categoria,
             SUM(d.cantidad) AS vendidos
      FROM detalle_pedido d
