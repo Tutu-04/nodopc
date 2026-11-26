@@ -21,7 +21,9 @@ export function manejarErrores(err, req, res, next) {
     return res.status(400).json({ error: 'La categoría, la marca o el producto indicado no existe' });
   }
   if (err.code === 'ER_CHECK_CONSTRAINT_VIOLATED' || err.code === 'ER_CONSTRAINT_FAILED') {
-    return res.status(400).json({ error: 'Algún dato no cumple las restricciones de la base (por ejemplo, stock negativo)' });
+    return res
+      .status(400)
+      .json({ error: 'Algún dato no cumple las restricciones de la base (por ejemplo, stock negativo)' });
   }
 
   console.error(err);

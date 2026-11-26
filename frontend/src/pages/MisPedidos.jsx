@@ -81,7 +81,11 @@ export default function MisPedidos() {
                         Ver
                       </Link>
                       {pedido.estado === 'pendiente' && (
-                        <BotonEliminar onConfirmar={() => cancelar(pedido)} texto="Cancelar" textoConfirmar="Sí, cancelar" />
+                        <BotonEliminar
+                          onConfirmar={() => cancelar(pedido)}
+                          texto="Cancelar"
+                          textoConfirmar="Sí, cancelar"
+                        />
                       )}
                     </div>
                   </td>

@@ -18,10 +18,9 @@ export async function obtenerTodos() {
 }
 
 export async function obtenerPorUsuario(usuarioId) {
-  const [filas] = await pool.execute(
-    SELECT_PEDIDOS + ' WHERE p.usuario_id = ? ORDER BY p.fecha DESC, p.id DESC',
-    [usuarioId]
-  );
+  const [filas] = await pool.execute(SELECT_PEDIDOS + ' WHERE p.usuario_id = ? ORDER BY p.fecha DESC, p.id DESC', [
+    usuarioId,
+  ]);
   return filas;
 }
 
@@ -50,10 +49,9 @@ export async function crear(usuarioId, direccionEnvio, items) {
     const renglones = [];
 
     for (const item of items) {
-      const [filas] = await conexion.execute(
-        'SELECT id, nombre, precio, stock FROM productos WHERE id = ?',
-        [item.producto_id]
-      );
+      const [filas] = await conexion.execute('SELECT id, nombre, precio, stock FROM productos WHERE id = ?', [
+        item.producto_id,
+      ]);
       const producto = filas[0];
 
       if (!producto) {
@@ -83,10 +81,10 @@ export async function crear(usuarioId, direccionEnvio, items) {
         'INSERT INTO detalle_pedido (pedido_id, producto_id, producto_nombre, cantidad, precio_unitario) VALUES (?, ?, ?, ?, ?)',
         [pedidoId, renglon.producto_id, renglon.producto_nombre, renglon.cantidad, renglon.precio_unitario]
       );
-      await conexion.execute(
-        'UPDATE productos SET stock = stock - ? WHERE id = ?',
-        [renglon.cantidad, renglon.producto_id]
-      );
+      await conexion.execute('UPDATE productos SET stock = stock - ? WHERE id = ?', [
+        renglon.cantidad,
+        renglon.producto_id,
+      ]);
     }
 
     await conexion.commit();
@@ -100,10 +98,7 @@ export async function crear(usuarioId, direccionEnvio, items) {
 }
 
 export async function actualizar(id, { estado, direccion_envio }) {
-  await pool.execute(
-    'UPDATE pedidos SET estado = ?, direccion_envio = ? WHERE id = ?',
-    [estado, direccion_envio, id]
-  );
+  await pool.execute('UPDATE pedidos SET estado = ?, direccion_envio = ? WHERE id = ?', [estado, direccion_envio, id]);
 }
 
 export async function eliminar(id) {
@@ -117,10 +112,7 @@ export async function eliminar(id) {
       [id]
     );
     for (const item of items) {
-      await conexion.execute(
-        'UPDATE productos SET stock = stock + ? WHERE id = ?',
-        [item.cantidad, item.producto_id]
-      );
+      await conexion.execute('UPDATE productos SET stock = stock + ? WHERE id = ?', [item.cantidad, item.producto_id]);
     }
 
     await conexion.execute('DELETE FROM pedidos WHERE id = ?', [id]);

@@ -44,11 +44,9 @@ export async function iniciarSesion(req, res) {
     return res.status(401).json({ error: 'Email o contraseña incorrectos' });
   }
 
-  const token = jwt.sign(
-    { id: usuario.id, nombre: usuario.nombre, rol: usuario.rol },
-    process.env.JWT_SECRET,
-    { expiresIn: '8h' }
-  );
+  const token = jwt.sign({ id: usuario.id, nombre: usuario.nombre, rol: usuario.rol }, process.env.JWT_SECRET, {
+    expiresIn: '8h',
+  });
 
   res.json({
     token,

@@ -16,38 +16,41 @@ NodoPC vende componentes de PC, PC armadas, monitores y periféricos. Los visita
 
 ## Capturas
 
-| Inicio | Catálogo |
-|---|---|
-| ![Inicio](docs/capturas/inicio.png) | ![Catálogo con filtros](docs/capturas/catalogo.png) |
-| **Detalle de producto** | **Carrito** |
-| ![Detalle de producto](docs/capturas/detalle.png) | ![Carrito](docs/capturas/carrito.png) |
-| **Gestión de productos** | **Panel del administrador** |
+| Inicio                                                     | Catálogo                                             |
+| ---------------------------------------------------------- | ---------------------------------------------------- |
+| ![Inicio](docs/capturas/inicio.png)                        | ![Catálogo con filtros](docs/capturas/catalogo.png)  |
+| **Detalle de producto**                                    | **Carrito**                                          |
+| ![Detalle de producto](docs/capturas/detalle.png)          | ![Carrito](docs/capturas/carrito.png)                |
+| **Gestión de productos**                                   | **Panel del administrador**                          |
 | ![Gestión de productos](docs/capturas/admin-productos.png) | ![Panel con métricas](docs/capturas/panel-admin.png) |
 
 ## Funcionalidades
 
 **Visitante**
+
 - Portada con los productos más vendidos, las categorías y las últimas novedades.
 - Catálogo con búsqueda por palabras y filtros por categoría, marca y stock.
 - Carrito que se guarda en el navegador y se actualiza con el precio y el stock reales.
 
 **Cliente**
+
 - Registro e inicio de sesión.
 - Compra con dirección de envío y seguimiento de sus pedidos.
 - Cancelación de pedidos pendientes, que devuelve el stock.
 
 **Administrador**
+
 - Panel con métricas: ventas por mes, ventas por categoría, pedidos por estado, productos más vendidos, mejores clientes y productos con poco stock.
 - Alta, edición y baja de productos, categorías, marcas y usuarios.
 - Gestión de pedidos y de su estado (pendiente, enviado, entregado).
 
 ## Tecnologías
 
-| Parte | Tecnologías |
-|---|---|
-| Frontend | React 19, Vite, React Router, Zustand, Axios, Tailwind CSS 4, Recharts |
-| Backend | Node.js, Express 5, mysql2, bcrypt, jsonwebtoken |
-| Base de datos | MySQL 8 |
+| Parte         | Tecnologías                                                            |
+| ------------- | ---------------------------------------------------------------------- |
+| Frontend      | React 19, Vite, React Router, Zustand, Axios, Tailwind CSS 4, Recharts |
+| Backend       | Node.js, Express 5, mysql2, bcrypt, jsonwebtoken                       |
+| Base de datos | MySQL 8                                                                |
 
 ## Arquitectura
 
@@ -81,10 +84,10 @@ La [guía de instalación](GUIA_DE_INSTALACION.md) explica cada paso en Windows 
 
 ### Usuarios de prueba
 
-| Rol | Email | Contraseña |
-|---|---|---|
-| Administrador | `admin@nodopc.com` | `admin123` |
-| Cliente | `cliente@nodopc.com` | `cliente123` |
+| Rol           | Email                | Contraseña   |
+| ------------- | -------------------- | ------------ |
+| Administrador | `admin@nodopc.com`   | `admin123`   |
+| Cliente       | `cliente@nodopc.com` | `cliente123` |
 
 Hay otros 5 clientes con pedidos de varios meses (`maria@`, `lucas@`, `sofia@`, `julian@` y `valentina@nodopc.com`, todos con `cliente123`), para que el panel de métricas tenga datos.
 
@@ -117,13 +120,13 @@ nodopc/
 
 ![Diagrama entidad-relación](docs/diagrama-er.png)
 
-| Tabla | Guarda |
-|---|---|
-| `usuarios` | Cuentas, con su rol y el hash de la contraseña |
-| `categorias` | Tipos de producto |
-| `marcas` | Fabricantes |
-| `productos` | Lo que vende la tienda, con precio y stock |
-| `pedidos` | Cada compra, con su estado y su total |
+| Tabla            | Guarda                                                                           |
+| ---------------- | -------------------------------------------------------------------------------- |
+| `usuarios`       | Cuentas, con su rol y el hash de la contraseña                                   |
+| `categorias`     | Tipos de producto                                                                |
+| `marcas`         | Fabricantes                                                                      |
+| `productos`      | Lo que vende la tienda, con precio y stock                                       |
+| `pedidos`        | Cada compra, con su estado y su total                                            |
 | `detalle_pedido` | Los productos de cada pedido, con el nombre y el precio del momento de la compra |
 
 ## Decisiones técnicas

@@ -20,7 +20,9 @@ import MensajeError from '../components/MensajeError';
 const CATEGORIAS_EN_TORTA = 5;
 
 function Muestra({ color }) {
-  return <span className="mr-2 inline-block size-3 shrink-0 rounded-full" style={{ background: color }} aria-hidden="true" />;
+  return (
+    <span className="mr-2 inline-block size-3 shrink-0 rounded-full" style={{ background: color }} aria-hidden="true" />
+  );
 }
 
 function capitalizar(texto) {
@@ -98,7 +100,10 @@ export default function DashboardAdmin() {
         <Dato titulo="Clientes" valor={resumen.clientes} />
         <Dato titulo="Pedidos pendientes" valor={resumen.pedidos_pendientes} />
         <Dato titulo="Productos" valor={resumen.productos} />
-        <Dato titulo="Sin stock / poco stock" valor={`${resumen.productos_sin_stock} / ${resumen.productos_poco_stock}`} />
+        <Dato
+          titulo="Sin stock / poco stock"
+          valor={`${resumen.productos_sin_stock} / ${resumen.productos_poco_stock}`}
+        />
       </div>
 
       <Seccion titulo="Ventas por mes" descripcion="Facturación de los últimos 6 meses con pedidos.">

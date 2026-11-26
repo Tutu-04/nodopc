@@ -1,6 +1,7 @@
 const ICONOS = {
   procesador: 'M7 7h10v10H7z M10 10h4v4h-4z M9 2v3 M15 2v3 M9 19v3 M15 19v3 M2 9h3 M2 15h3 M19 9h3 M19 15h3',
-  video: 'M2 7h20v10H2z M8.5 9.5a2.5 2.5 0 1 0 0 5a2.5 2.5 0 1 0 0-5 M15.5 9.5a2.5 2.5 0 1 0 0 5a2.5 2.5 0 1 0 0-5 M5 17v3 M9 17v2',
+  video:
+    'M2 7h20v10H2z M8.5 9.5a2.5 2.5 0 1 0 0 5a2.5 2.5 0 1 0 0-5 M15.5 9.5a2.5 2.5 0 1 0 0 5a2.5 2.5 0 1 0 0-5 M5 17v3 M9 17v2',
   mother: 'M4 4h16v16H4z M8 8h5v5H8z M16 7v2 M16 12v5 M7 16h4',
   ram: 'M3 8h18v8H3z M7 11v2 M11 11v2 M15 11v2 M6 16v3 M18 16v3',
   disco: 'M4 5h16v14H4z M4 13h16 M8 16.5h.01 M12 16.5h4',
@@ -12,10 +13,7 @@ const ICONOS = {
 };
 
 function normalizar(texto) {
-  return (texto ?? '')
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '');
+  return (texto ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 }
 
 function elegirIcono(categoria) {
