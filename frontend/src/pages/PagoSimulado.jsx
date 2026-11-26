@@ -2,35 +2,13 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import api, { obtenerMensajeError } from '../api/api';
 import { formatearPrecio } from '../utils/formato';
-import {
-  TARJETA_DE_PRUEBA,
-  formatearCuentaRegresiva,
-  formatearNumeroDeTarjeta,
-  formatearVencimiento,
-} from '../utils/tarjetas';
-import { useCuentaRegresiva } from '../hooks/useCuentaRegresiva';
+import { TARJETA_DE_PRUEBA, formatearNumeroDeTarjeta, formatearVencimiento } from '../utils/tarjetas';
 import Cargando from '../components/Cargando';
 import MensajeError from '../components/MensajeError';
 import Icono from '../components/Icono';
+import TiempoParaPagar from '../components/TiempoParaPagar';
 
 const TARJETA_VACIA = { numero: '', titular: '', vencimiento: '', cvv: '' };
-
-function TiempoParaPagar({ segundos }) {
-  const restantes = useCuentaRegresiva(segundos);
-  if (restantes === null) return null;
-
-  return (
-    <p className="text-sm text-neutral-600">
-      {restantes > 0 ? (
-        <>
-          Tenés <strong className="tabular-nums">{formatearCuentaRegresiva(restantes)}</strong> para completar el pago.
-        </>
-      ) : (
-        <strong className="text-red-700">Se terminó el tiempo para pagar este pedido.</strong>
-      )}
-    </p>
-  );
-}
 
 export default function PagoSimulado() {
   const { id } = useParams();
