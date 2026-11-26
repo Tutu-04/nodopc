@@ -23,6 +23,10 @@ export async function obtenerOpciones(req, res) {
   });
 }
 
+export function obtenerCampos(req, res) {
+  res.json(CAMPOS);
+}
+
 export async function verificar(req, res) {
   const pedida = req.body?.seleccion ?? {};
   if (typeof pedida !== 'object' || Array.isArray(pedida)) {

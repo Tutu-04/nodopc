@@ -1,4 +1,6 @@
 import * as Producto from '../models/producto.model.js';
+import * as Categoria from '../models/categoria.model.js';
+import { validarEspecificaciones } from '../armador/especificaciones.js';
 import { esTextoValido, esNumero, esEnteroValido } from '../utils/validaciones.js';
 import { borrarImagen, detectarTipoDeImagen, guardarImagen } from '../utils/imagenes.js';
 
@@ -110,13 +112,23 @@ export async function obtener(req, res) {
   res.json(producto);
 }
 
+async function leerEspecificaciones(categoriaId, especificaciones) {
+  const categoria = await Categoria.obtenerPorId(categoriaId);
+  return validarEspecificaciones(categoria?.componente, especificaciones);
+}
+
 export async function crear(req, res) {
   const error = validar(req.body);
   if (error) {
     return res.status(400).json({ error });
   }
 
-  const id = await Producto.crear(prepararDatos(req.body));
+  const especificaciones = await leerEspecificaciones(req.body.categoria_id, req.body.especificaciones);
+  if (especificaciones.error) {
+    return res.status(400).json({ error: especificaciones.error });
+  }
+
+  const id = await Producto.crear({ ...prepararDatos(req.body), especificaciones: especificaciones.valor });
   res.status(201).json(await Producto.obtenerPorId(id));
 }
 
@@ -133,7 +145,16 @@ export async function actualizar(req, res) {
     return res.status(400).json({ error });
   }
 
-  const datos = prepararDatos(req.body);
+  const mismaCategoria = Number(req.body.categoria_id) === existente.categoria_id;
+  const especificaciones = await leerEspecificaciones(
+    req.body.categoria_id,
+    req.body.especificaciones === undefined && mismaCategoria ? existente.especificaciones : req.body.especificaciones
+  );
+  if (especificaciones.error) {
+    return res.status(400).json({ error: especificaciones.error });
+  }
+
+  const datos = { ...prepararDatos(req.body), especificaciones: especificaciones.valor };
   await Producto.actualizar(id, datos);
   if (existente.imagen_url !== datos.imagen_url) {
     await borrarImagen(existente.imagen_url);

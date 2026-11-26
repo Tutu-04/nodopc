@@ -8,27 +8,27 @@ export const TIPOS_DE_MEMORIA = ['DDR4', 'DDR5'];
 
 export const CAMPOS = {
   procesador: {
-    socket: { tipo: TEXTO },
-    consumo: { tipo: NUMERO },
-    graficos_integrados: { tipo: SI_O_NO },
+    socket: { tipo: TEXTO, etiqueta: 'Socket' },
+    consumo: { tipo: NUMERO, etiqueta: 'Consumo máximo (W)' },
+    graficos_integrados: { tipo: SI_O_NO, etiqueta: 'Gráficos integrados' },
   },
   motherboard: {
-    socket: { tipo: TEXTO },
-    memoria: { tipo: TEXTO, opciones: TIPOS_DE_MEMORIA },
-    formato: { tipo: TEXTO, opciones: FORMATOS },
+    socket: { tipo: TEXTO, etiqueta: 'Socket' },
+    memoria: { tipo: TEXTO, etiqueta: 'Tipo de memoria', opciones: TIPOS_DE_MEMORIA },
+    formato: { tipo: TEXTO, etiqueta: 'Formato', opciones: FORMATOS },
   },
   memoria: {
-    memoria: { tipo: TEXTO, opciones: TIPOS_DE_MEMORIA },
+    memoria: { tipo: TEXTO, etiqueta: 'Tipo de memoria', opciones: TIPOS_DE_MEMORIA },
   },
   placa_de_video: {
-    consumo: { tipo: NUMERO },
+    consumo: { tipo: NUMERO, etiqueta: 'Consumo máximo (W)' },
   },
   almacenamiento: {},
   fuente: {
-    potencia: { tipo: NUMERO },
+    potencia: { tipo: NUMERO, etiqueta: 'Potencia (W)' },
   },
   gabinete: {
-    formatos: { tipo: LISTA, opciones: FORMATOS },
+    formatos: { tipo: LISTA, etiqueta: 'Formatos de motherboard que admite', opciones: FORMATOS },
   },
 };
 
@@ -46,4 +46,27 @@ export function estanCompletas(componente, especificaciones) {
   const campos = CAMPOS[componente];
   if (!campos) return false;
   return Object.entries(campos).every(([campo, regla]) => valorValido(especificaciones?.[campo], regla));
+}
+
+export function validarEspecificaciones(componente, especificaciones) {
+  const campos = CAMPOS[componente];
+  if (!campos || Object.keys(campos).length === 0) {
+    return { valor: null };
+  }
+  if (especificaciones === undefined || especificaciones === null) {
+    return { valor: null };
+  }
+  if (typeof especificaciones !== 'object' || Array.isArray(especificaciones)) {
+    return { error: 'Las especificaciones tienen que ser un objeto' };
+  }
+
+  const valor = {};
+  for (const [campo, regla] of Object.entries(campos)) {
+    const dato = typeof especificaciones[campo] === 'string' ? especificaciones[campo].trim() : especificaciones[campo];
+    if (!valorValido(dato, regla)) {
+      return { error: `Revisá el dato "${regla.etiqueta}" de la ficha técnica` };
+    }
+    valor[campo] = dato;
+  }
+  return { valor };
 }

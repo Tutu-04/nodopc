@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import pool from '../src/db.js';
 import { reiniciarBase } from '../src/migraciones.js';
-import { api } from './ayudantes.js';
+import { api, conSesion, ingresarComoAdmin } from './ayudantes.js';
 
 function verificar(seleccion) {
   return api().post('/api/armador/verificar').send({ seleccion });
@@ -116,5 +116,62 @@ describe('POST /api/armador/verificar', () => {
     ['un producto que no es componente', { procesador: 20 }],
   ])('rechaza %s', async (_caso, seleccion) => {
     expect((await verificar(seleccion)).status).toBe(400);
+  });
+});
+
+describe('Especificaciones de los productos', () => {
+  let admin;
+  const base = { nombre: 'Procesador AMD Ryzen 7 9700X', precio: 499999, stock: 4, categoria_id: 1, marca_id: 1 };
+  const fichaValida = { socket: 'AM5', consumo: 88, graficos_integrados: true };
+
+  beforeAll(async () => {
+    admin = await ingresarComoAdmin();
+  });
+
+  function crear(datos) {
+    return api().post('/api/productos').set(conSesion(admin)).send(datos);
+  }
+
+  it('describe los campos de cada componente', async () => {
+    const respuesta = await api().get('/api/armador/campos');
+    expect(respuesta.body.fuente).toEqual({ potencia: { tipo: 'numero', etiqueta: 'Potencia (W)' } });
+    expect(respuesta.body.almacenamiento).toEqual({});
+  });
+
+  it('el detalle de un producto trae su ficha técnica y su componente', async () => {
+    const respuesta = await api().get('/api/productos/28');
+    expect(respuesta.body).toMatchObject({
+      componente: 'motherboard',
+      especificaciones: { socket: 'AM5', memoria: 'DDR5', formato: 'ATX' },
+    });
+  });
+
+  it('valida la ficha según el componente de la categoría', async () => {
+    expect((await crear({ ...base, especificaciones: { ...fichaValida, consumo: -5 } })).status).toBe(400);
+    expect((await crear({ ...base, especificaciones: { socket: 'AM5' } })).body.error).toMatch(/Consumo máximo/);
+    expect((await crear({ ...base, especificaciones: 'AM5' })).status).toBe(400);
+
+    const creado = await crear({ ...base, especificaciones: { ...fichaValida, socket: ' AM5 ', extra: 'se ignora' } });
+    expect(creado.status).toBe(201);
+    expect(creado.body.especificaciones).toEqual(fichaValida);
+
+    const armador = await api().get('/api/armador');
+    expect(armador.body.pasos[0].productos.map((p) => p.id)).toContain(creado.body.id);
+  });
+
+  it('un producto que no es componente no guarda ficha', async () => {
+    const creado = await crear({ ...base, nombre: 'Mouse X', categoria_id: 8, especificaciones: fichaValida });
+    expect(creado.body.especificaciones).toBeNull();
+  });
+
+  it('al editar sin mandar la ficha, se conserva', async () => {
+    const { body: producto } = await api().get('/api/productos/30');
+    const editado = await api()
+      .put('/api/productos/30')
+      .set(conSesion(admin))
+      .send({ ...producto, precio: 115999, especificaciones: undefined });
+
+    expect(editado.status).toBe(200);
+    expect(editado.body).toMatchObject({ precio: 115999, especificaciones: { potencia: 650 } });
   });
 });
