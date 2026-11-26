@@ -1,6 +1,8 @@
+import { Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
+import Cargando from './Cargando';
 import useRevalidarSesion from '../hooks/useRevalidarSesion';
 
 export default function Layout() {
@@ -13,7 +15,9 @@ export default function Layout() {
       </p>
       <Navbar />
       <main className="contenedor flex-1 py-10">
-        <Outlet />
+        <Suspense fallback={<Cargando />}>
+          <Outlet />
+        </Suspense>
       </main>
       <Footer />
     </div>

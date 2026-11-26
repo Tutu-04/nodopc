@@ -7,7 +7,16 @@ const SELECT_PRODUCTOS = `
   JOIN marcas m ON m.id = p.marca_id
 `;
 
-export async function obtenerTodos({ categoria, marca, buscar }) {
+const ORDENES = {
+  recientes: 'p.id DESC',
+  precio_asc: 'p.precio ASC, p.id DESC',
+  precio_desc: 'p.precio DESC, p.id DESC',
+  nombre: 'p.nombre ASC, p.id DESC',
+};
+
+export const ORDENES_VALIDOS = Object.keys(ORDENES);
+
+function armarFiltros({ categoria, marca, buscar, ids, conStock, precioMin, precioMax }) {
   const condiciones = [];
   const valores = [];
 
@@ -19,6 +28,21 @@ export async function obtenerTodos({ categoria, marca, buscar }) {
     condiciones.push('p.marca_id = ?');
     valores.push(marca);
   }
+  if (ids?.length) {
+    condiciones.push(`p.id IN (${ids.map(() => '?').join(', ')})`);
+    valores.push(...ids);
+  }
+  if (conStock) {
+    condiciones.push('p.stock > 0');
+  }
+  if (precioMin !== undefined) {
+    condiciones.push('p.precio >= ?');
+    valores.push(precioMin);
+  }
+  if (precioMax !== undefined) {
+    condiciones.push('p.precio <= ?');
+    valores.push(precioMax);
+  }
   if (buscar) {
     const palabras = buscar.trim().split(/\s+/).filter(Boolean).slice(0, 6);
 
@@ -29,14 +53,28 @@ export async function obtenerTodos({ categoria, marca, buscar }) {
     }
   }
 
-  let sql = SELECT_PRODUCTOS;
-  if (condiciones.length > 0) {
-    sql += ' WHERE ' + condiciones.join(' AND ');
-  }
-  sql += ' ORDER BY p.id DESC';
+  const where = condiciones.length > 0 ? ' WHERE ' + condiciones.join(' AND ') : '';
+  return { where, valores };
+}
 
-  const [filas] = await pool.execute(sql, valores);
-  return filas;
+export async function buscar({ orden = 'recientes', pagina = 1, porPagina = 12, ...filtros }) {
+  const { where, valores } = armarFiltros(filtros);
+
+  const [[{ total }]] = await pool.query(
+    `SELECT COUNT(*) AS total
+     FROM productos p
+     JOIN categorias c ON c.id = p.categoria_id
+     JOIN marcas m ON m.id = p.marca_id${where}`,
+    valores
+  );
+
+  const [productos] = await pool.query(`${SELECT_PRODUCTOS}${where} ORDER BY ${ORDENES[orden]} LIMIT ? OFFSET ?`, [
+    ...valores,
+    porPagina,
+    (pagina - 1) * porPagina,
+  ]);
+
+  return { productos, total };
 }
 
 export async function obtenerPorId(id) {

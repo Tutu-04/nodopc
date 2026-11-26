@@ -1,7 +1,13 @@
 import pool from '../db.js';
 
 export async function obtenerTodas() {
-  const [filas] = await pool.execute('SELECT * FROM categorias ORDER BY nombre');
+  const [filas] = await pool.execute(
+    `SELECT c.*, COUNT(p.id) AS cantidad_productos
+     FROM categorias c
+     LEFT JOIN productos p ON p.categoria_id = c.id
+     GROUP BY c.id
+     ORDER BY c.nombre`
+  );
   return filas;
 }
 

@@ -92,6 +92,9 @@ export default function DashboardCliente() {
         <Link to="/carrito" className="btn btn-secundario">
           Ver mi carrito
         </Link>
+        <Link to="/cuenta" className="btn btn-secundario">
+          Mi cuenta
+        </Link>
       </div>
     </div>
   );

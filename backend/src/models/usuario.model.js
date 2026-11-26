@@ -17,6 +17,15 @@ export async function obtenerPorEmail(email) {
   return filas[0];
 }
 
+export async function obtenerHashPassword(id) {
+  const [filas] = await pool.execute('SELECT password FROM usuarios WHERE id = ?', [id]);
+  return filas[0]?.password;
+}
+
+export async function actualizarDatosPersonales(id, { nombre, email }) {
+  await pool.execute('UPDATE usuarios SET nombre = ?, email = ? WHERE id = ?', [nombre, email, id]);
+}
+
 export async function crear({ nombre, email, password, rol }) {
   const [resultado] = await pool.execute('INSERT INTO usuarios (nombre, email, password, rol) VALUES (?, ?, ?, ?)', [
     nombre,

@@ -19,14 +19,62 @@ beforeAll(async () => {
   admin = await ingresarComoAdmin();
 });
 
+async function listar(filtros = '') {
+  const respuesta = await api().get(`/api/productos${filtros}`);
+  return respuesta.body;
+}
+
 describe('Listado y búsqueda', () => {
-  it('devuelve todos los productos, del más nuevo al más viejo', async () => {
+  it('devuelve la primera página, del más nuevo al más viejo', async () => {
     const respuesta = await api().get('/api/productos');
     expect(respuesta.status).toBe(200);
-    expect(respuesta.body).toHaveLength(24);
-    expect(respuesta.body[0].id).toBe(24);
-    expect(typeof respuesta.body[0].precio).toBe('number');
-    expect(respuesta.body[0].categoria).toBeTruthy();
+    expect(respuesta.body).toMatchObject({ total: 24, pagina: 1, porPagina: 12, paginas: 2 });
+    expect(respuesta.body.productos).toHaveLength(12);
+    expect(respuesta.body.productos[0].id).toBe(24);
+    expect(typeof respuesta.body.productos[0].precio).toBe('number');
+    expect(respuesta.body.productos[0].categoria).toBeTruthy();
+  });
+
+  it('pagina sin repetir ni saltear productos', async () => {
+    const primera = await listar('?porPagina=10&pagina=1');
+    const segunda = await listar('?porPagina=10&pagina=2');
+    const tercera = await listar('?porPagina=10&pagina=3');
+    const ids = [...primera.productos, ...segunda.productos, ...tercera.productos].map((producto) => producto.id);
+
+    expect(tercera.productos).toHaveLength(4);
+    expect(new Set(ids).size).toBe(24);
+  });
+
+  it.each([
+    ['precio_asc', (a, b) => a.precio - b.precio],
+    ['precio_desc', (a, b) => b.precio - a.precio],
+    ['nombre', (a, b) => a.nombre.localeCompare(b.nombre, 'es')],
+  ])('ordena por %s', async (orden, comparar) => {
+    const { productos } = await listar(`?orden=${orden}&porPagina=100`);
+    expect(productos).toEqual([...productos].sort(comparar));
+  });
+
+  it('filtra por rango de precio y por stock', async () => {
+    const { productos } = await listar('?precioMin=100000&precioMax=300000&conStock=1&porPagina=100');
+    expect(productos.length).toBeGreaterThan(0);
+    expect(productos.every((producto) => producto.precio >= 100000 && producto.precio <= 300000)).toBe(true);
+    expect(productos.every((producto) => producto.stock > 0)).toBe(true);
+  });
+
+  it('busca varios productos por id, para actualizar el carrito', async () => {
+    const { productos } = await listar('?ids=3,1,20');
+    expect(productos.map((producto) => producto.id).sort((a, b) => a - b)).toEqual([1, 3, 20]);
+  });
+
+  it.each([
+    ['página 0', '?pagina=0'],
+    ['demasiados por página', '?porPagina=500'],
+    ['un orden que no existe', '?orden=al_azar'],
+    ['un precio negativo', '?precioMin=-5'],
+    ['ids que no son números', '?ids=1,dos'],
+  ])('rechaza %s', async (_caso, filtros) => {
+    const respuesta = await api().get(`/api/productos${filtros}`);
+    expect(respuesta.status).toBe(400);
   });
 
   it.each([
@@ -36,14 +84,14 @@ describe('Listado y búsqueda', () => {
     ['varias palabras', '?buscar=placa%20de%20video%20asus', 1],
     ['nombre de la categoría', '?buscar=monitores', 3],
   ])('filtra por %s', async (_caso, filtros, cantidad) => {
-    const respuesta = await api().get(`/api/productos${filtros}`);
-    expect(respuesta.body).toHaveLength(cantidad);
+    const { total } = await listar(filtros);
+    expect(total).toBe(cantidad);
   });
 
   it('trata el texto de búsqueda como dato y no como SQL', async () => {
     const respuesta = await api().get("/api/productos?buscar=' OR '1'='1");
     expect(respuesta.status).toBe(200);
-    expect(respuesta.body).toHaveLength(0);
+    expect(respuesta.body.total).toBe(0);
   });
 
   it('devuelve los 3 más vendidos, ordenados', async () => {

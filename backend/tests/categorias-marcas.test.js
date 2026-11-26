@@ -16,6 +16,12 @@ describe('Categorías', () => {
     expect(respuesta.body).toHaveLength(8);
   });
 
+  it('incluyen cuántos productos tiene cada una', async () => {
+    const respuesta = await api().get('/api/categorias');
+    const total = respuesta.body.reduce((suma, categoria) => suma + categoria.cantidad_productos, 0);
+    expect(total).toBe(24);
+  });
+
   it('responden 404 si no existen o el id no es un número', async () => {
     expect((await api().get('/api/categorias/999')).status).toBe(404);
     expect((await api().get('/api/categorias/abc')).status).toBe(404);

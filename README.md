@@ -30,13 +30,14 @@ NodoPC vende componentes de PC, PC armadas, monitores y periféricos. Los visita
 **Visitante**
 
 - Portada con los productos más vendidos, las categorías y las últimas novedades.
-- Catálogo con búsqueda por palabras y filtros por categoría, marca y stock.
+- Catálogo paginado con búsqueda por palabras, filtros por categoría, marca, precio y stock, y orden por precio o nombre. Los filtros quedan en la URL, así se pueden compartir.
 - Carrito que se guarda en el navegador y se actualiza con el precio y el stock reales.
 
 **Cliente**
 
 - Registro e inicio de sesión.
 - Compra con dirección de envío y seguimiento de sus pedidos.
+- Página Mi cuenta para cambiar sus datos y su contraseña.
 - Cancelación de pedidos pendientes, que devuelve el stock.
 
 **Administrador**
@@ -201,6 +202,7 @@ nodopc/
 - **Historial intacto.** `detalle_pedido` guarda el nombre y el precio de cada producto al momento de la compra, así los pedidos viejos no cambian si después se modifica o se elimina el producto.
 - **Buscador sin consultas de más.** Busca cada palabra por separado en el nombre, la descripción, la marca y la categoría. Espera a que el usuario deje de escribir antes de consultar la API, y descarta las respuestas que llegan fuera de orden.
 - **Métricas accesibles.** Cada gráfico de Recharts tiene al lado su tabla con los números exactos.
+- **Carga bajo demanda.** Las páginas de administración y los gráficos se descargan solo cuando se usan: el JavaScript inicial pesa menos de la mitad.
 - **Interfaz sin librerías de componentes.** Los estilos que se repiten están definidos una sola vez en `index.css`, y los íconos son SVG propios. Si un producto no tiene foto, se muestra el ícono de su categoría.
 
 ## Documentación
@@ -215,10 +217,10 @@ nodopc/
 - [x] Migraciones, tests automáticos e integración continua con GitHub Actions
 - [x] Levantar todo con un comando usando Docker Compose
 - [x] Seguridad: helmet, límite de intentos, sesión en cookie `httpOnly` y rol verificado en la base
+- [x] Catálogo paginado con orden y filtro por precio, Mi cuenta, menú para celulares y página 404
 - [ ] Pagos con Mercado Pago en modo prueba
 - [ ] Emails de confirmación de pedido y de recuperación de contraseña
 - [ ] Subida de imágenes desde el panel del administrador
-- [ ] Paginación, orden y filtro por precio en el catálogo
 
 ## Autor
 

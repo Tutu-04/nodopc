@@ -17,9 +17,12 @@ export default function Carrito() {
 
   useEffect(() => {
     async function actualizarCarrito() {
+      const ids = useCarritoStore.getState().items.map((item) => item.id);
+      if (ids.length === 0) return;
+
       try {
-        const respuesta = await api.get('/productos');
-        const quitados = sincronizar(respuesta.data);
+        const respuesta = await api.get('/productos', { params: { ids: ids.join(','), porPagina: 100 } });
+        const quitados = sincronizar(respuesta.data.productos);
         if (quitados.length > 0) {
           setAviso(`Se quitaron del carrito porque ya no están disponibles: ${quitados.join(', ')}.`);
         }
