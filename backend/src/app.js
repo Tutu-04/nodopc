@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 
 import authRoutes from './routes/auth.routes.js';
 import categoriasRoutes from './routes/categorias.routes.js';
@@ -14,6 +15,7 @@ import { config } from './config.js';
 
 const app = express();
 
+app.use(helmet());
 app.use(cors({ origin: config.frontendUrl }));
 app.use(express.json());
 
