@@ -19,7 +19,7 @@ describe('GET /api/dashboard', () => {
       marcas: 12,
       usuarios: 7,
       pedidos: 28,
-      pedidos_pendientes: 4,
+      pedidos_pendientes: 1,
       unidades_vendidas: 60,
     });
   });
@@ -33,6 +33,12 @@ describe('GET /api/dashboard', () => {
   it('devuelve los rankings y la distribución por estado', () => {
     expect(metricas.productosMasVendidos).toHaveLength(5);
     expect(metricas.mejoresClientes).toHaveLength(5);
-    expect(metricas.pedidosPorEstado.map((fila) => fila.estado).sort()).toEqual(['entregado', 'enviado', 'pendiente']);
+    expect(metricas.pedidosPorEstado.map((fila) => fila.estado).sort()).toEqual([
+      'cancelado',
+      'entregado',
+      'enviado',
+      'pagado',
+      'pendiente',
+    ]);
   });
 });

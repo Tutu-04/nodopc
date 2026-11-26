@@ -6,6 +6,7 @@ export const config = {
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
   jwtSecret: process.env.JWT_SECRET,
   cookieSegura: process.env.COOKIE_SEGURA === 'true',
+  minutosParaPagar: Number(process.env.MINUTOS_PARA_PAGAR) || 30,
   uploadsDir: process.env.UPLOADS_DIR || fileURLToPath(new URL('../uploads', import.meta.url)),
   db: {
     host: process.env.DB_HOST,

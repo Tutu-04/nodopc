@@ -154,7 +154,7 @@ describe('Alta, edición y baja', () => {
     const pedido = await api().get('/api/pedidos/20').set(conSesion(admin));
     const renglon = pedido.body.items.find((item) => item.producto.startsWith('SSD Kingston NV2'));
     expect(renglon.producto_id).toBeNull();
-    expect(pedido.body.total).toBe(279997);
+    expect(pedido.body.total).toBe(287497);
 
     const masVendidos = await api().get('/api/productos/mas-vendidos');
     expect(masVendidos.body.some((producto) => producto.id === 12)).toBe(false);
