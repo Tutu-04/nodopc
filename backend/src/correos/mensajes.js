@@ -129,3 +129,17 @@ export function recuperarPassword(usuario, { url, minutos }) {
     }),
   };
 }
+
+export function passwordCambiada(usuario) {
+  return {
+    asunto: 'Tu contraseña de NodoPC cambió',
+    ...armarCorreo({
+      titulo: 'Cambiaste tu contraseña',
+      parrafos: [
+        `Hola, ${primerNombre(usuario.nombre)}. La contraseña de tu cuenta se cambió recién.`,
+        'Si fuiste vos, no tenés que hacer nada.',
+      ],
+      boton: { texto: 'No fui yo: restablecerla', url: enlace('/olvide-password') },
+    }),
+  };
+}

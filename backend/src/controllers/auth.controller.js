@@ -3,7 +3,7 @@ import * as Usuario from '../models/usuario.model.js';
 import { esTextoValido, esEmailValido, validarPassword } from '../utils/validaciones.js';
 import { borrarSesion, guardarSesion } from '../utils/sesion.js';
 import { enviarCorreo } from '../services/correo.js';
-import { bienvenida, recuperarPassword } from '../correos/mensajes.js';
+import { bienvenida, passwordCambiada, recuperarPassword } from '../correos/mensajes.js';
 import * as Recuperacion from '../models/recuperacion.model.js';
 import { crearTokenAlAzar, hashearToken } from '../utils/tokens.js';
 import { enlace } from '../correos/plantilla.js';
@@ -124,6 +124,7 @@ export async function restablecerPassword(req, res) {
 
   await Usuario.actualizarPassword(recuperacion.usuario_id, await bcrypt.hash(password, 10));
   await Recuperacion.anularDelUsuario(recuperacion.usuario_id);
+  enviarCorreo({ para: recuperacion.email, ...passwordCambiada(recuperacion) });
 
   res.json({ mensaje: 'Listo, ya podés ingresar con tu contraseña nueva.' });
 }

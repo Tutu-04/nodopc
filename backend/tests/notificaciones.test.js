@@ -138,3 +138,16 @@ describe('Correos de cada pedido', () => {
     expect(correo.texto).toContain('porque no se pagó dentro del tiempo de reserva');
   });
 });
+
+describe('Correo de seguridad', () => {
+  it('avisa cuando se cambia la contraseña desde Mi cuenta', async () => {
+    const respuesta = await api()
+      .put('/api/cuenta/password')
+      .set(conSesion(cliente))
+      .send({ actual: 'cliente123', nueva: 'nueva12345' });
+    expect(respuesta.status).toBe(200);
+
+    const correo = await esperarCorreo(CLIENTE, 'Tu contraseña de NodoPC cambió');
+    expect(correo.texto).toContain('http://localhost:5173/olvide-password');
+  });
+});

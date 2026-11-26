@@ -67,8 +67,12 @@ describe('Elegir la contraseña nueva', () => {
 
     expect((await restablecer(token, 'corta')).status).toBe(400);
 
+    vi.mocked(enviarCorreo).mockClear();
     const respuesta = await restablecer(token);
     expect(respuesta.status).toBe(200);
+    expect(enviarCorreo).toHaveBeenCalledWith(
+      expect.objectContaining({ para: EMAIL, asunto: 'Tu contraseña de NodoPC cambió' })
+    );
     expect((await ingresar('cliente123')).status).toBe(401);
     expect((await ingresar('nueva1234')).status).toBe(200);
 
