@@ -17,6 +17,7 @@ import MisPedidos from './pages/MisPedidos';
 import PedidoDetalle from './pages/PedidoDetalle';
 import Salir from './pages/Salir';
 import MiCuenta from './pages/MiCuenta';
+import NoEncontrada from './pages/NoEncontrada';
 
 import CategoriasLista from './pages/admin/categorias/CategoriasLista';
 import CategoriaNueva from './pages/admin/categorias/CategoriaNueva';
@@ -83,7 +84,7 @@ export default function App() {
             </Route>
           </Route>
 
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<NoEncontrada />} />
         </Route>
       </Routes>
     </BrowserRouter>
