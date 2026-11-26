@@ -5,19 +5,19 @@ export const TARJETA_DE_PRUEBA = {
   cvv: '123',
 };
 
-export function formatearNumeroDeTarjeta(valor) {
+export function formatearNumeroDeTarjeta(valor: string): string {
   return valor
     .replace(/\D/g, '')
     .slice(0, 16)
     .replace(/(\d{4})(?=\d)/g, '$1 ');
 }
 
-export function formatearVencimiento(valor) {
+export function formatearVencimiento(valor: string): string {
   const digitos = valor.replace(/\D/g, '').slice(0, 4);
   return digitos.length > 2 ? `${digitos.slice(0, 2)}/${digitos.slice(2)}` : digitos;
 }
 
-export function formatearCuentaRegresiva(segundos) {
+export function formatearCuentaRegresiva(segundos: number): string {
   const minutos = Math.floor(segundos / 60);
   const resto = segundos % 60;
   return `${String(minutos).padStart(2, '0')}:${String(resto).padStart(2, '0')}`;

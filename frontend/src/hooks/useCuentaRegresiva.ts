@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-export function useCuentaRegresiva(segundosIniciales) {
+export function useCuentaRegresiva(segundosIniciales: number | null | undefined): number | null {
   const [fin] = useState(() => (typeof segundosIniciales === 'number' ? Date.now() + segundosIniciales * 1000 : null));
   const [restantes, setRestantes] = useState(segundosIniciales ?? null);
 

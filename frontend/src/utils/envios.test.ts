@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { calcularEnvio, faltaParaEnvioGratis } from './envios';
 
 const condiciones = {
+  minutosParaPagar: 30,
   envioGratisDesde: 1500000,
   provincias: [
     { nombre: 'Córdoba', costo: 7500 },

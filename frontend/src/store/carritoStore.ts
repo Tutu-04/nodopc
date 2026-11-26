@@ -1,7 +1,29 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export const useCarritoStore = create(
+export interface ProductoParaCarrito {
+  id: number;
+  nombre: string;
+  precio: number;
+  stock: number;
+  categoria: string;
+  imagen_url: string | null;
+}
+
+export interface ItemCarrito extends ProductoParaCarrito {
+  cantidad: number;
+}
+
+interface EstadoDelCarrito {
+  items: ItemCarrito[];
+  agregar: (producto: ProductoParaCarrito) => void;
+  cambiarCantidad: (id: number, cantidad: number) => void;
+  quitar: (id: number) => void;
+  vaciar: () => void;
+  sincronizar: (productos: ProductoParaCarrito[]) => string[];
+}
+
+export const useCarritoStore = create<EstadoDelCarrito>()(
   persist(
     (set, get) => ({
       items: [],
@@ -18,7 +40,7 @@ export const useCarritoStore = create(
             };
           }
 
-          const nuevo = {
+          const nuevo: ItemCarrito = {
             id: producto.id,
             nombre: producto.nombre,
             precio: producto.precio,
@@ -42,8 +64,8 @@ export const useCarritoStore = create(
       vaciar: () => set({ items: [] }),
 
       sincronizar: (productos) => {
-        const quitados = [];
-        const actualizados = [];
+        const quitados: string[] = [];
+        const actualizados: ItemCarrito[] = [];
 
         for (const item of get().items) {
           const producto = productos.find((p) => p.id === item.id);
@@ -72,10 +94,10 @@ export const useCarritoStore = create(
   )
 );
 
-export function contarProductos(items) {
+export function contarProductos(items: ItemCarrito[]): number {
   return items.reduce((suma, item) => suma + item.cantidad, 0);
 }
 
-export function calcularTotal(items) {
+export function calcularTotal(items: ItemCarrito[]): number {
   return items.reduce((suma, item) => suma + item.precio * item.cantidad, 0);
 }

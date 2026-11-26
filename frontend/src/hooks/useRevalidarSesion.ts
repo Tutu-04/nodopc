@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
 import api from '../api/api';
 import { useAuthStore } from '../store/authStore';
+import type { UsuarioDeSesion } from '../tipos';
 
-export default function useRevalidarSesion() {
+export default function useRevalidarSesion(): void {
   const iniciarSesion = useAuthStore((estado) => estado.iniciarSesion);
 
   useEffect(() => {
@@ -11,7 +12,7 @@ export default function useRevalidarSesion() {
     let vigente = true;
 
     api
-      .get('/auth/yo')
+      .get<{ usuario: UsuarioDeSesion }>('/auth/yo')
       .then((respuesta) => {
         if (vigente) iniciarSesion(respuesta.data.usuario);
       })

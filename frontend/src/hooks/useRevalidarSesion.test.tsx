@@ -18,12 +18,12 @@ describe('useRevalidarSesion', () => {
   });
 
   it('actualiza los datos guardados con los de la cuenta', async () => {
-    useAuthStore.getState().iniciarSesion({ id: 5, nombre: 'Pepe', rol: 'admin' });
+    useAuthStore.getState().iniciarSesion({ id: 5, nombre: 'Pepe', email: 'pepe@nodopc.com', rol: 'admin' });
     vi.mocked(api.get).mockResolvedValue({ data: { usuario: { id: 5, nombre: 'Pepe', rol: 'cliente' } } });
 
     renderHook(() => useRevalidarSesion());
 
-    await waitFor(() => expect(useAuthStore.getState().usuario.rol).toBe('cliente'));
+    await waitFor(() => expect(useAuthStore.getState().usuario?.rol).toBe('cliente'));
     expect(api.get).toHaveBeenCalledWith('/auth/yo');
   });
 });
