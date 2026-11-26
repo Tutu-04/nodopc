@@ -30,8 +30,8 @@ export default function MisPedidos() {
   async function cancelar(pedido) {
     setError('');
     try {
-      await api.delete(`/pedidos/${pedido.id}`);
-      setPedidos((actuales) => actuales.filter((p) => p.id !== pedido.id));
+      const respuesta = await api.post(`/pedidos/${pedido.id}/cancelar`);
+      setPedidos((actuales) => actuales.map((p) => (p.id === pedido.id ? { ...p, ...respuesta.data } : p)));
     } catch (e) {
       setError(obtenerMensajeError(e));
     }
@@ -59,7 +59,7 @@ export default function MisPedidos() {
               <tr>
                 <th>N.º</th>
                 <th>Fecha</th>
-                <th>Dirección de envío</th>
+                <th>Entrega</th>
                 <th>Estado</th>
                 <th>Total</th>
                 <th></th>
@@ -70,7 +70,7 @@ export default function MisPedidos() {
                 <tr key={pedido.id}>
                   <td className="tabular-nums">#{pedido.id}</td>
                   <td>{formatearFecha(pedido.fecha)}</td>
-                  <td>{pedido.direccion_envio}</td>
+                  <td>{pedido.metodo_entrega === 'envio' ? `Envío a ${pedido.provincia}` : 'Retiro en el local'}</td>
                   <td>
                     <EstadoPedido estado={pedido.estado} />
                   </td>
@@ -81,11 +81,16 @@ export default function MisPedidos() {
                         Ver
                       </Link>
                       {pedido.estado === 'pendiente' && (
-                        <BotonEliminar
-                          onConfirmar={() => cancelar(pedido)}
-                          texto="Cancelar"
-                          textoConfirmar="Sí, cancelar"
-                        />
+                        <>
+                          <Link to={`/pedidos/${pedido.id}`} className="btn btn-acento btn-chico">
+                            Pagar
+                          </Link>
+                          <BotonEliminar
+                            onConfirmar={() => cancelar(pedido)}
+                            texto="Cancelar"
+                            textoConfirmar="Sí, cancelar"
+                          />
+                        </>
                       )}
                     </div>
                   </td>

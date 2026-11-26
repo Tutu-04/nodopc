@@ -7,6 +7,8 @@ import EstadoPedido from '../components/EstadoPedido';
 import Cargando from '../components/Cargando';
 import MensajeError from '../components/MensajeError';
 
+const ESTADOS_COBRADOS = ['pagado', 'enviado', 'entregado'];
+
 export default function DashboardCliente() {
   const [pedidos, setPedidos] = useState([]);
   const [cargando, setCargando] = useState(true);
@@ -30,7 +32,9 @@ export default function DashboardCliente() {
   if (cargando) return <Cargando />;
 
   const pendientes = pedidos.filter((pedido) => pedido.estado === 'pendiente').length;
-  const totalGastado = pedidos.reduce((suma, pedido) => suma + pedido.total, 0);
+  const totalGastado = pedidos
+    .filter((pedido) => ESTADOS_COBRADOS.includes(pedido.estado))
+    .reduce((suma, pedido) => suma + pedido.total, 0);
   const ultimos = pedidos.slice(0, 3);
 
   return (
@@ -39,7 +43,7 @@ export default function DashboardCliente() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Dato titulo="Pedidos realizados" valor={pedidos.length} />
-        <Dato titulo="Pedidos pendientes" valor={pendientes} />
+        <Dato titulo="Esperando pago" valor={pendientes} />
         <Dato titulo="Total comprado" valor={formatearPrecio(totalGastado)} />
       </div>
 
