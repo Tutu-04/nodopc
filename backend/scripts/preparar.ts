@@ -21,6 +21,6 @@ try {
   }
 } catch (error) {
   console.error('No se pudo preparar la base de datos.');
-  console.error(explicarErrorMysql(error));
+  console.error(explicarErrorMysql(error as Error));
   process.exit(1);
 }

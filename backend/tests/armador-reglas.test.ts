@@ -5,8 +5,15 @@ import {
   calcularPotenciaRecomendada,
   verificarArmado,
 } from '../src/armador/reglas.js';
+import type { Pieza } from '../src/armador/reglas.js';
+import type { Especificaciones } from '../src/tipos.js';
 
-function producto(id, nombre, especificaciones, { precio = 100, stock = 5 } = {}) {
+function producto(
+  id: number,
+  nombre: string,
+  especificaciones: Especificaciones | null,
+  { precio = 100, stock = 5 } = {}
+): Pieza {
   return { id, nombre, precio, stock, especificaciones };
 }
 

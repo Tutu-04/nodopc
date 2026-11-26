@@ -10,7 +10,7 @@ export default defineConfig({
       JWT_SECRET: process.env.JWT_SECRET || 'clave-solo-para-los-tests',
       UPLOADS_DIR: path.join(os.tmpdir(), 'nodopc-tests-uploads'),
     },
-    setupFiles: ['./tests/setup.js'],
+    setupFiles: ['./tests/setup.ts'],
     fileParallelism: false,
     hookTimeout: 30000,
   },

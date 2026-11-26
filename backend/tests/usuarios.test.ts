@@ -1,10 +1,11 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { reiniciarBase } from '../src/migraciones.js';
 import { api, conSesion, ingresar, ingresarComoAdmin } from './ayudantes.js';
+import type { Usuario } from '../src/tipos.js';
 
-let admin;
+let admin: string;
 
-function login(email, password) {
+function login(email: string, password: string) {
   return api().post('/api/auth/login').send({ email, password });
 }
 
@@ -18,7 +19,7 @@ describe('Gestión de usuarios', () => {
     const respuesta = await api().get('/api/usuarios').set(conSesion(admin));
     expect(respuesta.status).toBe(200);
     expect(respuesta.body).toHaveLength(7);
-    expect(respuesta.body.every((usuario) => !('password' in usuario))).toBe(true);
+    expect(respuesta.body.every((usuario: Usuario) => !('password' in usuario))).toBe(true);
   });
 
   it.each([
@@ -89,7 +90,7 @@ describe('Cambio de rol con la sesión abierta', () => {
     expect((await api().get('/api/usuarios').set(conSesion(lola))).status).toBe(200);
 
     const usuarios = await api().get('/api/usuarios').set(conSesion(admin));
-    const { id } = usuarios.body.find((usuario) => usuario.email === 'lola@x.com');
+    const { id } = usuarios.body.find((usuario: Usuario) => usuario.email === 'lola@x.com');
     await api()
       .put(`/api/usuarios/${id}`)
       .set(conSesion(admin))

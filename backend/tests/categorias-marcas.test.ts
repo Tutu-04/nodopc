@@ -1,8 +1,9 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { reiniciarBase } from '../src/migraciones.js';
 import { api, conSesion, ingresarComoAdmin } from './ayudantes.js';
+import type { Categoria } from '../src/tipos.js';
 
-let admin;
+let admin: string;
 
 beforeAll(async () => {
   await reiniciarBase();
@@ -18,7 +19,10 @@ describe('Categorías', () => {
 
   it('incluyen cuántos productos tiene cada una', async () => {
     const respuesta = await api().get('/api/categorias');
-    const total = respuesta.body.reduce((suma, categoria) => suma + categoria.cantidad_productos, 0);
+    const total = respuesta.body.reduce(
+      (suma: number, categoria: Categoria) => suma + (categoria.cantidad_productos ?? 0),
+      0
+    );
     expect(total).toBe(33);
   });
 

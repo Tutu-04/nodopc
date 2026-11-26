@@ -3,18 +3,19 @@ import { config } from '../src/config.js';
 import { reiniciarBase } from '../src/migraciones.js';
 import { calcularFirma, firmaEsValida } from '../src/utils/firmaWebhook.js';
 import { api, conSesion, ingresar, ingresarComoCliente } from './ayudantes.js';
+import type { PagoDeMercadoPago } from '../src/services/mercadoPago.js';
 
 const SECRETO = 'secreto-de-prueba';
 
-let cliente;
-let maria;
+let cliente: string;
+let maria: string;
 
-function responder(datos, status = 200) {
+function responder(datos: unknown, status = 200): Promise<Response> {
   return Promise.resolve(new Response(JSON.stringify(datos), { status }));
 }
 
-function simularMercadoPago(respuestas) {
-  const fetchFalso = vi.fn((url) => {
+function simularMercadoPago(respuestas: Record<string, [unknown, number?]>) {
+  const fetchFalso = vi.fn((url: string, opciones?: RequestInit) => {
     const ruta = new URL(url).pathname;
     const [, respuesta] = Object.entries(respuestas).find(([prefijo]) => ruta.startsWith(prefijo)) ?? [];
     return respuesta ? responder(...respuesta) : responder({ message: 'not found' }, 404);
@@ -23,7 +24,10 @@ function simularMercadoPago(respuestas) {
   return fetchFalso;
 }
 
-function pagoAprobado(pedido, cambios = {}) {
+function pagoAprobado(
+  pedido: { id: number; total: number },
+  cambios: Partial<PagoDeMercadoPago> = {}
+): PagoDeMercadoPago {
   return {
     id: 1324567890,
     status: 'approved',
@@ -47,16 +51,19 @@ async function crearPedido() {
   return respuesta.body;
 }
 
-async function pedirPreferencia(pedidoId, token = cliente) {
+async function pedirPreferencia(pedidoId: number, token = cliente) {
   return api().post(`/api/pagos/${pedidoId}/mercadopago`).set(conSesion(token));
 }
 
-async function estadoDe(pedidoId) {
+async function estadoDe(pedidoId: number) {
   const respuesta = await api().get(`/api/pedidos/${pedidoId}`).set(conSesion(cliente));
   return respuesta.body;
 }
 
-function notificar(dataId, { firma, requestId = 'req-123', tipo = 'payment' } = {}) {
+function notificar(
+  dataId: number,
+  { firma, requestId = 'req-123', tipo = 'payment' }: { firma?: string; requestId?: string; tipo?: string } = {}
+) {
   const ts = '1742505638683';
   const v1 = firma ?? calcularFirma({ dataId: String(dataId), requestId, ts, secreto: SECRETO });
   return api()
@@ -114,10 +121,11 @@ describe('Checkout de Mercado Pago', () => {
     expect(respuesta.status).toBe(200);
     expect(respuesta.body.url).toBe('https://mp/prueba');
 
-    const [url, opciones] = fetchFalso.mock.calls[0];
-    const enviada = JSON.parse(opciones.body);
+    const [url, opciones = {}] = fetchFalso.mock.calls[0];
+    const encabezados = opciones.headers as Record<string, string>;
+    const enviada = JSON.parse(String(opciones.body));
     expect(url).toBe('https://api.mercadopago.com/checkout/preferences');
-    expect(opciones.headers.Authorization).toBe('Bearer TEST-token-de-prueba');
+    expect(encabezados.Authorization).toBe('Bearer TEST-token-de-prueba');
     expect(enviada.external_reference).toBe(String(pedido.id));
     expect(enviada.items).toEqual([
       expect.objectContaining({ title: 'Mouse Logitech G203 Lightsync', quantity: 2, unit_price: 39999 }),

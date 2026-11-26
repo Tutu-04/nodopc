@@ -6,8 +6,8 @@ import { api, conSesion, ingresar, ingresarComoCliente } from './ayudantes.js';
 
 const TARJETA = { numero: '4509 9535 6623 3704', titular: 'APRO', vencimiento: '12/30', cvv: '123' };
 
-let cliente;
-let maria;
+let cliente: string;
+let maria: string;
 
 async function crearPedido() {
   const respuesta = await api()
@@ -17,7 +17,7 @@ async function crearPedido() {
   return respuesta.body;
 }
 
-function pagarSimulado(token, pedidoId, tarjeta = TARJETA) {
+function pagarSimulado(token: string, pedidoId: number, tarjeta: Record<string, string> = TARJETA) {
   return api().post(`/api/pagos/${pedidoId}/simulado`).set(conSesion(token)).send(tarjeta);
 }
 

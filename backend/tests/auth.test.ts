@@ -107,7 +107,7 @@ describe('Rutas protegidas', () => {
 
 describe('Tiempo de respuesta del login', () => {
   it('tarda lo mismo si el email no existe, para no revelar qué cuentas hay', async () => {
-    const medir = async (email) => {
+    const medir = async (email: string) => {
       const inicio = performance.now();
       await api().post('/api/auth/login').send({ email, password: 'incorrecta1' });
       return performance.now() - inicio;

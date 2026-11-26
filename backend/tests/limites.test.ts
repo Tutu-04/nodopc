@@ -3,9 +3,9 @@ import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { crearLimitador } from '../src/middlewares/limites.js';
 
-function crearApp(opciones) {
+function crearApp(opciones: { maximo: number; soloFallidos?: boolean }) {
   const app = express();
-  app.post('/accion', crearLimitador({ mensaje: 'Esperá un rato', ...opciones }), (req, res) => {
+  app.post('/accion', crearLimitador({ ...opciones, mensaje: 'Esperá un rato' }), (req, res) => {
     const salio = req.query.ok === '1';
     res.status(salio ? 200 : 401).json({});
   });

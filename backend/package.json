@@ -11,9 +11,9 @@
     "start": "node dist/src/index.js",
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc",
-    "migrar": "tsx scripts/migrar.js",
-    "crear-base": "tsx scripts/crearBase.js",
-    "preparar": "tsx scripts/preparar.js",
+    "migrar": "tsx scripts/migrar.ts",
+    "crear-base": "tsx scripts/crearBase.ts",
+    "preparar": "tsx scripts/preparar.ts",
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest"

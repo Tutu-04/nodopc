@@ -19,6 +19,6 @@ try {
   }
 } catch (error) {
   console.error('No se pudieron aplicar las migraciones.');
-  console.error(explicarErrorMysql(error));
+  console.error(explicarErrorMysql(error as Error));
   process.exit(1);
 }

@@ -5,10 +5,11 @@ import pool from '../src/db.js';
 import { cancelarVencidos } from '../src/models/pedido.model.js';
 import { notificarPedido } from '../src/services/notificaciones.js';
 import { api, conSesion, ingresarComoAdmin, ingresarComoCliente } from './ayudantes.js';
+import type { Correo } from '../src/services/correo.js';
 
 vi.mock('../src/services/correo.js', () => ({ enviarCorreo: vi.fn(async () => true) }));
 
-function correosA(email) {
+function correosA(email: string): Correo[] {
   return vi
     .mocked(enviarCorreo)
     .mock.calls.map(([correo]) => correo)
@@ -18,10 +19,12 @@ function correosA(email) {
 const CLIENTE = 'cliente@nodopc.com';
 const TARJETA = { numero: '4509 9535 6623 3704', titular: 'APRO', vencimiento: '12/30', cvv: '123' };
 
-let admin;
-let cliente;
+let admin: string;
+let cliente: string;
 
-async function crearPedido(datos = { metodo_entrega: 'envio', provincia: 'Tucumán', direccion_envio: 'Mitre 789' }) {
+async function crearPedido(
+  datos: Record<string, string> = { metodo_entrega: 'envio', provincia: 'Tucumán', direccion_envio: 'Mitre 789' }
+) {
   const respuesta = await api()
     .post('/api/pedidos')
     .set(conSesion(cliente))
@@ -29,17 +32,19 @@ async function crearPedido(datos = { metodo_entrega: 'envio', provincia: 'Tucum�
   return respuesta.body;
 }
 
-function pagar(pedidoId) {
+function pagar(pedidoId: number) {
   return api().post(`/api/pagos/${pedidoId}/simulado`).set(conSesion(cliente)).send(TARJETA);
 }
 
-function cambiarEstado(pedidoId, estado) {
+function cambiarEstado(pedidoId: number, estado: string) {
   return api().put(`/api/pedidos/${pedidoId}`).set(conSesion(admin)).send({ estado });
 }
 
-async function esperarCorreo(email, asunto) {
+async function esperarCorreo(email: string, asunto: string): Promise<Correo> {
   await vi.waitFor(() => expect(correosA(email).map((correo) => correo.asunto)).toContain(asunto));
-  return correosA(email).find((correo) => correo.asunto === asunto);
+  const correo = correosA(email).find((encontrado) => encontrado.asunto === asunto);
+  if (!correo) throw new Error(`No llegó el correo "${asunto}"`);
+  return correo;
 }
 
 beforeAll(async () => {

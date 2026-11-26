@@ -13,13 +13,13 @@ const PNG = Buffer.from(
 const JPG = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10]);
 const WEBP = Buffer.concat([Buffer.from('RIFF'), Buffer.alloc(4), Buffer.from('WEBPVP8 ')]);
 
-let admin;
+let admin: string;
 
-function archivoDe(url) {
+function archivoDe(url: string) {
   return path.join(config.uploadsDir, url.replace('/uploads/', ''));
 }
 
-function subir(idProducto, contenido, nombre = 'foto.png') {
+function subir(idProducto: number, contenido: Buffer, nombre = 'foto.png') {
   return api().post(`/api/productos/${idProducto}/imagen`).set(conSesion(admin)).attach('imagen', contenido, nombre);
 }
 

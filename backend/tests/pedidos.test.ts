@@ -2,26 +2,26 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { reiniciarBase } from '../src/migraciones.js';
 import { api, conSesion, ingresar, ingresarComoAdmin, ingresarComoCliente } from './ayudantes.js';
 
-let admin;
-let cliente;
-let maria;
+let admin: string;
+let cliente: string;
+let maria: string;
 
-async function stockDe(id) {
+async function stockDe(id: number): Promise<number> {
   const respuesta = await api().get(`/api/productos/${id}`);
   return respuesta.body.stock;
 }
 
 const ENVIO_A_TUCUMAN = { metodo_entrega: 'envio', provincia: 'Tucumán', direccion_envio: 'Mitre 789' };
 
-function crearPedido(token, datos) {
+function crearPedido(token: string, datos: Record<string, unknown>) {
   return api().post('/api/pedidos').set(conSesion(token)).send(datos);
 }
 
-function cancelarPedido(token, id) {
+function cancelarPedido(token: string, id: number) {
   return api().post(`/api/pedidos/${id}/cancelar`).set(conSesion(token));
 }
 
-function cambiarPedido(id, datos) {
+function cambiarPedido(id: number, datos: Record<string, unknown>) {
   return api().put(`/api/pedidos/${id}`).set(conSesion(admin)).send(datos);
 }
 
@@ -135,7 +135,7 @@ describe('Creación de pedidos', () => {
 
   it('deja el pedido reservado durante el tiempo para pagar', async () => {
     const creado = await crearPedido(cliente, { ...ENVIO_A_TUCUMAN, items: unMouse });
-    const minutos = (new Date(creado.body.vence_en) - new Date(creado.body.fecha)) / 60000;
+    const minutos = (new Date(creado.body.vence_en).getTime() - new Date(creado.body.fecha).getTime()) / 60000;
 
     expect(minutos).toBeCloseTo(30, 0);
     expect(creado.body.segundos_para_pagar).toBeGreaterThan(29 * 60);

@@ -1,8 +1,16 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { reiniciarBase } from '../src/migraciones.js';
 import { api, conSesion, ingresarComoAdmin } from './ayudantes.js';
+import type { PedidosPorEstado, Resumen, VentaDelMes } from '../src/models/dashboard.model.js';
 
-let metricas;
+interface Metricas {
+  resumen: Resumen;
+  ventasPorMes: VentaDelMes[];
+  pedidosPorEstado: PedidosPorEstado[];
+  [otra: string]: unknown;
+}
+
+let metricas: Metricas;
 
 beforeAll(async () => {
   await reiniciarBase();

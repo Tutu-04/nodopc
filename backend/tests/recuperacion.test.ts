@@ -3,6 +3,7 @@ import pool from '../src/db.js';
 import { reiniciarBase } from '../src/migraciones.js';
 import { enviarCorreo } from '../src/services/correo.js';
 import { api } from './ayudantes.js';
+import type { Fila } from '../src/tipos.js';
 
 vi.mock('../src/services/correo.js', () => ({ enviarCorreo: vi.fn(async () => true) }));
 
@@ -12,17 +13,18 @@ function pedirEnlace(email = EMAIL) {
   return api().post('/api/auth/olvide-password').send({ email });
 }
 
-async function tokenDelCorreo() {
+async function tokenDelCorreo(): Promise<string> {
   await vi.waitFor(() => expect(enviarCorreo).toHaveBeenCalled());
-  const [{ texto }] = vi.mocked(enviarCorreo).mock.calls.at(-1);
-  return new URL(texto.match(/http\S+/)[0]).searchParams.get('token');
+  const [{ texto }] = vi.mocked(enviarCorreo).mock.calls.at(-1) ?? [{ texto: '' }];
+  const enlace = texto.match(/http\S+/)?.[0] ?? '';
+  return new URL(enlace).searchParams.get('token') ?? '';
 }
 
-function restablecer(token, password = 'nueva1234') {
+function restablecer(token: string | undefined, password = 'nueva1234') {
   return api().post('/api/auth/restablecer-password').send({ token, password });
 }
 
-function ingresar(password) {
+function ingresar(password: string) {
   return api().post('/api/auth/login').send({ email: EMAIL, password });
 }
 
@@ -54,7 +56,9 @@ describe('Pedir el enlace', () => {
     await pedirEnlace();
     const token = await tokenDelCorreo();
 
-    const [filas] = await pool.execute('SELECT token_hash FROM recuperaciones_password');
+    const [filas] = await pool.execute<Fila<{ token_hash: string }>[]>(
+      'SELECT token_hash FROM recuperaciones_password'
+    );
     expect(filas.map((fila) => fila.token_hash)).not.toContain(token);
     expect(filas.every((fila) => /^[0-9a-f]{64}$/.test(fila.token_hash))).toBe(true);
   });

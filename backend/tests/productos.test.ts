@@ -1,8 +1,10 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { reiniciarBase } from '../src/migraciones.js';
 import { api, conSesion, ingresarComoAdmin } from './ayudantes.js';
+import type { ProductoMasVendido } from '../src/models/producto.model.js';
+import type { ItemPedido, Producto } from '../src/tipos.js';
 
-let admin;
+let admin: string;
 
 const fuente = {
   nombre: 'Fuente Corsair CV650',
@@ -46,9 +48,9 @@ describe('Listado y búsqueda', () => {
   });
 
   it.each([
-    ['precio_asc', (a, b) => a.precio - b.precio],
-    ['precio_desc', (a, b) => b.precio - a.precio],
-    ['nombre', (a, b) => a.nombre.localeCompare(b.nombre, 'es')],
+    ['precio_asc', (a: Producto, b: Producto) => a.precio - b.precio],
+    ['precio_desc', (a: Producto, b: Producto) => b.precio - a.precio],
+    ['nombre', (a: Producto, b: Producto) => a.nombre.localeCompare(b.nombre, 'es')],
   ])('ordena por %s', async (orden, comparar) => {
     const { productos } = await listar(`?orden=${orden}&porPagina=100`);
     expect(productos).toEqual([...productos].sort(comparar));
@@ -57,13 +59,15 @@ describe('Listado y búsqueda', () => {
   it('filtra por rango de precio y por stock', async () => {
     const { productos } = await listar('?precioMin=100000&precioMax=300000&conStock=1&porPagina=100');
     expect(productos.length).toBeGreaterThan(0);
-    expect(productos.every((producto) => producto.precio >= 100000 && producto.precio <= 300000)).toBe(true);
-    expect(productos.every((producto) => producto.stock > 0)).toBe(true);
+    expect(productos.every((producto: Producto) => producto.precio >= 100000 && producto.precio <= 300000)).toBe(true);
+    expect(productos.every((producto: Producto) => producto.stock > 0)).toBe(true);
   });
 
   it('busca varios productos por id, para actualizar el carrito', async () => {
     const { productos } = await listar('?ids=3,1,20');
-    expect(productos.map((producto) => producto.id).sort((a, b) => a - b)).toEqual([1, 3, 20]);
+    expect(productos.map((producto: Producto) => producto.id).sort((a: number, b: number) => a - b)).toEqual([
+      1, 3, 20,
+    ]);
   });
 
   it.each([
@@ -98,10 +102,10 @@ describe('Listado y búsqueda', () => {
 
   it('devuelve los 3 más vendidos, ordenados', async () => {
     const respuesta = await api().get('/api/productos/mas-vendidos');
-    const vendidos = respuesta.body.map((producto) => producto.vendidos);
+    const vendidos = respuesta.body.map((producto: ProductoMasVendido) => producto.vendidos);
 
     expect(respuesta.status).toBe(200);
-    expect(respuesta.body.map((producto) => producto.id)).toEqual([10, 23, 20]);
+    expect(respuesta.body.map((producto: Producto) => producto.id)).toEqual([10, 23, 20]);
     expect(vendidos).toEqual([...vendidos].sort((a, b) => b - a));
   });
 
@@ -154,11 +158,11 @@ describe('Alta, edición y baja', () => {
     expect((await api().get('/api/productos/12')).status).toBe(404);
 
     const pedido = await api().get('/api/pedidos/20').set(conSesion(admin));
-    const renglon = pedido.body.items.find((item) => item.producto.startsWith('SSD Kingston NV2'));
+    const renglon = pedido.body.items.find((item: ItemPedido) => item.producto.startsWith('SSD Kingston NV2'));
     expect(renglon.producto_id).toBeNull();
     expect(pedido.body.total).toBe(287497);
 
     const masVendidos = await api().get('/api/productos/mas-vendidos');
-    expect(masVendidos.body.some((producto) => producto.id === 12)).toBe(false);
+    expect(masVendidos.body.some((producto: Producto) => producto.id === 12)).toBe(false);
   });
 });

@@ -14,6 +14,6 @@ try {
   console.log('Ya podés arrancar el backend.');
 } catch (error) {
   console.error('No se pudo crear la base de datos.');
-  console.error(explicarErrorMysql(error));
+  console.error(explicarErrorMysql(error as Error));
   process.exit(1);
 }

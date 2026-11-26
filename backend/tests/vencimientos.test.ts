@@ -3,10 +3,11 @@ import pool from '../src/db.js';
 import { reiniciarBase } from '../src/migraciones.js';
 import { cancelarVencidos } from '../src/models/pedido.model.js';
 import { api, conSesion, ingresarComoCliente } from './ayudantes.js';
+import type { Fila } from '../src/tipos.js';
 
-let cliente;
+let cliente: string;
 
-async function stockDe(id) {
+async function stockDe(id: number): Promise<number> {
   const respuesta = await api().get(`/api/productos/${id}`);
   return respuesta.body.stock;
 }
@@ -19,8 +20,8 @@ async function crearPedido() {
   return respuesta.body;
 }
 
-async function estadoDe(id) {
-  const [filas] = await pool.execute('SELECT estado FROM pedidos WHERE id = ?', [id]);
+async function estadoDe(id: number): Promise<string> {
+  const [filas] = await pool.execute<Fila<{ estado: string }>[]>('SELECT estado FROM pedidos WHERE id = ?', [id]);
   return filas[0].estado;
 }
 

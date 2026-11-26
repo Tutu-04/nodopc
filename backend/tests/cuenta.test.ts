@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { reiniciarBase } from '../src/migraciones.js';
 import { api, conSesion, cookieDeSesion, ingresar, ingresarComoCliente } from './ayudantes.js';
 
-let cliente;
+let cliente: string;
 
 beforeAll(async () => {
   await reiniciarBase();
@@ -70,7 +70,7 @@ describe('PUT /api/cuenta/password', () => {
       .send({ actual: 'cliente123', nueva: 'nueva1234' });
     expect(respuesta.status).toBe(200);
 
-    expect(await ingresar('cliente.nuevo@nodopc.com', 'cliente123')).toBeUndefined();
+    expect(await ingresar('cliente.nuevo@nodopc.com', 'cliente123')).toBe('');
     expect(await ingresar('cliente.nuevo@nodopc.com', 'nueva1234')).toBeTruthy();
   });
 });

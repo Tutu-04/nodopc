@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { api } from './ayudantes.js';
 import { calcularCostoDeEnvio, ENVIO_GRATIS_DESDE, esProvinciaValida } from '../src/utils/envios.js';
+import type { Provincia } from '../src/utils/envios.js';
 
 describe('Costo de envío', () => {
   it('cobra según la zona de la provincia', () => {
@@ -27,7 +28,7 @@ describe('Costo de envío', () => {
 describe('GET /api/envios', () => {
   it('devuelve las 24 jurisdicciones ordenadas y las condiciones de envío', async () => {
     const respuesta = await api().get('/api/envios');
-    const nombres = respuesta.body.provincias.map((provincia) => provincia.nombre);
+    const nombres = respuesta.body.provincias.map((provincia: Provincia) => provincia.nombre);
 
     expect(respuesta.status).toBe(200);
     expect(nombres).toHaveLength(24);

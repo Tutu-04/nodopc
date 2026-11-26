@@ -2,8 +2,15 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import pool from '../src/db.js';
 import { reiniciarBase } from '../src/migraciones.js';
 import { api, conSesion, ingresarComoAdmin } from './ayudantes.js';
+import type { Problema } from '../src/armador/reglas.js';
+import type { Producto } from '../src/tipos.js';
 
-function verificar(seleccion) {
+interface Paso {
+  clave: string;
+  productos: Producto[];
+}
+
+function verificar(seleccion: Record<string, unknown>) {
   return api().post('/api/armador/verificar').send({ seleccion });
 }
 
@@ -24,7 +31,7 @@ describe('GET /api/armador', () => {
     const pasos = respuesta.body.pasos;
 
     expect(respuesta.status).toBe(200);
-    expect(pasos.map((paso) => paso.clave)).toEqual([
+    expect(pasos.map((paso: Paso) => paso.clave)).toEqual([
       'procesador',
       'motherboard',
       'memoria',
@@ -33,10 +40,12 @@ describe('GET /api/armador', () => {
       'fuente',
       'gabinete',
     ]);
-    expect(pasos.map((paso) => paso.productos.length)).toEqual([5, 4, 3, 3, 3, 3, 2]);
+    expect(pasos.map((paso: Paso) => paso.productos.length)).toEqual([5, 4, 3, 3, 3, 3, 2]);
 
     const procesadores = pasos[0].productos;
-    expect(procesadores.map((p) => p.precio)).toEqual([...procesadores.map((p) => p.precio)].sort((a, b) => a - b));
+    expect(procesadores.map((p: Producto) => p.precio)).toEqual(
+      [...procesadores.map((p: Producto) => p.precio)].sort((a, b) => a - b)
+    );
     expect(procesadores[0]).toMatchObject({
       nombre: 'Procesador AMD Ryzen 5 5600',
       marca: 'AMD',
@@ -48,7 +57,7 @@ describe('GET /api/armador', () => {
     await pool.execute('UPDATE productos SET especificaciones = NULL WHERE id = 25');
 
     const respuesta = await api().get('/api/armador');
-    expect(respuesta.body.pasos[0].productos.map((p) => p.id)).not.toContain(25);
+    expect(respuesta.body.pasos[0].productos.map((p: Producto) => p.id)).not.toContain(25);
 
     await reiniciarBase();
   });
@@ -70,13 +79,13 @@ describe('POST /api/armador/verificar', () => {
 
   it('explica las incompatibilidades y marca las opciones que no encajan', async () => {
     const respuesta = await verificar({ ...ARMADO_AM5, memoria: 27, procesador: 3 });
-    const mensajes = respuesta.body.problemas.map((problema) => problema.mensaje);
+    const mensajes = respuesta.body.problemas.map((problema: Problema) => problema.mensaje);
 
     expect(respuesta.body.completo).toBe(false);
     expect(mensajes).toContain('El Intel Core i5-14400F usa socket LGA1700 y la motherboard es AM5.');
     expect(mensajes).toContain('La memoria es DDR4 y la motherboard usa DDR5.');
 
-    const ids = (opciones) =>
+    const ids = (opciones: Record<string, string>) =>
       Object.keys(opciones)
         .map(Number)
         .sort((a, b) => a - b);
@@ -120,7 +129,7 @@ describe('POST /api/armador/verificar', () => {
 });
 
 describe('Especificaciones de los productos', () => {
-  let admin;
+  let admin: string;
   const base = { nombre: 'Procesador AMD Ryzen 7 9700X', precio: 499999, stock: 4, categoria_id: 1, marca_id: 1 };
   const fichaValida = { socket: 'AM5', consumo: 88, graficos_integrados: true };
 
@@ -128,7 +137,7 @@ describe('Especificaciones de los productos', () => {
     admin = await ingresarComoAdmin();
   });
 
-  function crear(datos) {
+  function crear(datos: Record<string, unknown>) {
     return api().post('/api/productos').set(conSesion(admin)).send(datos);
   }
 
@@ -156,7 +165,7 @@ describe('Especificaciones de los productos', () => {
     expect(creado.body.especificaciones).toEqual(fichaValida);
 
     const armador = await api().get('/api/armador');
-    expect(armador.body.pasos[0].productos.map((p) => p.id)).toContain(creado.body.id);
+    expect(armador.body.pasos[0].productos.map((p: Producto) => p.id)).toContain(creado.body.id);
   });
 
   it('un producto que no es componente no guarda ficha', async () => {

@@ -8,8 +8,6 @@
     "strict": true,
     "noImplicitOverride": true,
     "noFallthroughCasesInSwitch": true,
-    "allowJs": true,
-    "checkJs": false,
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
