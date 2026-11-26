@@ -2,12 +2,14 @@ import js from '@eslint/js';
 import globals from 'globals';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
+import tseslint from 'typescript-eslint';
 
-export default [
+export default tseslint.config(
   { ignores: ['dist', 'node_modules', 'coverage'] },
   js.configs.recommended,
+  tseslint.configs.recommended,
   {
-    files: ['**/*.{js,jsx}'],
+    files: ['**/*.{js,jsx,ts,tsx}'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
@@ -22,13 +24,15 @@ export default [
       'react/prop-types': 'off',
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
-      'no-unused-vars': ['error', { args: 'none' }],
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': ['error', { args: 'none' }],
+      '@typescript-eslint/consistent-type-imports': 'error',
       'prefer-const': 'error',
       eqeqeq: ['error', 'always'],
     },
   },
   {
-    files: ['vite.config.js', 'vitest.config.js', 'eslint.config.js'],
+    files: ['vite.config.ts', 'vitest.config.ts', 'eslint.config.js'],
     languageOptions: { globals: globals.node },
-  },
-];
+  }
+);
