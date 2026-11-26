@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useCarritoStore, contarProductos } from '../store/carritoStore';
 import Icono from './Icono';
@@ -13,8 +13,27 @@ export default function Navbar() {
   const usuario = useAuthStore((estado) => estado.usuario);
   const items = useCarritoStore((estado) => estado.items);
 
+  const { pathname } = useLocation();
+
   const [busqueda, setBusqueda] = useState('');
+  const [menuAbierto, setMenuAbierto] = useState(false);
   const cantidadCarrito = contarProductos(items);
+
+  useEffect(() => {
+    setMenuAbierto(false);
+  }, [pathname]);
+
+  const enlaces = [
+    { a: '/', texto: 'Inicio', exacto: true },
+    { a: '/catalogo', texto: 'Catálogo' },
+    ...(usuario
+      ? [
+          { a: '/dashboard', texto: 'Mi panel' },
+          { a: '/mis-pedidos', texto: 'Mis pedidos' },
+        ]
+      : []),
+    ...(usuario?.rol === 'admin' ? [{ a: '/admin', texto: 'Administración' }] : []),
+  ];
 
   function salir() {
     navigate('/salir');
@@ -42,7 +61,7 @@ export default function Navbar() {
         <form
           role="search"
           onSubmit={buscar}
-          className="flex h-11 min-w-0 flex-1 basis-72 items-center gap-2.5 rounded-full border border-neutral-200 bg-neutral-100 px-4 focus-within:border-orange-600 focus-within:ring-4 focus-within:ring-orange-100"
+          className="order-last flex h-11 w-full min-w-0 items-center md:order-none md:w-auto md:flex-1 md:basis-72 gap-2.5 rounded-full border border-neutral-200 bg-neutral-100 px-4 focus-within:border-orange-600 focus-within:ring-4 focus-within:ring-orange-100"
         >
           <Icono nombre="buscar" className="size-4.5 shrink-0 text-neutral-500" />
           <label htmlFor="buscador-encabezado" className="sr-only">
@@ -58,31 +77,33 @@ export default function Navbar() {
           />
         </form>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {usuario ? (
-            <>
-              <Link
-                to="/cuenta"
-                className="flex min-h-9 items-center gap-2 rounded-lg px-2 text-sm text-neutral-600 hover:bg-neutral-100"
-              >
-                <Icono nombre="usuario" className="size-4.5" />
-                Hola, <strong className="font-semibold text-neutral-950">{usuario.nombre}</strong>
-              </Link>
-              <button type="button" onClick={salir} className="btn btn-secundario btn-chico">
-                <Icono nombre="salir" className="size-4" />
-                Salir
-              </button>
-            </>
-          ) : (
-            <>
-              <NavLink to="/login" className={claseLink}>
-                Ingresar
-              </NavLink>
-              <Link to="/registro" className="btn btn-chico">
-                Crear cuenta
-              </Link>
-            </>
-          )}
+        <div className="ml-auto flex items-center gap-2">
+          <div className="hidden items-center gap-2 md:flex">
+            {usuario ? (
+              <>
+                <Link
+                  to="/cuenta"
+                  className="flex min-h-9 items-center gap-2 rounded-lg px-2 text-sm text-neutral-600 hover:bg-neutral-100"
+                >
+                  <Icono nombre="usuario" className="size-4.5" />
+                  Hola, <strong className="font-semibold text-neutral-950">{usuario.nombre}</strong>
+                </Link>
+                <button type="button" onClick={salir} className="btn btn-secundario btn-chico">
+                  <Icono nombre="salir" className="size-4" />
+                  Salir
+                </button>
+              </>
+            ) : (
+              <>
+                <NavLink to="/login" className={claseLink}>
+                  Ingresar
+                </NavLink>
+                <Link to="/registro" className="btn btn-chico">
+                  Crear cuenta
+                </Link>
+              </>
+            )}
+          </div>
 
           <NavLink
             to="/carrito"
@@ -94,39 +115,67 @@ export default function Navbar() {
             }
           >
             <Icono nombre="carrito" className="size-5" />
-            Carrito
+            <span className="hidden sm:inline">Carrito</span>
             <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-orange-700 px-1.5 text-xs font-bold text-white">
               {cantidadCarrito}
             </span>
           </NavLink>
+
+          <button
+            type="button"
+            className="inline-flex size-11 items-center justify-center rounded-xl border border-neutral-200 hover:bg-neutral-100 md:hidden"
+            aria-expanded={menuAbierto}
+            aria-controls="menu-movil"
+            aria-label={menuAbierto ? 'Cerrar menú' : 'Abrir menú'}
+            onClick={() => setMenuAbierto((abierto) => !abierto)}
+          >
+            <Icono nombre={menuAbierto ? 'cerrar' : 'menu'} className="size-5" />
+          </button>
         </div>
       </div>
 
-      <div className="border-t border-neutral-100">
+      {menuAbierto && (
+        <div id="menu-movil" className="border-t border-neutral-100 md:hidden">
+          <nav aria-label="Menú" className="contenedor flex flex-col gap-1 py-3">
+            {enlaces.map((enlace) => (
+              <NavLink key={enlace.a} to={enlace.a} end={enlace.exacto} className={claseLink}>
+                {enlace.texto}
+              </NavLink>
+            ))}
+            <div className="mt-2 flex flex-wrap gap-2 border-t border-neutral-100 pt-3">
+              {usuario ? (
+                <>
+                  <Link to="/cuenta" className="btn btn-secundario btn-chico">
+                    <Icono nombre="usuario" className="size-4" />
+                    Mi cuenta
+                  </Link>
+                  <button type="button" onClick={salir} className="btn btn-secundario btn-chico">
+                    <Icono nombre="salir" className="size-4" />
+                    Salir
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link to="/login" className="btn btn-secundario btn-chico">
+                    Ingresar
+                  </Link>
+                  <Link to="/registro" className="btn btn-chico">
+                    Crear cuenta
+                  </Link>
+                </>
+              )}
+            </div>
+          </nav>
+        </div>
+      )}
+
+      <div className="hidden border-t border-neutral-100 md:block">
         <nav aria-label="Principal" className="contenedor flex flex-wrap items-center gap-1 py-2">
-          <NavLink to="/" end className={claseLink}>
-            Inicio
-          </NavLink>
-          <NavLink to="/catalogo" className={claseLink}>
-            Catálogo
-          </NavLink>
-
-          {usuario && (
-            <>
-              <NavLink to="/dashboard" className={claseLink}>
-                Mi panel
-              </NavLink>
-              <NavLink to="/mis-pedidos" className={claseLink}>
-                Mis pedidos
-              </NavLink>
-            </>
-          )}
-
-          {usuario?.rol === 'admin' && (
-            <NavLink to="/admin" className={claseLink}>
-              Administración
+          {enlaces.map((enlace) => (
+            <NavLink key={enlace.a} to={enlace.a} end={enlace.exacto} className={claseLink}>
+              {enlace.texto}
             </NavLink>
-          )}
+          ))}
         </nav>
       </div>
     </header>
