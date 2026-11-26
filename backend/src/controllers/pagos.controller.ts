@@ -1,13 +1,16 @@
+import type { Request, Response } from 'express';
 import { randomUUID } from 'node:crypto';
 import * as Pedido from '../models/pedido.model.js';
 import { config } from '../config.js';
 import { motivoDeRechazo, validarTarjeta } from '../utils/tarjetas.js';
 import { firmaEsValida } from '../utils/firmaWebhook.js';
 import * as MercadoPago from '../services/mercadoPago.js';
+import type { PagoDeMercadoPago } from '../services/mercadoPago.js';
+import type { PedidoConItems } from '../tipos.js';
 import { notificarPedido } from '../services/notificaciones.js';
 
-async function buscarPedidoParaPagar(req, res) {
-  const pedido = await Pedido.obtenerPorId(req.params.pedidoId);
+async function buscarPedidoParaPagar(req: Request, res: Response) {
+  const pedido = await Pedido.obtenerPorId(Number(req.params.pedidoId));
 
   if (!pedido) {
     res.status(404).json({ error: 'El pedido no existe' });
@@ -28,11 +31,11 @@ async function buscarPedidoParaPagar(req, res) {
   return pedido;
 }
 
-export function listarMedios(req, res) {
+export function listarMedios(req: Request, res: Response) {
   res.json({ mercadopago: MercadoPago.estaConfigurado(), simulado: config.pagoSimulado });
 }
 
-export async function pagarSimulado(req, res) {
+export async function pagarSimulado(req: Request, res: Response) {
   if (!config.pagoSimulado) {
     return res.status(404).json({ error: 'El pago simulado no está habilitado' });
   }
@@ -62,7 +65,7 @@ export async function pagarSimulado(req, res) {
   res.json(await Pedido.obtenerPorId(pedido.id));
 }
 
-export async function pagarConMercadoPago(req, res) {
+export async function pagarConMercadoPago(req: Request, res: Response) {
   if (!MercadoPago.estaConfigurado()) {
     return res.status(404).json({ error: 'Mercado Pago no está configurado en esta tienda' });
   }
@@ -75,7 +78,7 @@ export async function pagarConMercadoPago(req, res) {
   res.json({ url });
 }
 
-async function acreditarSiCorresponde(pago, pedido) {
+async function acreditarSiCorresponde(pago: PagoDeMercadoPago | null, pedido: PedidoConItems): Promise<boolean> {
   if (!MercadoPago.pagoCubrePedido(pago, pedido)) return false;
 
   const acreditado = await Pedido.marcarPagado(pedido.id, { medio: 'mercadopago', pagoId: String(pago.id) });
@@ -87,8 +90,8 @@ async function acreditarSiCorresponde(pago, pedido) {
   return acreditado;
 }
 
-export async function verificarMercadoPago(req, res) {
-  const pedido = await Pedido.obtenerPorId(req.params.pedidoId);
+export async function verificarMercadoPago(req: Request, res: Response) {
+  const pedido = await Pedido.obtenerPorId(Number(req.params.pedidoId));
   if (!pedido) {
     return res.status(404).json({ error: 'El pedido no existe' });
   }
@@ -104,7 +107,7 @@ export async function verificarMercadoPago(req, res) {
   res.json(await Pedido.obtenerPorId(pedido.id));
 }
 
-export async function recibirNotificacion(req, res) {
+export async function recibirNotificacion(req: Request, res: Response) {
   if (!MercadoPago.estaConfigurado()) {
     return res.sendStatus(404);
   }

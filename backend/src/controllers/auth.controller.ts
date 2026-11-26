@@ -1,3 +1,4 @@
+import type { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import * as Usuario from '../models/usuario.model.js';
 import { esTextoValido, esEmailValido, validarPassword } from '../utils/validaciones.js';
@@ -12,7 +13,7 @@ const HASH_DE_RELLENO = '$2b$10$2cpuXqFIhYURbXTkjXf7LucR5/8yel6thdZDhRNYPU39LNhM
 const MINUTOS_PARA_RESTABLECER = 60;
 const RESPUESTA_RECUPERACION = 'Si el email tiene una cuenta, te mandamos un enlace para elegir una contraseña nueva.';
 
-export async function registrar(req, res) {
+export async function registrar(req: Request, res: Response) {
   const { nombre, email, password } = req.body;
 
   if (!esTextoValido(nombre, 2, 100)) {
@@ -35,13 +36,16 @@ export async function registrar(req, res) {
 
   const id = await Usuario.crear({ nombre: nombre.trim(), email, password: hash, rol: 'cliente' });
   const usuario = await Usuario.obtenerPorId(id);
+  if (!usuario) {
+    throw new Error(`No se encontró el usuario ${id} recién creado`);
+  }
 
   enviarCorreo({ para: usuario.email, ...bienvenida(usuario) });
 
   res.status(201).json(usuario);
 }
 
-export async function iniciarSesion(req, res) {
+export async function iniciarSesion(req: Request, res: Response) {
   const { email, password } = req.body;
 
   if (!esEmailValido(email) || !esTextoValido(password, 1, 72)) {
@@ -63,7 +67,7 @@ export async function iniciarSesion(req, res) {
   });
 }
 
-export async function obtenerSesion(req, res) {
+export async function obtenerSesion(req: Request, res: Response) {
   const usuario = await Usuario.obtenerPorId(req.usuario.id);
   if (!usuario) {
     borrarSesion(res);
@@ -72,12 +76,12 @@ export async function obtenerSesion(req, res) {
   res.json({ usuario: { id: usuario.id, nombre: usuario.nombre, email: usuario.email, rol: usuario.rol } });
 }
 
-export function cerrarSesion(req, res) {
+export function cerrarSesion(req: Request, res: Response) {
   borrarSesion(res);
   res.json({ mensaje: 'Sesión cerrada' });
 }
 
-async function prepararRecuperacion(email) {
+async function prepararRecuperacion(email: string): Promise<void> {
   const usuario = await Usuario.obtenerPorEmail(email);
   if (!usuario) return;
 
@@ -91,7 +95,7 @@ async function prepararRecuperacion(email) {
   });
 }
 
-export async function pedirRecuperacion(req, res) {
+export async function pedirRecuperacion(req: Request, res: Response) {
   const { email } = req.body;
   if (!esEmailValido(email)) {
     return res.status(400).json({ error: 'El email no tiene un formato válido' });
@@ -102,11 +106,11 @@ export async function pedirRecuperacion(req, res) {
   try {
     await prepararRecuperacion(email);
   } catch (error) {
-    console.error('No se pudo preparar la recuperación de contraseña:', error.message);
+    console.error('No se pudo preparar la recuperación de contraseña:', (error as Error).message);
   }
 }
 
-export async function restablecerPassword(req, res) {
+export async function restablecerPassword(req: Request, res: Response) {
   const { token, password } = req.body;
 
   if (!esTextoValido(token, 20, 200)) {

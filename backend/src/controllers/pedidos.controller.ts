@@ -1,34 +1,43 @@
+import type { Request, Response } from 'express';
 import * as Pedido from '../models/pedido.model.js';
 import { esTextoValido, esEnteroValido } from '../utils/validaciones.js';
-import { esProvinciaValida, METODOS_DE_ENTREGA } from '../utils/envios.js';
+import { esProvinciaValida } from '../utils/envios.js';
+import type { EstadoPedido, MetodoEntrega, Pedido as DatosDePedido, PedidoConItems } from '../tipos.js';
 import { config } from '../config.js';
 import { notificarPedido } from '../services/notificaciones.js';
 
-const ESTADOS = ['pendiente', 'pagado', 'enviado', 'entregado', 'cancelado'];
+const ESTADOS: EstadoPedido[] = ['pendiente', 'pagado', 'enviado', 'entregado', 'cancelado'];
 
-export async function listar(req, res) {
+export async function listar(req: Request, res: Response) {
   const pedidos = await Pedido.obtenerTodos();
   res.json(pedidos);
 }
 
-export async function listarMios(req, res) {
+export async function listarMios(req: Request, res: Response) {
   const pedidos = await Pedido.obtenerPorUsuario(req.usuario.id);
   res.json(pedidos);
 }
 
-function estadosSiguientes(pedido) {
+type Entrega =
+  | { error: string }
+  | { error?: undefined; metodoEntrega: MetodoEntrega; provincia: string | null; direccionEnvio: string | null };
+
+function estadosSiguientes(pedido: DatosDePedido): EstadoPedido[] {
   if (pedido.estado === 'pendiente') return ['pagado'];
   if (pedido.estado === 'pagado') return pedido.metodo_entrega === 'retiro' ? ['entregado'] : ['enviado'];
   if (pedido.estado === 'enviado') return ['entregado'];
   return [];
 }
 
-function conAcciones(pedido) {
+function conAcciones(pedido: PedidoConItems | undefined) {
+  if (!pedido) {
+    throw new Error('El pedido ya no existe');
+  }
   return { ...pedido, estados_siguientes: estadosSiguientes(pedido) };
 }
 
-export async function obtener(req, res) {
-  const pedido = await Pedido.obtenerPorId(req.params.id);
+export async function obtener(req: Request, res: Response) {
+  const pedido = await Pedido.obtenerPorId(Number(req.params.id));
   if (!pedido) {
     return res.status(404).json({ error: 'El pedido no existe' });
   }
@@ -38,8 +47,8 @@ export async function obtener(req, res) {
   res.json(conAcciones(pedido));
 }
 
-function leerEntrega({ metodo_entrega, provincia, direccion_envio }) {
-  if (!METODOS_DE_ENTREGA.includes(metodo_entrega)) {
+function leerEntrega({ metodo_entrega, provincia, direccion_envio }: Record<string, unknown>): Entrega {
+  if (metodo_entrega !== 'envio' && metodo_entrega !== 'retiro') {
     return { error: 'Elegí si el pedido se envía o se retira en el local' };
   }
   if (metodo_entrega === 'retiro') {
@@ -54,11 +63,11 @@ function leerEntrega({ metodo_entrega, provincia, direccion_envio }) {
   return { metodoEntrega: 'envio', provincia, direccionEnvio: direccion_envio.trim() };
 }
 
-export async function crear(req, res) {
+export async function crear(req: Request, res: Response) {
   const { items } = req.body;
 
   const entrega = leerEntrega(req.body);
-  if (entrega.error) {
+  if (entrega.error !== undefined) {
     return res.status(400).json({ error: entrega.error });
   }
   if (!Array.isArray(items) || items.length === 0) {
@@ -76,7 +85,9 @@ export async function crear(req, res) {
   }));
 
   const id = await Pedido.crear(req.usuario.id, {
-    ...entrega,
+    metodoEntrega: entrega.metodoEntrega,
+    provincia: entrega.provincia,
+    direccionEnvio: entrega.direccionEnvio,
     items: itemsLimpios,
     minutosParaPagar: config.minutosParaPagar,
   });
@@ -84,8 +95,8 @@ export async function crear(req, res) {
   res.status(201).json(await Pedido.obtenerPorId(id));
 }
 
-export async function actualizar(req, res) {
-  const pedido = await Pedido.obtenerPorId(req.params.id);
+export async function actualizar(req: Request, res: Response) {
+  const pedido = await Pedido.obtenerPorId(Number(req.params.id));
   if (!pedido) {
     return res.status(404).json({ error: 'El pedido no existe' });
   }
@@ -120,8 +131,8 @@ export async function actualizar(req, res) {
   res.json(conAcciones(await Pedido.obtenerPorId(pedido.id)));
 }
 
-export async function cancelar(req, res) {
-  const pedido = await Pedido.obtenerPorId(req.params.id);
+export async function cancelar(req: Request, res: Response) {
+  const pedido = await Pedido.obtenerPorId(Number(req.params.id));
   if (!pedido) {
     return res.status(404).json({ error: 'El pedido no existe' });
   }
@@ -131,7 +142,7 @@ export async function cancelar(req, res) {
     return res.status(403).json({ error: 'No podés cancelar un pedido de otro usuario' });
   }
 
-  const cancelables = esAdmin ? ['pendiente', 'pagado'] : ['pendiente'];
+  const cancelables: EstadoPedido[] = esAdmin ? ['pendiente', 'pagado'] : ['pendiente'];
   const cancelado = cancelables.includes(pedido.estado) && (await Pedido.cancelar(pedido.id, cancelables));
   if (!cancelado) {
     return res.status(409).json({
@@ -145,8 +156,8 @@ export async function cancelar(req, res) {
   res.json(conAcciones(await Pedido.obtenerPorId(pedido.id)));
 }
 
-export async function eliminar(req, res) {
-  const pedido = await Pedido.obtenerPorId(req.params.id);
+export async function eliminar(req: Request, res: Response) {
+  const pedido = await Pedido.obtenerPorId(Number(req.params.id));
   if (!pedido) {
     return res.status(404).json({ error: 'El pedido no existe' });
   }

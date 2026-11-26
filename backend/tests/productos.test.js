@@ -72,6 +72,8 @@ describe('Listado y búsqueda', () => {
     ['un orden que no existe', '?orden=al_azar'],
     ['un precio negativo', '?precioMin=-5'],
     ['ids que no son números', '?ids=1,dos'],
+    ['una categoría que no es un número', '?categoria=procesadores'],
+    ['una marca que no es un número', '?marca=1.5'],
   ])('rechaza %s', async (_caso, filtros) => {
     const respuesta = await api().get(`/api/productos${filtros}`);
     expect(respuesta.status).toBe(400);

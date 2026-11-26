@@ -1,10 +1,11 @@
+import type { Request, Response } from 'express';
 import * as Producto from '../models/producto.model.js';
 import * as Categoria from '../models/categoria.model.js';
 import { validarEspecificaciones } from '../armador/especificaciones.js';
 import { esTextoValido, esNumero, esEnteroValido } from '../utils/validaciones.js';
 import { borrarImagen, detectarTipoDeImagen, guardarImagen } from '../utils/imagenes.js';
 
-function validar({ nombre, descripcion, precio, stock, imagen_url, categoria_id, marca_id }) {
+function validar({ nombre, descripcion, precio, stock, imagen_url, categoria_id, marca_id }: Record<string, unknown>) {
   if (!esTextoValido(nombre, 2, 150)) {
     return 'El nombre es obligatorio (entre 2 y 150 caracteres)';
   }
@@ -29,7 +30,7 @@ function validar({ nombre, descripcion, precio, stock, imagen_url, categoria_id,
   return null;
 }
 
-function prepararDatos(body) {
+function prepararDatos(body: Record<string, string>) {
   return {
     nombre: body.nombre.trim(),
     descripcion: body.descripcion || null,
@@ -41,31 +42,36 @@ function prepararDatos(body) {
   };
 }
 
-function leerEntero(valor, { porDefecto, minimo, maximo }) {
+function leerEntero<T extends number | undefined>(
+  valor: unknown,
+  { porDefecto, minimo, maximo }: { porDefecto: T; minimo: number; maximo: number }
+): number | T | null {
   if (valor === undefined || valor === '') return porDefecto;
   if (!esEnteroValido(valor, minimo) || Number(valor) > maximo) return null;
   return Number(valor);
 }
 
-function leerPrecio(valor) {
+function leerPrecio(valor: unknown): number | undefined | null {
   if (valor === undefined || valor === '') return undefined;
   if (!esNumero(valor) || Number(valor) < 0) return null;
   return Number(valor);
 }
 
-function leerIds(valor) {
+function leerIds(valor: unknown): number[] | undefined | null {
   if (valor === undefined || valor === '') return undefined;
   const ids = String(valor).split(',');
   if (ids.length > 100 || !ids.every((id) => esEnteroValido(id, 1))) return null;
   return ids.map(Number);
 }
 
-export async function listar(req, res) {
+export async function listar(req: Request, res: Response) {
   const consulta = req.query;
 
   const pagina = leerEntero(consulta.pagina, { porDefecto: 1, minimo: 1, maximo: 10000 });
   const porPagina = leerEntero(consulta.porPagina, { porDefecto: 12, minimo: 1, maximo: 100 });
-  const orden = consulta.orden || 'recientes';
+  const orden = typeof consulta.orden === 'string' && consulta.orden ? consulta.orden : 'recientes';
+  const categoria = leerEntero(consulta.categoria, { porDefecto: undefined, minimo: 1, maximo: 1e9 });
+  const marca = leerEntero(consulta.marca, { porDefecto: undefined, minimo: 1, maximo: 1e9 });
   const precioMin = leerPrecio(consulta.precioMin);
   const precioMax = leerPrecio(consulta.precioMax);
   const ids = leerIds(consulta.ids);
@@ -79,13 +85,16 @@ export async function listar(req, res) {
   if (precioMin === null || precioMax === null) {
     return res.status(400).json({ error: 'Los precios mínimo y máximo tienen que ser números, 0 o más' });
   }
+  if (categoria === null || marca === null) {
+    return res.status(400).json({ error: 'La categoría y la marca tienen que ser números enteros' });
+  }
   if (ids === null) {
     return res.status(400).json({ error: 'ids tiene que ser una lista de hasta 100 números separados por comas' });
   }
 
   const { productos, total } = await Producto.buscar({
-    categoria: consulta.categoria,
-    marca: consulta.marca,
+    categoria,
+    marca,
     buscar: typeof consulta.buscar === 'string' ? consulta.buscar.slice(0, 100) : '',
     conStock: consulta.conStock === '1' || consulta.conStock === 'true',
     ids,
@@ -99,25 +108,25 @@ export async function listar(req, res) {
   res.json({ productos, total, pagina, porPagina, paginas: Math.ceil(total / porPagina) });
 }
 
-export async function masVendidos(req, res) {
+export async function masVendidos(req: Request, res: Response) {
   const productos = await Producto.obtenerMasVendidos();
   res.json(productos);
 }
 
-export async function obtener(req, res) {
-  const producto = await Producto.obtenerPorId(req.params.id);
+export async function obtener(req: Request, res: Response) {
+  const producto = await Producto.obtenerPorId(Number(req.params.id));
   if (!producto) {
     return res.status(404).json({ error: 'El producto no existe' });
   }
   res.json(producto);
 }
 
-async function leerEspecificaciones(categoriaId, especificaciones) {
-  const categoria = await Categoria.obtenerPorId(categoriaId);
+async function leerEspecificaciones(categoriaId: unknown, especificaciones: unknown) {
+  const categoria = await Categoria.obtenerPorId(Number(categoriaId));
   return validarEspecificaciones(categoria?.componente, especificaciones);
 }
 
-export async function crear(req, res) {
+export async function crear(req: Request, res: Response) {
   const error = validar(req.body);
   if (error) {
     return res.status(400).json({ error });
@@ -128,12 +137,12 @@ export async function crear(req, res) {
     return res.status(400).json({ error: especificaciones.error });
   }
 
-  const id = await Producto.crear({ ...prepararDatos(req.body), especificaciones: especificaciones.valor });
+  const id = await Producto.crear({ ...prepararDatos(req.body), especificaciones: especificaciones.valor ?? null });
   res.status(201).json(await Producto.obtenerPorId(id));
 }
 
-export async function actualizar(req, res) {
-  const { id } = req.params;
+export async function actualizar(req: Request, res: Response) {
+  const id = Number(req.params.id);
 
   const existente = await Producto.obtenerPorId(id);
   if (!existente) {
@@ -154,7 +163,7 @@ export async function actualizar(req, res) {
     return res.status(400).json({ error: especificaciones.error });
   }
 
-  const datos = { ...prepararDatos(req.body), especificaciones: especificaciones.valor };
+  const datos = { ...prepararDatos(req.body), especificaciones: especificaciones.valor ?? null };
   await Producto.actualizar(id, datos);
   if (existente.imagen_url !== datos.imagen_url) {
     await borrarImagen(existente.imagen_url);
@@ -163,8 +172,8 @@ export async function actualizar(req, res) {
   res.json(await Producto.obtenerPorId(id));
 }
 
-export async function eliminar(req, res) {
-  const producto = await Producto.obtenerPorId(req.params.id);
+export async function eliminar(req: Request, res: Response) {
+  const producto = await Producto.obtenerPorId(Number(req.params.id));
   if (!producto) {
     return res.status(404).json({ error: 'El producto no existe' });
   }
@@ -174,8 +183,8 @@ export async function eliminar(req, res) {
   res.json({ mensaje: 'Producto eliminado' });
 }
 
-export async function subirImagen(req, res) {
-  const producto = await Producto.obtenerPorId(req.params.id);
+export async function subirImagen(req: Request, res: Response) {
+  const producto = await Producto.obtenerPorId(Number(req.params.id));
   if (!producto) {
     return res.status(404).json({ error: 'El producto no existe' });
   }
@@ -195,8 +204,8 @@ export async function subirImagen(req, res) {
   res.json(await Producto.obtenerPorId(producto.id));
 }
 
-export async function quitarImagen(req, res) {
-  const producto = await Producto.obtenerPorId(req.params.id);
+export async function quitarImagen(req: Request, res: Response) {
+  const producto = await Producto.obtenerPorId(Number(req.params.id));
   if (!producto) {
     return res.status(404).json({ error: 'El producto no existe' });
   }

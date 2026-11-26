@@ -19,6 +19,6 @@ app.listen(config.puerto, async () => {
     iniciarTareas();
   } catch (error) {
     console.error('No se pudo conectar a MySQL.');
-    console.error(explicarErrorMysql(error));
+    console.error(explicarErrorMysql(error as Error));
   }
 });
