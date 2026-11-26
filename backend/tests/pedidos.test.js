@@ -138,6 +138,7 @@ describe('Creación de pedidos', () => {
     const minutos = (new Date(creado.body.vence_en) - new Date(creado.body.fecha)) / 60000;
 
     expect(minutos).toBeCloseTo(30, 0);
+    expect(creado.body.segundos_para_pagar).toBeGreaterThan(29 * 60);
   });
 });
 

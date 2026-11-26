@@ -8,7 +8,10 @@ function crearError(status, mensaje) {
 }
 
 const SELECT_PEDIDOS = `
-  SELECT p.*, u.nombre AS cliente, u.email AS cliente_email
+  SELECT p.*, u.nombre AS cliente, u.email AS cliente_email,
+         IF(p.estado = 'pendiente' AND p.vence_en IS NOT NULL,
+            GREATEST(TIMESTAMPDIFF(SECOND, NOW(), p.vence_en), 0),
+            NULL) AS segundos_para_pagar
   FROM pedidos p
   JOIN usuarios u ON u.id = p.usuario_id
 `;
@@ -156,4 +159,13 @@ export async function cancelarVencidos() {
     if (await cancelar(fila.id, ['pendiente'])) cancelados++;
   }
   return cancelados;
+}
+
+export async function marcarPagado(id, { medio, pagoId }) {
+  const [resultado] = await pool.execute(
+    `UPDATE pedidos SET estado = 'pagado', medio_pago = ?, pago_id = ?, pagado_en = NOW(), vence_en = NULL
+     WHERE id = ? AND estado = 'pendiente'`,
+    [medio, pagoId, id]
+  );
+  return resultado.affectedRows === 1;
 }

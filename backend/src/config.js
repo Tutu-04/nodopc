@@ -7,6 +7,7 @@ export const config = {
   jwtSecret: process.env.JWT_SECRET,
   cookieSegura: process.env.COOKIE_SEGURA === 'true',
   minutosParaPagar: Number(process.env.MINUTOS_PARA_PAGAR) || 30,
+  pagoSimulado: process.env.PAGO_SIMULADO !== 'false',
   uploadsDir: process.env.UPLOADS_DIR || fileURLToPath(new URL('../uploads', import.meta.url)),
   db: {
     host: process.env.DB_HOST,
