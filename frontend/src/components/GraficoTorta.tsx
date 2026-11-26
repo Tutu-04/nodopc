@@ -1,7 +1,20 @@
 import { Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { formatearPorcentaje } from '../utils/formato';
 
-function EtiquetaPorcentaje({ x, y, textAnchor, percent }) {
+interface PropsDeEtiqueta {
+  x?: number;
+  y?: number;
+  textAnchor?: 'start' | 'middle' | 'end' | 'inherit';
+  percent?: number;
+}
+
+export interface DatoDeTorta {
+  nombre: string;
+  valor: number;
+  color: string;
+}
+
+function EtiquetaPorcentaje({ x, y, textAnchor, percent = 0 }: PropsDeEtiqueta) {
   if (percent < 0.04) return null;
 
   return (
@@ -11,7 +24,14 @@ function EtiquetaPorcentaje({ x, y, textAnchor, percent }) {
   );
 }
 
-export default function GraficoTorta({ datos, formatoValor, dona = false, alto = 300 }) {
+interface Props {
+  datos: DatoDeTorta[];
+  formatoValor: (valor: number) => string;
+  dona?: boolean;
+  alto?: number;
+}
+
+export default function GraficoTorta({ datos, formatoValor, dona = false, alto = 300 }: Props) {
   const total = datos.reduce((suma, dato) => suma + dato.valor, 0);
 
   return (
@@ -30,7 +50,10 @@ export default function GraficoTorta({ datos, formatoValor, dona = false, alto =
         />
 
         <Tooltip
-          formatter={(valor, nombre) => [`${formatoValor(valor)} (${formatearPorcentaje(valor, total)})`, nombre]}
+          formatter={(valor, nombre) => [
+            `${formatoValor(Number(valor))} (${formatearPorcentaje(Number(valor), total)})`,
+            nombre,
+          ]}
           contentStyle={{ border: '1px solid #d4d4d4', borderRadius: 0, fontSize: 13 }}
           itemStyle={{ color: '#171717' }}
         />

@@ -4,7 +4,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import RutaProtegida from './RutaProtegida';
 import { useAuthStore } from '../store/authStore';
 
-function renderizarEn(ruta, { soloAdmin = false } = {}) {
+function renderizarEn(ruta: string, { soloAdmin = false } = {}) {
   render(
     <MemoryRouter initialEntries={[ruta]}>
       <Routes>
@@ -29,19 +29,19 @@ describe('RutaProtegida', () => {
   });
 
   it('muestra la página si hay sesión', () => {
-    useAuthStore.getState().iniciarSesion({ id: 2, nombre: 'Cliente', rol: 'cliente' });
+    useAuthStore.getState().iniciarSesion({ id: 2, nombre: 'Cliente', email: 'prueba@nodopc.com', rol: 'cliente' });
     renderizarEn('/privada');
     expect(screen.getByText('Contenido privado')).toBeInTheDocument();
   });
 
   it('manda al panel a un cliente que entra a una ruta de administrador', () => {
-    useAuthStore.getState().iniciarSesion({ id: 2, nombre: 'Cliente', rol: 'cliente' });
+    useAuthStore.getState().iniciarSesion({ id: 2, nombre: 'Cliente', email: 'prueba@nodopc.com', rol: 'cliente' });
     renderizarEn('/privada', { soloAdmin: true });
     expect(screen.getByText('Panel')).toBeInTheDocument();
   });
 
   it('deja pasar al administrador', () => {
-    useAuthStore.getState().iniciarSesion({ id: 1, nombre: 'Admin', rol: 'admin' });
+    useAuthStore.getState().iniciarSesion({ id: 1, nombre: 'Admin', email: 'prueba@nodopc.com', rol: 'admin' });
     renderizarEn('/privada', { soloAdmin: true });
     expect(screen.getByText('Contenido privado')).toBeInTheDocument();
   });

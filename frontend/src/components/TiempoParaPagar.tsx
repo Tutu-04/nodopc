@@ -1,7 +1,7 @@
 import { useCuentaRegresiva } from '../hooks/useCuentaRegresiva';
 import { formatearCuentaRegresiva } from '../utils/tarjetas';
 
-export default function TiempoParaPagar({ segundos }) {
+export default function TiempoParaPagar({ segundos }: { segundos: number | null }) {
   const restantes = useCuentaRegresiva(segundos);
   if (restantes === null) return null;
 

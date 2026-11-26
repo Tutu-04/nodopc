@@ -1,4 +1,4 @@
-export default function Cargando({ texto = 'Cargando...' }) {
+export default function Cargando({ texto = 'Cargando...' }: { texto?: string }) {
   return (
     <p className="flex items-center gap-3 py-10 text-sm text-neutral-500">
       <span

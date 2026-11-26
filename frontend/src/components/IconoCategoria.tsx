@@ -12,11 +12,11 @@ const ICONOS = {
   caja: 'M3 7l9-4 9 4v10l-9 4-9-4z M3 7l9 4 9-4 M12 11v10',
 };
 
-function normalizar(texto) {
+function normalizar(texto: string | null | undefined): string {
   return (texto ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 }
 
-function elegirIcono(categoria) {
+function elegirIcono(categoria: string | null | undefined): string {
   const nombre = normalizar(categoria);
 
   if (nombre.includes('procesador')) return ICONOS.procesador;
@@ -31,7 +31,13 @@ function elegirIcono(categoria) {
   return ICONOS.caja;
 }
 
-export default function IconoCategoria({ categoria, className = 'size-6', grosor = 1.8 }) {
+interface Props {
+  categoria: string | null | undefined;
+  className?: string;
+  grosor?: number;
+}
+
+export default function IconoCategoria({ categoria, className = 'size-6', grosor = 1.8 }: Props) {
   return (
     <svg
       className={className}

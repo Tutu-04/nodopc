@@ -1,3 +1,4 @@
+import type { ProductoDeLista } from '../tipos';
 import { Link } from 'react-router-dom';
 import { useCarritoStore } from '../store/carritoStore';
 import { formatearPrecio } from '../utils/formato';
@@ -5,7 +6,7 @@ import ImagenProducto from './ImagenProducto';
 import InsigniaStock from './InsigniaStock';
 import Icono from './Icono';
 
-export default function ProductoCard({ producto }) {
+export default function ProductoCard({ producto }: { producto: ProductoDeLista }) {
   const agregar = useCarritoStore((estado) => estado.agregar);
   const sinStock = producto.stock === 0;
 

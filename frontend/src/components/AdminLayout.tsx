@@ -1,9 +1,10 @@
 import { Suspense } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import Icono from './Icono';
+import type { NombreDeIcono } from './Icono';
 import Cargando from './Cargando';
 
-const SECCIONES = [
+const SECCIONES: { ruta: string; texto: string; icono: NombreDeIcono }[] = [
   { ruta: '/admin/productos', texto: 'Productos', icono: 'productos' },
   { ruta: '/admin/categorias', texto: 'Categorías', icono: 'categorias' },
   { ruta: '/admin/marcas', texto: 'Marcas', icono: 'marcas' },
@@ -11,7 +12,7 @@ const SECCIONES = [
   { ruta: '/admin/pedidos', texto: 'Pedidos', icono: 'pedidos' },
 ];
 
-function claseLink({ isActive }) {
+function claseLink({ isActive }: { isActive: boolean }): string {
   return isActive ? 'menu-link menu-link-activo' : 'menu-link';
 }
 

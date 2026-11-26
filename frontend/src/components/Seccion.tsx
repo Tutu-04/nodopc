@@ -1,4 +1,12 @@
-export default function Seccion({ titulo, descripcion, children }) {
+import type { ReactNode } from 'react';
+
+interface Props {
+  titulo: string;
+  descripcion?: string;
+  children: ReactNode;
+}
+
+export default function Seccion({ titulo, descripcion, children }: Props) {
   return (
     <section className="tarjeta flex min-w-0 flex-col gap-5">
       <div>

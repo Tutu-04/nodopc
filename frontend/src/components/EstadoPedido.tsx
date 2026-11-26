@@ -1,4 +1,6 @@
-const ESTADOS = {
+import type { EstadoPedido as Estado } from '../tipos';
+
+const ESTADOS: Record<Estado, { texto: string; clases: string }> = {
   pendiente: { texto: 'Pendiente de pago', clases: 'bg-amber-100 text-amber-900' },
   pagado: { texto: 'Pagado', clases: 'bg-blue-100 text-blue-900' },
   enviado: { texto: 'Enviado', clases: 'bg-pink-100 text-pink-900' },
@@ -6,11 +8,11 @@ const ESTADOS = {
   cancelado: { texto: 'Cancelado', clases: 'bg-neutral-200 text-neutral-700' },
 };
 
-export function textoDeEstado(estado) {
-  return ESTADOS[estado]?.texto ?? estado;
+export function textoDeEstado(estado: string): string {
+  return ESTADOS[estado as Estado]?.texto ?? estado;
 }
 
-export default function EstadoPedido({ estado }) {
-  const { clases = 'bg-neutral-100 text-neutral-800' } = ESTADOS[estado] ?? {};
+export default function EstadoPedido({ estado }: { estado: string }) {
+  const { clases = 'bg-neutral-100 text-neutral-800' } = ESTADOS[estado as Estado] ?? {};
   return <span className={`insignia whitespace-nowrap ${clases}`}>{textoDeEstado(estado)}</span>;
 }

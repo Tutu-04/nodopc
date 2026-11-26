@@ -29,7 +29,15 @@ const ICONOS = {
   menu: 'M4 7h16 M4 12h16 M4 17h16',
 };
 
-export default function Icono({ nombre, className = 'size-5', grosor = 2 }) {
+export type NombreDeIcono = keyof typeof ICONOS;
+
+interface Props {
+  nombre: NombreDeIcono;
+  className?: string;
+  grosor?: number;
+}
+
+export default function Icono({ nombre, className = 'size-5', grosor = 2 }: Props) {
   return (
     <svg
       className={className}

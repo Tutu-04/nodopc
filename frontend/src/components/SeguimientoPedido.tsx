@@ -1,7 +1,9 @@
 import Icono from './Icono';
 
-function pasosDe(pedido) {
-  const pasos = [
+import type { EstadoPedido, Pedido } from '../tipos';
+
+function pasosDe(pedido: Pedido) {
+  const pasos: { estado: EstadoPedido; texto: string }[] = [
     { estado: 'pendiente', texto: 'Pedido creado' },
     { estado: 'pagado', texto: 'Pago acreditado' },
   ];
@@ -12,7 +14,7 @@ function pasosDe(pedido) {
   return pasos;
 }
 
-export default function SeguimientoPedido({ pedido }) {
+export default function SeguimientoPedido({ pedido }: { pedido: Pedido }) {
   if (pedido.estado === 'cancelado') return null;
 
   const pasos = pasosDe(pedido);

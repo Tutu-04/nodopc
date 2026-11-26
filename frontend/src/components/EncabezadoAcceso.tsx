@@ -1,4 +1,4 @@
-export default function EncabezadoAcceso({ titulo, descripcion }) {
+export default function EncabezadoAcceso({ titulo, descripcion }: { titulo: string; descripcion: string }) {
   return (
     <div className="mb-6 flex flex-col items-center gap-3 text-center">
       <span className="flex size-12 items-center justify-center rounded-xl bg-neutral-950 text-xl font-black text-white">

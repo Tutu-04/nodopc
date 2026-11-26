@@ -1,4 +1,6 @@
-export default function Dato({ titulo, valor }) {
+import type { ReactNode } from 'react';
+
+export default function Dato({ titulo, valor }: { titulo: string; valor: ReactNode }) {
   return (
     <div className="tarjeta p-5">
       <p className="subtitulo">{titulo}</p>

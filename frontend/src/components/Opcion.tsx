@@ -1,4 +1,26 @@
-export default function Opcion({ nombre, valor, elegido, onElegir, titulo, detalle, extra, deshabilitada = false }) {
+import type { ReactNode } from 'react';
+
+interface Props<T extends string> {
+  nombre: string;
+  valor: T;
+  elegido: boolean;
+  onElegir: (valor: T) => void;
+  titulo: ReactNode;
+  detalle?: ReactNode;
+  extra?: ReactNode;
+  deshabilitada?: boolean;
+}
+
+export default function Opcion<T extends string>({
+  nombre,
+  valor,
+  elegido,
+  onElegir,
+  titulo,
+  detalle,
+  extra,
+  deshabilitada = false,
+}: Props<T>) {
   return (
     <label
       className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition ${

@@ -3,16 +3,33 @@ import { COLOR_BARRAS } from '../utils/colores';
 
 const ESTILO_EJE = { fontSize: 12, fill: '#525252' };
 
-function recortar(texto, largo) {
+function recortar(texto: string, largo: number): string {
   return texto.length > largo ? `${texto.slice(0, largo - 1)}…` : texto;
 }
 
-function EtiquetaCategoria({ x, y, payload }) {
+interface PropsDeEtiqueta {
+  x?: number | string;
+  y?: number | string;
+  payload?: { value: string };
+}
+
+function EtiquetaCategoria({ x, y, payload }: PropsDeEtiqueta) {
   return (
     <text x={x} y={y} dy={4} textAnchor="end" fill="#525252" fontSize={12}>
-      {recortar(payload.value, 24)}
+      {recortar(payload?.value ?? '', 24)}
     </text>
   );
+}
+
+interface Props {
+  datos: object[];
+  claveEtiqueta: string;
+  claveValor: string;
+  nombreValor: string;
+  formatoValor: (valor: number) => string;
+  formatoEje?: (valor: number) => string;
+  horizontal?: boolean;
+  alto?: number;
 }
 
 export default function GraficoBarras({
@@ -24,7 +41,7 @@ export default function GraficoBarras({
   formatoEje = formatoValor,
   horizontal = false,
   alto = 280,
-}) {
+}: Props) {
   return (
     <ResponsiveContainer width="100%" height={alto}>
       <BarChart
@@ -53,7 +70,7 @@ export default function GraficoBarras({
         />
 
         <Tooltip
-          formatter={(valor) => [formatoValor(valor), nombreValor]}
+          formatter={(valor) => [formatoValor(Number(valor)), nombreValor]}
           cursor={{ fill: '#f5f5f5' }}
           contentStyle={{ border: '1px solid #d4d4d4', borderRadius: 0, fontSize: 13 }}
           itemStyle={{ color: '#171717' }}

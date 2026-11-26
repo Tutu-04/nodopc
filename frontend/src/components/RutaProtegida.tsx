@@ -1,7 +1,7 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 
-export default function RutaProtegida({ soloAdmin = false }) {
+export default function RutaProtegida({ soloAdmin = false }: { soloAdmin?: boolean }) {
   const usuario = useAuthStore((estado) => estado.usuario);
   const location = useLocation();
 

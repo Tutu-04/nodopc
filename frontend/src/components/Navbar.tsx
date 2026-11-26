@@ -1,10 +1,11 @@
+import type { FormEvent } from 'react';
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useCarritoStore, contarProductos } from '../store/carritoStore';
 import Icono from './Icono';
 
-function claseLink({ isActive }) {
+function claseLink({ isActive }: { isActive: boolean }): string {
   return isActive ? 'nav-link nav-link-activo' : 'nav-link';
 }
 
@@ -40,7 +41,7 @@ export default function Navbar() {
     navigate('/salir');
   }
 
-  function buscar(evento) {
+  function buscar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     const texto = busqueda.trim();
     setBusqueda('');

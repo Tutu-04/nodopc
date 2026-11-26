@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import Paginacion, { paginasVisibles } from './Paginacion';
 
-function renderizar(pagina, paginas) {
+function renderizar(pagina: number, paginas: number) {
   render(
     <MemoryRouter>
       <Paginacion pagina={pagina} paginas={paginas} enlace={(numero) => `/catalogo?pagina=${numero}`} />

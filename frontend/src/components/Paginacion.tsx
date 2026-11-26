@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom';
 import Icono from './Icono';
 
-export function paginasVisibles(actual, total) {
+export function paginasVisibles(actual: number, total: number): (number | '…')[] {
   const paginas = new Set([1, total, actual - 1, actual, actual + 1]);
   const ordenadas = [...paginas].filter((pagina) => pagina >= 1 && pagina <= total).sort((a, b) => a - b);
 
-  const resultado = [];
+  const resultado: (number | '…')[] = [];
   ordenadas.forEach((pagina, indice) => {
     if (indice > 0 && pagina - ordenadas[indice - 1] > 1) resultado.push('…');
     resultado.push(pagina);
@@ -16,7 +16,13 @@ export function paginasVisibles(actual, total) {
 const claseBoton =
   'flex min-h-10 min-w-10 items-center justify-center rounded-lg border px-3 text-sm font-semibold transition';
 
-export default function Paginacion({ pagina, paginas, enlace }) {
+interface Props {
+  pagina: number;
+  paginas: number;
+  enlace: (pagina: number) => string;
+}
+
+export default function Paginacion({ pagina, paginas, enlace }: Props) {
   if (paginas <= 1) return null;
 
   return (

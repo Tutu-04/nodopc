@@ -155,3 +155,14 @@ export interface CampoDeFicha {
 }
 
 export type CamposDeFicha = Partial<Record<keyof Especificaciones, CampoDeFicha>>;
+
+export interface ProductoDeLista {
+  id: number;
+  nombre: string;
+  precio: number;
+  stock: number;
+  imagen_url: string | null;
+  categoria: string;
+  marca?: string;
+  vendidos?: number;
+}

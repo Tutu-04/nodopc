@@ -1,4 +1,4 @@
-export default function InsigniaStock({ stock }) {
+export default function InsigniaStock({ stock }: { stock: number }) {
   if (stock === 0) {
     return <span className="insignia bg-neutral-200 text-neutral-700">Sin stock</span>;
   }

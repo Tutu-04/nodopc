@@ -1,6 +1,12 @@
 import { useState } from 'react';
 
-export default function BotonEliminar({ onConfirmar, texto = 'Eliminar', textoConfirmar = 'Sí, eliminar' }) {
+interface Props {
+  onConfirmar: () => void | Promise<void>;
+  texto?: string;
+  textoConfirmar?: string;
+}
+
+export default function BotonEliminar({ onConfirmar, texto = 'Eliminar', textoConfirmar = 'Sí, eliminar' }: Props) {
   const [confirmando, setConfirmando] = useState(false);
   const [enviando, setEnviando] = useState(false);
 

@@ -1,6 +1,6 @@
 import Icono from './Icono';
 
-export default function MensajeError({ texto }) {
+export default function MensajeError({ texto }: { texto: string | null | undefined }) {
   if (!texto) return null;
 
   return (
