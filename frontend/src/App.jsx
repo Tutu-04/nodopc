@@ -16,6 +16,7 @@ import Checkout from './pages/Checkout';
 import MisPedidos from './pages/MisPedidos';
 import PedidoDetalle from './pages/PedidoDetalle';
 import Salir from './pages/Salir';
+import MiCuenta from './pages/MiCuenta';
 
 import CategoriasLista from './pages/admin/categorias/CategoriasLista';
 import CategoriaNueva from './pages/admin/categorias/CategoriaNueva';
@@ -51,6 +52,7 @@ export default function App() {
 
           <Route element={<RutaProtegida />}>
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/cuenta" element={<MiCuenta />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/mis-pedidos" element={<MisPedidos />} />
             <Route path="/pedidos/:id" element={<PedidoDetalle />} />

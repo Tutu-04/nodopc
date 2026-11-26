@@ -61,10 +61,13 @@ export default function Navbar() {
         <div className="flex flex-wrap items-center gap-2">
           {usuario ? (
             <>
-              <span className="flex items-center gap-2 px-2 text-sm text-neutral-600">
+              <Link
+                to="/cuenta"
+                className="flex min-h-9 items-center gap-2 rounded-lg px-2 text-sm text-neutral-600 hover:bg-neutral-100"
+              >
                 <Icono nombre="usuario" className="size-4.5" />
                 Hola, <strong className="font-semibold text-neutral-950">{usuario.nombre}</strong>
-              </span>
+              </Link>
               <button type="button" onClick={salir} className="btn btn-secundario btn-chico">
                 <Icono nombre="salir" className="size-4" />
                 Salir
