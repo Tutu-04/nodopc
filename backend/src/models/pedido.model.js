@@ -145,3 +145,15 @@ export async function cancelar(id, estadosCancelables = ['pendiente', 'pagado'])
 export async function eliminar(id) {
   await pool.execute('DELETE FROM pedidos WHERE id = ?', [id]);
 }
+
+export async function cancelarVencidos() {
+  const [filas] = await pool.execute(
+    "SELECT id FROM pedidos WHERE estado = 'pendiente' AND vence_en IS NOT NULL AND vence_en < NOW()"
+  );
+
+  let cancelados = 0;
+  for (const fila of filas) {
+    if (await cancelar(fila.id, ['pendiente'])) cancelados++;
+  }
+  return cancelados;
+}
