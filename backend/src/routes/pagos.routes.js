@@ -8,5 +8,7 @@ const router = Router();
 router.get('/medios', controlador.listarMedios);
 
 router.post('/:pedidoId/simulado', verificarToken, limitarPagos, controlador.pagarSimulado);
+router.post('/:pedidoId/mercadopago', verificarToken, controlador.pagarConMercadoPago);
+router.post('/:pedidoId/verificar', verificarToken, controlador.verificarMercadoPago);
 
 export default router;

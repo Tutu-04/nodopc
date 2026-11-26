@@ -169,3 +169,7 @@ export async function marcarPagado(id, { medio, pagoId }) {
   );
   return resultado.affectedRows === 1;
 }
+
+export async function elegirMedioDePago(id, medio) {
+  await pool.execute("UPDATE pedidos SET medio_pago = ? WHERE id = ? AND estado = 'pendiente'", [medio, id]);
+}

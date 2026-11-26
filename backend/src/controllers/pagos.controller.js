@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import * as Pedido from '../models/pedido.model.js';
 import { config } from '../config.js';
 import { motivoDeRechazo, validarTarjeta } from '../utils/tarjetas.js';
+import * as MercadoPago from '../services/mercadoPago.js';
 
 async function buscarPedidoParaPagar(req, res) {
   const pedido = await Pedido.obtenerPorId(req.params.pedidoId);
@@ -26,7 +27,7 @@ async function buscarPedidoParaPagar(req, res) {
 }
 
 export function listarMedios(req, res) {
-  res.json({ simulado: config.pagoSimulado });
+  res.json({ mercadopago: MercadoPago.estaConfigurado(), simulado: config.pagoSimulado });
 }
 
 export async function pagarSimulado(req, res) {
@@ -53,6 +54,46 @@ export async function pagarSimulado(req, res) {
   });
   if (!pagado) {
     return res.status(409).json({ error: 'Este pedido ya no está pendiente de pago' });
+  }
+
+  res.json(await Pedido.obtenerPorId(pedido.id));
+}
+
+export async function pagarConMercadoPago(req, res) {
+  if (!MercadoPago.estaConfigurado()) {
+    return res.status(404).json({ error: 'Mercado Pago no está configurado en esta tienda' });
+  }
+
+  const pedido = await buscarPedidoParaPagar(req, res);
+  if (!pedido) return;
+
+  const url = await MercadoPago.crearPreferencia(pedido);
+  await Pedido.elegirMedioDePago(pedido.id, 'mercadopago');
+  res.json({ url });
+}
+
+async function acreditarSiCorresponde(pago, pedido) {
+  if (!MercadoPago.pagoCubrePedido(pago, pedido)) return false;
+
+  const acreditado = await Pedido.marcarPagado(pedido.id, { medio: 'mercadopago', pagoId: String(pago.id) });
+  if (!acreditado && pedido.estado === 'cancelado') {
+    console.warn(`El pago ${pago.id} llegó con el pedido ${pedido.id} ya cancelado: hay que devolver el dinero`);
+  }
+  return acreditado;
+}
+
+export async function verificarMercadoPago(req, res) {
+  const pedido = await Pedido.obtenerPorId(req.params.pedidoId);
+  if (!pedido) {
+    return res.status(404).json({ error: 'El pedido no existe' });
+  }
+  if (req.usuario.rol !== 'admin' && pedido.usuario_id !== req.usuario.id) {
+    return res.status(403).json({ error: 'No podés ver un pedido de otro usuario' });
+  }
+
+  if (pedido.estado === 'pendiente' && pedido.medio_pago === 'mercadopago' && MercadoPago.estaConfigurado()) {
+    const pago = await MercadoPago.buscarPagoAprobado(pedido.id);
+    await acreditarSiCorresponde(pago, pedido);
   }
 
   res.json(await Pedido.obtenerPorId(pedido.id));
