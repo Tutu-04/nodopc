@@ -13,13 +13,13 @@ describe('Categorías', () => {
   it('se listan sin iniciar sesión', async () => {
     const respuesta = await api().get('/api/categorias');
     expect(respuesta.status).toBe(200);
-    expect(respuesta.body).toHaveLength(8);
+    expect(respuesta.body).toHaveLength(10);
   });
 
   it('incluyen cuántos productos tiene cada una', async () => {
     const respuesta = await api().get('/api/categorias');
     const total = respuesta.body.reduce((suma, categoria) => suma + categoria.cantidad_productos, 0);
-    expect(total).toBe(24);
+    expect(total).toBe(33);
   });
 
   it('responden 404 si no existen o el id no es un número', async () => {
@@ -38,19 +38,19 @@ describe('Categorías', () => {
     const creada = await api()
       .post('/api/categorias')
       .set(conSesion(admin))
-      .send({ nombre: '  Fuentes  ', descripcion: '' });
+      .send({ nombre: '  Refrigeración  ', descripcion: '' });
     expect(creada.status).toBe(201);
-    expect(creada.body).toMatchObject({ nombre: 'Fuentes', descripcion: null });
+    expect(creada.body).toMatchObject({ nombre: 'Refrigeración', descripcion: null });
 
-    const repetida = await api().post('/api/categorias').set(conSesion(admin)).send({ nombre: 'Fuentes' });
+    const repetida = await api().post('/api/categorias').set(conSesion(admin)).send({ nombre: 'Refrigeración' });
     expect(repetida.status).toBe(409);
 
     const editada = await api()
       .put(`/api/categorias/${creada.body.id}`)
       .set(conSesion(admin))
-      .send({ nombre: 'Fuentes de poder', descripcion: 'PSU' });
+      .send({ nombre: 'Coolers y refrigeración', descripcion: 'Coolers' });
     expect(editada.status).toBe(200);
-    expect(editada.body.nombre).toBe('Fuentes de poder');
+    expect(editada.body.nombre).toBe('Coolers y refrigeración');
 
     const eliminada = await api().delete(`/api/categorias/${creada.body.id}`).set(conSesion(admin));
     expect(eliminada.status).toBe(200);

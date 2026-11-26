@@ -39,6 +39,9 @@ Todas las rutas empiezan con `http://localhost:3000/api`.
 | POST                   | `/pagos/:pedidoId/mercadopago`   | Dueño         | Crea la preferencia de Mercado Pago y devuelve `{ url }` para ir a pagar                                                                     |
 | POST                   | `/pagos/:pedidoId/verificar`     | Dueño o admin | Busca en Mercado Pago un pago aprobado del pedido y, si coincide, lo acredita                                                                |
 | POST                   | `/pagos/webhook`                 | Mercado Pago  | Recibe los avisos de pago de Mercado Pago                                                                                                    |
+| GET                    | `/armador`                       | Público       | Los siete pasos del armador de PC con sus productos y fichas técnicas                                                                        |
+| GET                    | `/armador/campos`                | Público       | Qué datos de la ficha técnica necesita cada tipo de componente                                                                               |
+| POST                   | `/armador/verificar`             | Público       | Revisa la compatibilidad de un armado (ver abajo)                                                                                            |
 | GET                    | `/dashboard`                     | Admin         | Métricas de pedidos cobrados: totales, ventas por mes, más vendidos, ventas por categoría, pedidos por estado, mejores clientes y poco stock |
 
 Códigos de respuesta que usa la API: `200` correcto, `201` creado, `400` datos inválidos, `401` sin sesión o sesión inválida, `403` sin permiso, `404` no existe, `402` pago rechazado, `409` conflicto (dato repetido, registro en uso, sin stock o un pedido que ya no admite ese cambio), `413` archivo demasiado grande, `429` demasiados intentos, `500` error inesperado y `502` Mercado Pago no respondió.
@@ -102,6 +105,50 @@ Un pedido pendiente que no se paga en `MINUTOS_PARA_PAGAR` (30 por defecto) se c
 
 **Mercado Pago.** Con `MP_ACCESS_TOKEN` cargado, `POST /pagos/:pedidoId/mercadopago` devuelve el link del Checkout Pro. Al terminar, Mercado Pago vuelve a `/pedidos/:id?pago=aprobado` (o `pendiente`, o `rechazado`) y el frontend llama a `/pagos/:pedidoId/verificar`. Si la API tiene una URL pública (`API_PUBLICA_URL`), Mercado Pago además avisa a `/pagos/webhook`. Los pasos para probarlo están en la [guía de instalación](../GUIA_DE_INSTALACION.md#pagos-con-mercado-pago).
 
+### Armador de PC
+
+Cada categoría puede representar un componente (`procesador`, `motherboard`, `memoria`, `placa_de_video`, `almacenamiento`, `fuente` o `gabinete`) y cada producto puede tener una ficha técnica en `especificaciones`:
+
+| Componente       | Ficha técnica                                                     |
+| ---------------- | ----------------------------------------------------------------- |
+| `procesador`     | `{ "socket": "AM5", "consumo": 88, "graficos_integrados": true }` |
+| `motherboard`    | `{ "socket": "AM5", "memoria": "DDR5", "formato": "Micro ATX" }`  |
+| `memoria`        | `{ "memoria": "DDR5" }`                                           |
+| `placa_de_video` | `{ "consumo": 220 }`                                              |
+| `fuente`         | `{ "potencia": 650 }`                                             |
+| `gabinete`       | `{ "formatos": ["ATX", "Micro ATX", "Mini ITX"] }`                |
+
+`POST /productos` y `PUT /productos/:id` validan la ficha según el componente de la categoría. Un componente con la ficha incompleta no aparece en el armador.
+
+`POST /armador/verificar` recibe la selección con el id elegido en cada paso:
+
+```json
+{ "seleccion": { "procesador": 1, "motherboard": 7, "memoria": 11, "fuente": 30 } }
+```
+
+Y responde:
+
+```json
+{
+  "problemas": [
+    {
+      "tipo": "incompatible",
+      "pasos": ["memoria", "motherboard"],
+      "mensaje": "La memoria es DDR4 y la motherboard usa DDR5."
+    }
+  ],
+  "avisos": ["La fuente de 450 W alcanza, pero queda justa. Para este equipo recomendamos 500 W o más."],
+  "faltan": ["almacenamiento", "gabinete"],
+  "consumo": 138,
+  "potenciaRecomendada": 250,
+  "total": 809996,
+  "completo": false,
+  "incompatibles": { "procesador": { "3": "El Intel Core i5-14400F usa socket LGA1700 y la motherboard es AM5." } }
+}
+```
+
+Las reglas: el procesador y la motherboard comparten socket; la memoria es del tipo de la motherboard; el gabinete admite el formato de la motherboard; la fuente cubre el consumo del procesador, la placa de video y 50 W para el resto (se recomienda ese consumo × 1,5); un procesador sin gráficos integrados necesita placa de video; y ningún componente puede estar sin stock. La placa de video es el único paso opcional.
+
 ### Correos
 
 La API avisa por correo:
@@ -142,6 +189,7 @@ Cualquier otra dirección muestra una página 404. La eliminación se hace desde
 | `/catalogo` y `/catalogo/categoria/:categoriaId` | Catálogo con filtros, orden y paginación. Todos los filtros viajan en la URL (`buscar`, `marca`, `stock`, `min`, `max`, `orden`, `pagina`) | Público                    |
 | `/producto/:id`                                  | Detalle de un producto                                                                                                                     | Público                    |
 | `/carrito`                                       | Carrito                                                                                                                                    | Público                    |
+| `/armador?procesador=1&...`                      | Armador de PC: elige componentes paso a paso y verifica su compatibilidad. La selección queda en la URL                                    | Público                    |
 | `/login` y `/registro`                           | Inicio de sesión y registro                                                                                                                | Solo sin sesión            |
 | `/olvide-password`                               | Pedir el enlace para recuperar la contraseña                                                                                               | Solo sin sesión            |
 | `/restablecer-password?token=...`                | Elegir la contraseña nueva desde el enlace del correo                                                                                      | Solo sin sesión            |

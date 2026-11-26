@@ -14,8 +14,8 @@ beforeAll(async () => {
 describe('GET /api/dashboard', () => {
   it('calcula los totales de la tienda', () => {
     expect(metricas.resumen).toMatchObject({
-      productos: 24,
-      categorias: 8,
+      productos: 33,
+      categorias: 10,
       marcas: 12,
       usuarios: 7,
       pedidos: 28,

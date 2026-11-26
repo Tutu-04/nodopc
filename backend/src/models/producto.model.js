@@ -1,7 +1,7 @@
 import pool from '../db.js';
 
 const SELECT_PRODUCTOS = `
-  SELECT p.*, c.nombre AS categoria, m.nombre AS marca
+  SELECT p.*, c.nombre AS categoria, c.componente, m.nombre AS marca
   FROM productos p
   JOIN categorias c ON c.id = p.categoria_id
   JOIN marcas m ON m.id = p.marca_id
@@ -82,21 +82,38 @@ export async function obtenerPorId(id) {
   return filas[0];
 }
 
-export async function crear({ nombre, descripcion, precio, stock, imagen_url, categoria_id, marca_id }) {
+function aJson(especificaciones) {
+  return especificaciones ? JSON.stringify(especificaciones) : null;
+}
+
+export async function crear({
+  nombre,
+  descripcion,
+  especificaciones,
+  precio,
+  stock,
+  imagen_url,
+  categoria_id,
+  marca_id,
+}) {
   const [resultado] = await pool.execute(
-    `INSERT INTO productos (nombre, descripcion, precio, stock, imagen_url, categoria_id, marca_id)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [nombre, descripcion, precio, stock, imagen_url, categoria_id, marca_id]
+    `INSERT INTO productos (nombre, descripcion, especificaciones, precio, stock, imagen_url, categoria_id, marca_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [nombre, descripcion, aJson(especificaciones), precio, stock, imagen_url, categoria_id, marca_id]
   );
   return resultado.insertId;
 }
 
-export async function actualizar(id, { nombre, descripcion, precio, stock, imagen_url, categoria_id, marca_id }) {
+export async function actualizar(
+  id,
+  { nombre, descripcion, especificaciones, precio, stock, imagen_url, categoria_id, marca_id }
+) {
   await pool.execute(
     `UPDATE productos
-     SET nombre = ?, descripcion = ?, precio = ?, stock = ?, imagen_url = ?, categoria_id = ?, marca_id = ?
+     SET nombre = ?, descripcion = ?, especificaciones = ?, precio = ?, stock = ?, imagen_url = ?,
+         categoria_id = ?, marca_id = ?
      WHERE id = ?`,
-    [nombre, descripcion, precio, stock, imagen_url, categoria_id, marca_id, id]
+    [nombre, descripcion, aJson(especificaciones), precio, stock, imagen_url, categoria_id, marca_id, id]
   );
 }
 

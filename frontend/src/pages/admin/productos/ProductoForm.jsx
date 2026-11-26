@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import api, { obtenerMensajeError, urlDeImagen } from '../../../api/api';
 import MensajeError from '../../../components/MensajeError';
 import IconoCategoria from '../../../components/IconoCategoria';
+import CamposFicha, { prepararFicha } from './CamposFicha';
 
 const TIPOS_DE_IMAGEN = ['image/jpeg', 'image/png', 'image/webp'];
 const TAMANO_MAXIMO = 2 * 1024 * 1024;
@@ -15,6 +16,7 @@ export default function ProductoForm({ inicial, onGuardar, guardando }) {
   const [imagenUrl, setImagenUrl] = useState(inicial?.imagen_url ?? '');
   const [categoriaId, setCategoriaId] = useState(inicial?.categoria_id ?? '');
   const [marcaId, setMarcaId] = useState(inicial?.marca_id ?? '');
+  const [ficha, setFicha] = useState(inicial?.especificaciones ?? {});
 
   const [archivo, setArchivo] = useState(null);
   const [vistaPrevia, setVistaPrevia] = useState('');
@@ -22,15 +24,20 @@ export default function ProductoForm({ inicial, onGuardar, guardando }) {
 
   const [categorias, setCategorias] = useState([]);
   const [marcas, setMarcas] = useState([]);
+  const [camposPorComponente, setCamposPorComponente] = useState({});
   const [errorListas, setErrorListas] = useState('');
 
   useEffect(() => {
     async function cargarListas() {
       try {
-        const respuestaCategorias = await api.get('/categorias');
-        const respuestaMarcas = await api.get('/marcas');
+        const [respuestaCategorias, respuestaMarcas, respuestaCampos] = await Promise.all([
+          api.get('/categorias'),
+          api.get('/marcas'),
+          api.get('/armador/campos'),
+        ]);
         setCategorias(respuestaCategorias.data);
         setMarcas(respuestaMarcas.data);
+        setCamposPorComponente(respuestaCampos.data);
       } catch (e) {
         setErrorListas(obtenerMensajeError(e));
       }
@@ -74,6 +81,12 @@ export default function ProductoForm({ inicial, onGuardar, guardando }) {
 
   const categoriaElegida = categorias.find((categoria) => String(categoria.id) === String(categoriaId));
   const imagenActual = vistaPrevia || urlDeImagen(imagenUrl);
+  const camposDeFicha = camposPorComponente[categoriaElegida?.componente];
+  const tieneFicha = camposDeFicha && Object.keys(camposDeFicha).length > 0;
+
+  function cambiarFicha(campo, valor) {
+    setFicha((actual) => ({ ...actual, [campo]: valor }));
+  }
 
   function manejarSubmit(evento) {
     evento.preventDefault();
@@ -86,6 +99,7 @@ export default function ProductoForm({ inicial, onGuardar, guardando }) {
         imagen_url: imagenUrl,
         categoria_id: categoriaId,
         marca_id: marcaId,
+        especificaciones: tieneFicha ? prepararFicha(camposDeFicha, ficha) : null,
       },
       archivo
     );
@@ -191,6 +205,8 @@ export default function ProductoForm({ inicial, onGuardar, guardando }) {
           </select>
         </div>
       </div>
+
+      {tieneFicha && <CamposFicha campos={camposDeFicha} ficha={ficha} onCambiar={cambiarFicha} />}
 
       <fieldset className="flex flex-col gap-3">
         <legend className="etiqueta">Imagen (opcional)</legend>

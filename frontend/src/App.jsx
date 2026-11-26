@@ -10,6 +10,7 @@ import Home from './pages/Home';
 import Catalogo from './pages/Catalogo';
 import ProductoDetalle from './pages/ProductoDetalle';
 import Carrito from './pages/Carrito';
+import Armador from './pages/Armador';
 import Login from './pages/Login';
 import Registro from './pages/Registro';
 import OlvidePassword from './pages/OlvidePassword';
@@ -48,6 +49,7 @@ export default function App() {
           <Route path="/catalogo/categoria/:categoriaId" element={<Catalogo />} />
           <Route path="/producto/:id" element={<ProductoDetalle />} />
           <Route path="/carrito" element={<Carrito />} />
+          <Route path="/armador" element={<Armador />} />
           <Route path="/salir" element={<Salir />} />
 
           <Route element={<RutaSoloInvitados />}>

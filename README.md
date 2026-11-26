@@ -36,6 +36,8 @@ NodoPC vende componentes de PC, PC armadas, monitores y periféricos. Los visita
 **Cliente**
 
 - Registro e inicio de sesión.
+- **Armador de PC**: elige procesador, motherboard, memoria, placa de video, almacenamiento, fuente y gabinete, y avisa al instante si algo no es compatible (socket, tipo de memoria, tamaño del gabinete, potencia de la fuente). El armado se comparte con un enlace y se agrega entero al carrito.
+- Ficha técnica en el detalle de cada componente.
 - Checkout con envío a domicilio (costo por provincia, gratis desde $1.500.000) o retiro en el local.
 - Pago con Mercado Pago (Checkout Pro en modo prueba) o con una tarjeta de prueba simulada.
 - Seguimiento de cada pedido, desde el pago hasta la entrega, y cancelación mientras está pendiente.
@@ -213,14 +215,18 @@ nodopc/
 
 ![Diagrama entidad-relación](docs/diagrama-er.png)
 
-| Tabla            | Guarda                                                                           |
-| ---------------- | -------------------------------------------------------------------------------- |
-| `usuarios`       | Cuentas, con su rol y el hash de la contraseña                                   |
-| `categorias`     | Tipos de producto                                                                |
-| `marcas`         | Fabricantes                                                                      |
-| `productos`      | Lo que vende la tienda, con precio y stock                                       |
-| `pedidos`        | Cada compra, con su estado y su total                                            |
-| `detalle_pedido` | Los productos de cada pedido, con el nombre y el precio del momento de la compra |
+| Tabla                     | Guarda                                                                                 |
+| ------------------------- | -------------------------------------------------------------------------------------- |
+| `usuarios`                | Cuentas, con su rol y el hash de la contraseña                                         |
+| `categorias`              | Tipos de producto, y qué componente de PC representa cada una                          |
+| `marcas`                  | Fabricantes                                                                            |
+| `productos`               | Lo que vende la tienda, con precio, stock y ficha técnica (JSON)                       |
+| `pedidos`                 | Cada compra: estado, entrega, costo de envío, total, datos del pago y plazo para pagar |
+| `detalle_pedido`          | Los productos de cada pedido, con el nombre y el precio del momento de la compra       |
+| `recuperaciones_password` | Enlaces para restablecer la contraseña (solo el hash del token)                        |
+| `migraciones`             | Qué archivos de `database/migraciones` ya se aplicaron                                 |
+
+Los cambios de estructura viven en `database/migraciones` y se aplican solos al arrancar con Docker o con `npm run migrar`. Los datos de prueba no se tocan en una base que ya tiene datos: para tener los productos de las versiones nuevas (por ejemplo, las fuentes y los gabinetes del armador), corré `npm run crear-base`, que borra la base y la vuelve a crear.
 
 ## Decisiones técnicas
 
@@ -234,6 +240,8 @@ nodopc/
 - **Pagos que no se creen a ciegas.** Ni la vuelta de Mercado Pago ni su notificación marcan un pedido como pagado por sí solas: la API consulta el pago con su credencial y lo acredita solo si el monto y la moneda coinciden. Las notificaciones se validan con la firma HMAC de Mercado Pago, y acreditar el mismo pago dos veces no tiene efecto.
 - **Correos que no frenan nada.** Se mandan sin esperar la respuesta del servidor de correo y un error al enviarlos queda en el log sin cortar la compra. Sin SMTP se muestran en la terminal; con Docker llegan a Mailpit. Todo dato del usuario se escapa antes de ponerlo en el HTML.
 - **Recuperación de contraseña sin filtrar cuentas.** Responde igual exista o no el email, guarda solo el hash del token y cada enlace sirve una vez durante una hora.
+- **Reglas del armador separadas de Express.** `armador/reglas.js` recibe componentes y devuelve problemas: no sabe de HTTP ni de MySQL, así que se testea con objetos simples. La API las usa para verificar un armado y para marcar, antes de elegirlas, las opciones que no encajan. El frontend no repite ninguna regla.
+- **Fichas técnicas en JSON.** Cada componente guarda sus datos en una columna JSON, porque un procesador y un gabinete no comparten campos. La API valida la ficha según el tipo de componente, y el panel arma el formulario con la misma descripción de campos.
 - **Integración sin SDK y testeable.** Mercado Pago se usa por su API REST con `fetch`. En los tests `fetch` se reemplaza, así la suite corre sin red ni cuenta.
 - **Historial intacto.** `detalle_pedido` guarda el nombre y el precio de cada producto al momento de la compra, así los pedidos viejos no cambian si después se modifica o se elimina el producto.
 - **Buscador sin consultas de más.** Busca cada palabra por separado en el nombre, la descripción, la marca y la categoría. Espera a que el usuario deje de escribir antes de consultar la API, y descarta las respuestas que llegan fuera de orden.
@@ -258,6 +266,8 @@ nodopc/
 - [x] Subida de imágenes desde el panel del administrador
 - [x] Envíos por provincia, pagos con Mercado Pago en modo prueba y pago simulado
 - [x] Correos de bienvenida, pagos y estado de los pedidos, y recuperación de contraseña
+- [x] Armador de PC con chequeo de compatibilidad
+- [ ] Migración del frontend y el backend a TypeScript
 
 ## Autor
 

@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import api, { obtenerMensajeError } from '../api/api';
 import { useCarritoStore } from '../store/carritoStore';
 import { formatearPrecio } from '../utils/formato';
+import { filasDeFicha } from '../utils/fichaTecnica';
 import ImagenProducto from '../components/ImagenProducto';
 import InsigniaStock from '../components/InsigniaStock';
 import Icono from '../components/Icono';
@@ -54,6 +55,7 @@ export default function ProductoDetalle() {
   }
 
   const sinStock = producto.stock === 0;
+  const ficha = filasDeFicha(producto.componente, producto.especificaciones);
 
   return (
     <div className="flex flex-col gap-6">
@@ -106,6 +108,26 @@ export default function ProductoDetalle() {
               Seguir comprando
             </Link>
           </div>
+
+          {ficha.length > 0 && (
+            <section className="mt-3 w-full border-t border-neutral-100 pt-5">
+              <h2 className="subtitulo mb-2">Ficha técnica</h2>
+              <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1.5 text-sm">
+                {ficha.map(([etiqueta, valor]) => (
+                  <div key={etiqueta} className="contents">
+                    <dt className="text-neutral-500">{etiqueta}</dt>
+                    <dd className="font-medium">{valor}</dd>
+                  </div>
+                ))}
+              </dl>
+              <Link
+                to={`/armador?${producto.componente}=${producto.id}`}
+                className="mt-3 inline-block text-sm font-semibold text-orange-700 hover:underline"
+              >
+                Armá una PC con este componente
+              </Link>
+            </section>
+          )}
 
           <ul className="mt-3 flex w-full flex-col gap-2.5 border-t border-neutral-100 pt-5 text-sm text-neutral-600">
             <li className="flex items-center gap-3">
