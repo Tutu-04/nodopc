@@ -6,11 +6,12 @@ import Dato from '../components/Dato';
 import EstadoPedido from '../components/EstadoPedido';
 import Cargando from '../components/Cargando';
 import MensajeError from '../components/MensajeError';
+import type { Pedido } from '../tipos';
 
 const ESTADOS_COBRADOS = ['pagado', 'enviado', 'entregado'];
 
 export default function DashboardCliente() {
-  const [pedidos, setPedidos] = useState([]);
+  const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
 

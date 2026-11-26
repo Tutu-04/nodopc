@@ -5,14 +5,27 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import api from '../api/api';
 import { useCarritoStore } from '../store/carritoStore';
 import Armador from './Armador';
+import type { Location } from 'react-router-dom';
+import type { Componente, OpcionDelArmador, PasoDelArmador } from '../tipos';
+import type * as ModuloApi from '../api/api';
 
 vi.mock('../api/api', async (original) => {
-  const modulo = await original();
+  const modulo = await original<typeof ModuloApi>();
   return { ...modulo, default: { get: vi.fn(), post: vi.fn() } };
 });
 
-function paso(clave, titulo, productos, obligatorio = true) {
-  return { clave, titulo, obligatorio, productos };
+function paso(
+  clave: Componente,
+  titulo: string,
+  productos: Omit<OpcionDelArmador, 'marca' | 'imagen_url'>[],
+  obligatorio = true
+): PasoDelArmador {
+  return {
+    clave,
+    titulo,
+    obligatorio,
+    productos: productos.map((producto) => ({ ...producto, marca: 'Marca', imagen_url: null })),
+  };
 }
 
 const PASOS = [
@@ -55,7 +68,7 @@ const SIN_PROBLEMAS = {
   incompatibles: {},
 };
 
-let ubicacion;
+let ubicacion: Location;
 function Ubicacion() {
   ubicacion = useLocation();
   return null;

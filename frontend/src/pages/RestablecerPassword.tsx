@@ -1,3 +1,4 @@
+import type { FormEvent } from 'react';
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import api, { obtenerMensajeError } from '../api/api';
@@ -15,7 +16,7 @@ export default function RestablecerPassword() {
   const [error, setError] = useState('');
   const [enviando, setEnviando] = useState(false);
 
-  async function manejarSubmit(evento) {
+  async function manejarSubmit(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     setError('');
 

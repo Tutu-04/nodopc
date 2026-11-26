@@ -1,3 +1,4 @@
+import type { FormEvent } from 'react';
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import api, { obtenerMensajeError } from '../api/api';
@@ -16,7 +17,7 @@ export default function Login() {
 
   const mensaje = location.state?.mensaje;
 
-  async function manejarSubmit(evento) {
+  async function manejarSubmit(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     setError('');
     setEnviando(true);

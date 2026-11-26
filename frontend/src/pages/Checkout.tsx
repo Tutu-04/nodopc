@@ -1,3 +1,4 @@
+import type { FormEvent } from 'react';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api, { obtenerMensajeError, pedirLinkDeMercadoPago } from '../api/api';
@@ -7,18 +8,19 @@ import { LOCAL, calcularEnvio, faltaParaEnvioGratis } from '../utils/envios';
 import Cargando from '../components/Cargando';
 import MensajeError from '../components/MensajeError';
 import Opcion from '../components/Opcion';
+import type { CondicionesDeEnvio, MediosDePago, MedioDePago, MetodoEntrega } from '../tipos';
 
 export default function Checkout() {
   const navigate = useNavigate();
   const items = useCarritoStore((estado) => estado.items);
   const vaciar = useCarritoStore((estado) => estado.vaciar);
 
-  const [condiciones, setCondiciones] = useState(null);
-  const [medios, setMedios] = useState(null);
-  const [metodo, setMetodo] = useState('envio');
+  const [condiciones, setCondiciones] = useState<CondicionesDeEnvio | null>(null);
+  const [medios, setMedios] = useState<MediosDePago | null>(null);
+  const [metodo, setMetodo] = useState<MetodoEntrega>('envio');
   const [provincia, setProvincia] = useState('');
   const [direccion, setDireccion] = useState('');
-  const [medio, setMedio] = useState('');
+  const [medio, setMedio] = useState<MedioDePago | ''>('');
 
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
@@ -45,7 +47,7 @@ export default function Checkout() {
   const envio = calcularEnvio({ metodo, provincia, subtotal, condiciones });
   const faltante = faltaParaEnvioGratis(subtotal, condiciones);
 
-  async function manejarSubmit(evento) {
+  async function manejarSubmit(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     setError('');
     setEnviando(true);

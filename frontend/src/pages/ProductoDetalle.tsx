@@ -9,13 +9,14 @@ import InsigniaStock from '../components/InsigniaStock';
 import Icono from '../components/Icono';
 import Cargando from '../components/Cargando';
 import MensajeError from '../components/MensajeError';
+import type { Producto } from '../tipos';
 
 export default function ProductoDetalle() {
   const { id } = useParams();
   const navigate = useNavigate();
   const agregar = useCarritoStore((estado) => estado.agregar);
 
-  const [producto, setProducto] = useState(null);
+  const [producto, setProducto] = useState<Producto | null>(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
 
@@ -37,13 +38,14 @@ export default function ProductoDetalle() {
   }, [id]);
 
   function agregarYVerCarrito() {
+    if (!producto) return;
     agregar(producto);
     navigate('/carrito');
   }
 
   if (cargando) return <Cargando />;
 
-  if (error) {
+  if (error || !producto) {
     return (
       <div className="tarjeta flex flex-col items-start gap-4">
         <MensajeError texto={error} />

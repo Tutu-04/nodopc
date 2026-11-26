@@ -16,18 +16,20 @@ import Seccion from '../components/Seccion';
 import EstadoPedido, { textoDeEstado } from '../components/EstadoPedido';
 import Cargando from '../components/Cargando';
 import MensajeError from '../components/MensajeError';
+import type { MetricasDelPanel, Pedido } from '../tipos';
+import type { DatoDeTorta } from '../components/GraficoTorta';
 
 const CATEGORIAS_EN_TORTA = 5;
 
-function Muestra({ color }) {
+function Muestra({ color }: { color: string }) {
   return (
     <span className="mr-2 inline-block size-3 shrink-0 rounded-full" style={{ background: color }} aria-hidden="true" />
   );
 }
 
 export default function DashboardAdmin() {
-  const [metricas, setMetricas] = useState(null);
-  const [pedidos, setPedidos] = useState([]);
+  const [metricas, setMetricas] = useState<MetricasDelPanel | null>(null);
+  const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
 
@@ -50,7 +52,7 @@ export default function DashboardAdmin() {
   }, []);
 
   if (cargando) return <Cargando />;
-  if (error) return <MensajeError texto={error} />;
+  if (error || !metricas) return <MensajeError texto={error} />;
 
   const {
     resumen,
@@ -65,8 +67,8 @@ export default function DashboardAdmin() {
   const datosMeses = ventasPorMes.map((fila) => ({ mes: formatearMes(fila.mes), total: fila.total }));
 
   const totalCategorias = ventasPorCategoria.reduce((suma, fila) => suma + fila.ingresos, 0);
-  const colorCategoria = (indice) => (indice < CATEGORIAS_EN_TORTA ? COLORES_CATEGORIAS[indice] : COLOR_OTRAS);
-  const datosCategorias = ventasPorCategoria.slice(0, CATEGORIAS_EN_TORTA).map((fila, indice) => ({
+  const colorCategoria = (indice: number) => (indice < CATEGORIAS_EN_TORTA ? COLORES_CATEGORIAS[indice] : COLOR_OTRAS);
+  const datosCategorias: DatoDeTorta[] = ventasPorCategoria.slice(0, CATEGORIAS_EN_TORTA).map((fila, indice) => ({
     nombre: fila.categoria,
     valor: fila.ingresos,
     fill: colorCategoria(indice),

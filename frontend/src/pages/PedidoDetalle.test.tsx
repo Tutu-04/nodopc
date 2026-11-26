@@ -5,13 +5,15 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import api from '../api/api';
 import { useAuthStore } from '../store/authStore';
 import PedidoDetalle from './PedidoDetalle';
+import type { PedidoConItems } from '../tipos';
+import type * as ModuloApi from '../api/api';
 
 vi.mock('../api/api', async (original) => {
-  const modulo = await original();
+  const modulo = await original<typeof ModuloApi>();
   return { ...modulo, default: { get: vi.fn(), post: vi.fn() } };
 });
 
-const PEDIDO = {
+const PEDIDO: PedidoConItems = {
   id: 30,
   usuario_id: 2,
   cliente: 'Cliente Demo',
@@ -26,11 +28,12 @@ const PEDIDO = {
   medio_pago: null,
   pago_id: null,
   pagado_en: null,
+  vence_en: '2026-11-20T10:30:00',
   segundos_para_pagar: 1200,
   items: [{ id: 1, producto_id: 20, producto: 'Mouse Logitech G203', cantidad: 1, precio_unitario: 39999 }],
 };
 
-function responderCon(pedido) {
+function responderCon(pedido: PedidoConItems) {
   vi.mocked(api.get).mockImplementation((ruta) =>
     Promise.resolve({ data: ruta === '/pagos/medios' ? { mercadopago: false, simulado: true } : pedido })
   );
@@ -48,7 +51,7 @@ function mostrar(ruta = '/pedidos/30') {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  useAuthStore.getState().iniciarSesion({ id: 2, nombre: 'Cliente Demo', rol: 'cliente' });
+  useAuthStore.getState().iniciarSesion({ id: 2, nombre: 'Cliente Demo', email: 'prueba@nodopc.com', rol: 'cliente' });
 });
 
 describe('PedidoDetalle', () => {
@@ -59,7 +62,7 @@ describe('PedidoDetalle', () => {
     expect(await screen.findByText('Envío a domicilio')).toBeInTheDocument();
     expect(screen.getByText('Mitre 789')).toBeInTheDocument();
 
-    const totales = within(screen.getByText('Total').closest('dl'));
+    const totales = within(screen.getByText('Total').closest('dl') as HTMLElement);
     expect(totales.getByText('$ 39.999,00')).toBeInTheDocument();
     expect(totales.getByText('$ 9.500,00')).toBeInTheDocument();
     expect(totales.getByText('$ 49.499,00')).toBeInTheDocument();
@@ -79,7 +82,7 @@ describe('PedidoDetalle', () => {
   });
 
   it('no le ofrece pagar a otra persona', async () => {
-    useAuthStore.getState().iniciarSesion({ id: 1, nombre: 'Administrador', rol: 'admin' });
+    useAuthStore.getState().iniciarSesion({ id: 1, nombre: 'Administrador', email: 'prueba@nodopc.com', rol: 'admin' });
     responderCon(PEDIDO);
     mostrar();
 

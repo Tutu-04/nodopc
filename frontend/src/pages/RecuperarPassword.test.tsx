@@ -6,13 +6,14 @@ import api from '../api/api';
 import Login from './Login';
 import OlvidePassword from './OlvidePassword';
 import RestablecerPassword from './RestablecerPassword';
+import type * as ModuloApi from '../api/api';
 
 vi.mock('../api/api', async (original) => {
-  const modulo = await original();
+  const modulo = await original<typeof ModuloApi>();
   return { ...modulo, default: { post: vi.fn() } };
 });
 
-function mostrar(ruta) {
+function mostrar(ruta: string) {
   render(
     <MemoryRouter initialEntries={[ruta]}>
       <Routes>

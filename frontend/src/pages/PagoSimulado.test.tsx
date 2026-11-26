@@ -4,9 +4,10 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import api from '../api/api';
 import PagoSimulado from './PagoSimulado';
+import type * as ModuloApi from '../api/api';
 
 vi.mock('../api/api', async (original) => {
-  const modulo = await original();
+  const modulo = await original<typeof ModuloApi>();
   return { ...modulo, default: { get: vi.fn(), post: vi.fn() } };
 });
 

@@ -1,3 +1,4 @@
+import type { FormEvent } from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import { NavLink, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import api, { obtenerMensajeError } from '../api/api';
@@ -8,6 +9,8 @@ import Paginacion from '../components/Paginacion';
 import Cargando from '../components/Cargando';
 import MensajeError from '../components/MensajeError';
 import { formatearPrecio } from '../utils/formato';
+import type { Categoria, Marca, Producto } from '../tipos';
+import type { To } from 'react-router-dom';
 
 const POR_PAGINA = 12;
 
@@ -18,7 +21,7 @@ const ORDENES = [
   { valor: 'nombre', texto: 'Nombre (A-Z)' },
 ];
 
-function claseLink({ isActive }) {
+function claseLink({ isActive }: { isActive: boolean }): string {
   return isActive ? 'menu-link menu-link-activo' : 'menu-link';
 }
 
@@ -35,9 +38,13 @@ export default function Catalogo() {
   const precioMax = parametros.get('max') ?? '';
   const pagina = Math.max(1, Number(parametros.get('pagina')) || 1);
 
-  const [categorias, setCategorias] = useState([]);
-  const [marcas, setMarcas] = useState([]);
-  const [resultado, setResultado] = useState({ productos: [], total: 0, paginas: 0 });
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [marcas, setMarcas] = useState<Marca[]>([]);
+  const [resultado, setResultado] = useState<{ productos: Producto[]; total: number; paginas: number }>({
+    productos: [],
+    total: 0,
+    paginas: 0,
+  });
 
   const [textoBuscador, setTextoBuscador] = useState(buscar);
   const [minimo, setMinimo] = useState(precioMin);
@@ -47,13 +54,13 @@ export default function Catalogo() {
   const [error, setError] = useState('');
 
   const actualizarFiltros = useCallback(
-    (cambios, { reemplazar = true } = {}) => {
+    (cambios: Record<string, string | boolean | null>, { reemplazar = true } = {}) => {
       setParametros(
         (actuales) => {
           const nuevos = new URLSearchParams(actuales);
           for (const [clave, valor] of Object.entries(cambios)) {
             if (valor === '' || valor === false || valor === null) nuevos.delete(clave);
-            else nuevos.set(clave, valor);
+            else nuevos.set(clave, String(valor));
           }
           if (!('pagina' in cambios)) nuevos.delete('pagina');
           return nuevos;
@@ -140,12 +147,12 @@ export default function Catalogo() {
     window.scrollTo({ top: 0 });
   }, [pagina]);
 
-  function manejarBusqueda(evento) {
+  function manejarBusqueda(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     actualizarFiltros({ buscar: textoBuscador.trim() });
   }
 
-  function aplicarPrecios(evento) {
+  function aplicarPrecios(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     actualizarFiltros({ min: minimo, max: maximo });
   }
@@ -155,15 +162,15 @@ export default function Catalogo() {
     navigate('/catalogo');
   }
 
-  function enlaceAPagina(numero) {
+  function enlaceAPagina(numero: number): string {
     const nuevos = new URLSearchParams(parametros);
     if (numero === 1) nuevos.delete('pagina');
-    else nuevos.set('pagina', numero);
+    else nuevos.set('pagina', String(numero));
     const texto = nuevos.toString();
     return texto ? `?${texto}` : '?';
   }
 
-  function enlaceACategoria(id) {
+  function enlaceACategoria(id: number | null): To {
     const nuevos = new URLSearchParams(parametros);
     nuevos.delete('pagina');
     const texto = nuevos.toString();

@@ -1,3 +1,4 @@
+import type { FormEvent } from 'react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import api, { obtenerMensajeError } from '../api/api';
@@ -10,7 +11,7 @@ export default function OlvidePassword() {
   const [enviando, setEnviando] = useState(false);
   const [respuesta, setRespuesta] = useState('');
 
-  async function manejarSubmit(evento) {
+  async function manejarSubmit(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     setError('');
     setEnviando(true);

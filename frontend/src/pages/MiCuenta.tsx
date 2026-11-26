@@ -1,10 +1,11 @@
+import type { FormEvent } from 'react';
 import { useState } from 'react';
 import api, { obtenerMensajeError } from '../api/api';
 import { useAuthStore } from '../store/authStore';
 import MensajeError from '../components/MensajeError';
 import { AYUDA_PASSWORD, PATRON_PASSWORD } from '../utils/password';
 
-function MensajeExito({ texto }) {
+function MensajeExito({ texto }: { texto: string }) {
   if (!texto) return null;
   return (
     <p role="status" className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-900">
@@ -17,13 +18,13 @@ function DatosPersonales() {
   const usuario = useAuthStore((estado) => estado.usuario);
   const iniciarSesion = useAuthStore((estado) => estado.iniciarSesion);
 
-  const [nombre, setNombre] = useState(usuario.nombre);
-  const [email, setEmail] = useState(usuario.email);
+  const [nombre, setNombre] = useState(usuario?.nombre ?? '');
+  const [email, setEmail] = useState(usuario?.email ?? '');
   const [error, setError] = useState('');
   const [exito, setExito] = useState('');
   const [guardando, setGuardando] = useState(false);
 
-  async function guardar(evento) {
+  async function guardar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     setError('');
     setExito('');
@@ -92,7 +93,7 @@ function CambiarPassword() {
   const [exito, setExito] = useState('');
   const [guardando, setGuardando] = useState(false);
 
-  async function guardar(evento) {
+  async function guardar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     setError('');
     setExito('');

@@ -6,9 +6,10 @@ import EstadoPedido from '../components/EstadoPedido';
 import Cargando from '../components/Cargando';
 import MensajeError from '../components/MensajeError';
 import BotonEliminar from '../components/BotonEliminar';
+import type { Pedido } from '../tipos';
 
 export default function MisPedidos() {
-  const [pedidos, setPedidos] = useState([]);
+  const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
 
@@ -27,7 +28,7 @@ export default function MisPedidos() {
     cargarPedidos();
   }, []);
 
-  async function cancelar(pedido) {
+  async function cancelar(pedido: Pedido) {
     setError('');
     try {
       const respuesta = await api.post(`/pedidos/${pedido.id}/cancelar`);

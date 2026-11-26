@@ -8,9 +8,12 @@ import ImagenProducto from '../components/ImagenProducto';
 import Icono from '../components/Icono';
 import Cargando from '../components/Cargando';
 import MensajeError from '../components/MensajeError';
+import type { Componente, OpcionDelArmador, PasoDelArmador, ResultadoDelArmado } from '../tipos';
 
-function leerSeleccion(parametros, pasos) {
-  const seleccion = {};
+type Seleccion = Partial<Record<Componente, number>>;
+
+function leerSeleccion(parametros: URLSearchParams, pasos: PasoDelArmador[]): Seleccion {
+  const seleccion: Seleccion = {};
   for (const paso of pasos) {
     const id = Number(parametros.get(paso.clave));
     if (paso.productos.some((producto) => producto.id === id)) {
@@ -20,7 +23,15 @@ function leerSeleccion(parametros, pasos) {
   return seleccion;
 }
 
-function Opcion({ paso, producto, elegido, motivo, onElegir }) {
+interface PropsDeOpcion {
+  paso: PasoDelArmador;
+  producto: OpcionDelArmador;
+  elegido: boolean;
+  motivo?: string;
+  onElegir: (clave: Componente, id: number) => void;
+}
+
+function Opcion({ paso, producto, elegido, motivo, onElegir }: PropsDeOpcion) {
   const sinStock = producto.stock === 0;
   const deshabilitada = Boolean(motivo) || sinStock;
 
@@ -67,7 +78,18 @@ function Opcion({ paso, producto, elegido, motivo, onElegir }) {
   );
 }
 
-function Paso({ numero, paso, elegido, abierto, incompatibles, onAbrir, onElegir, onQuitar }) {
+interface PropsDePaso {
+  numero: number;
+  paso: PasoDelArmador;
+  elegido: OpcionDelArmador | undefined;
+  abierto: boolean;
+  incompatibles: Record<number, string> | undefined;
+  onAbrir: (clave: Componente | null) => void;
+  onElegir: (clave: Componente, id: number) => void;
+  onQuitar: (clave: Componente) => void;
+}
+
+function Paso({ numero, paso, elegido, abierto, incompatibles, onAbrir, onElegir, onQuitar }: PropsDePaso) {
   return (
     <section className="tarjeta flex flex-col gap-4 p-4 sm:p-5">
       <div className="flex flex-wrap items-center gap-3">
@@ -131,9 +153,9 @@ export default function Armador() {
   const [parametros, setParametros] = useSearchParams();
   const agregar = useCarritoStore((estado) => estado.agregar);
 
-  const [pasos, setPasos] = useState(null);
-  const [resultado, setResultado] = useState(null);
-  const [abierto, setAbierto] = useState(undefined);
+  const [pasos, setPasos] = useState<PasoDelArmador[] | null>(null);
+  const [resultado, setResultado] = useState<ResultadoDelArmado | null>(null);
+  const [abierto, setAbierto] = useState<Componente | null | undefined>(undefined);
   const [error, setError] = useState('');
   const [copiado, setCopiado] = useState(false);
 
@@ -174,32 +196,33 @@ export default function Armador() {
 
   const elegidos = Object.fromEntries(
     pasos.map((paso) => [paso.clave, paso.productos.find((producto) => producto.id === seleccion[paso.clave])])
-  );
+  ) as Partial<Record<Componente, OpcionDelArmador>>;
   const primerPendiente = pasos.find((paso) => !elegidos[paso.clave])?.clave ?? null;
   const pasoAbierto = abierto === undefined ? primerPendiente : abierto;
 
-  function guardarSeleccion(nueva) {
+  const guardarSeleccion = (nueva: Seleccion) => {
     setCopiado(false);
-    setParametros(Object.fromEntries(Object.entries(nueva).filter(([, id]) => id)), { replace: true });
-  }
+    const conValor = Object.entries(nueva).filter(([, id]) => id);
+    setParametros(Object.fromEntries(conValor.map(([clave, id]) => [clave, String(id)])), { replace: true });
+  };
 
-  function elegir(clave, id) {
-    const nueva = { ...seleccion, [clave]: id };
+  const elegir = (clave: Componente, id: number) => {
+    const nueva: Seleccion = { ...seleccion, [clave]: id };
     guardarSeleccion(nueva);
     setAbierto(pasos.find((paso) => !nueva[paso.clave])?.clave ?? null);
-  }
+  };
 
-  function quitar(clave) {
+  const quitar = (clave: Componente) => {
     guardarSeleccion({ ...seleccion, [clave]: undefined });
-  }
+  };
 
-  function agregarAlCarrito() {
+  const agregarAlCarrito = () => {
     for (const paso of pasos) {
       const producto = elegidos[paso.clave];
       if (producto) agregar({ ...producto, categoria: paso.titulo });
     }
     navigate('/carrito');
-  }
+  };
 
   async function copiarEnlace() {
     try {
@@ -210,7 +233,7 @@ export default function Armador() {
     }
   }
 
-  const titulosDe = (claves) =>
+  const titulosDe = (claves: Componente[]) =>
     claves.map((clave) => pasos.find((paso) => paso.clave === clave)?.titulo.toLowerCase()).join(', ');
 
   return (
@@ -259,7 +282,7 @@ export default function Armador() {
             </div>
           </dl>
 
-          {resultado?.problemas.length > 0 && (
+          {resultado && resultado.problemas.length > 0 && (
             <ul className="flex flex-col gap-2" aria-label="Problemas">
               {resultado.problemas.map((problema) => (
                 <li
@@ -283,7 +306,7 @@ export default function Armador() {
             </p>
           ))}
 
-          {resultado?.faltan.length > 0 && (
+          {resultado && resultado.faltan.length > 0 && (
             <p className="text-sm text-neutral-600">Falta elegir: {titulosDe(resultado.faltan)}.</p>
           )}
 

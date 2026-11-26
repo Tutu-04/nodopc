@@ -11,7 +11,7 @@ interface PropsDeEtiqueta {
 export interface DatoDeTorta {
   nombre: string;
   valor: number;
-  color: string;
+  fill: string;
 }
 
 function EtiquetaPorcentaje({ x, y, textAnchor, percent = 0 }: PropsDeEtiqueta) {

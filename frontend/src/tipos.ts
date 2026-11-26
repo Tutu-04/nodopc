@@ -166,3 +166,30 @@ export interface ProductoDeLista {
   marca?: string;
   vendidos?: number;
 }
+
+export interface ResumenDelPanel {
+  productos: number;
+  productos_poco_stock: number;
+  productos_sin_stock: number;
+  categorias: number;
+  marcas: number;
+  usuarios: number;
+  clientes: number;
+  pedidos: number;
+  pedidos_pendientes: number;
+  pedidos_para_despachar: number;
+  pedidos_cobrados: number;
+  total_vendido: number;
+  ticket_promedio: number;
+  unidades_vendidas: number;
+}
+
+export interface MetricasDelPanel {
+  resumen: ResumenDelPanel;
+  ventasPorMes: { mes: string; pedidos: number; total: number }[];
+  pedidosPorEstado: { estado: EstadoPedido; cantidad: number; total: number }[];
+  productosMasVendidos: { producto: string; unidades: number; ingresos: number }[];
+  ventasPorCategoria: { categoria: string; unidades: number; ingresos: number }[];
+  mejoresClientes: { cliente: string; email: string; pedidos: number; total: number }[];
+  productosPocoStock: { id: number; nombre: string; stock: number; categoria: string }[];
+}

@@ -10,8 +10,10 @@ import { useCarritoStore } from '../store/carritoStore';
 
 describe('Salir', () => {
   it('avisa a la API, borra la sesión y el carrito, y vuelve al inicio', async () => {
-    useAuthStore.getState().iniciarSesion({ id: 2, nombre: 'Cliente', rol: 'cliente' });
-    useCarritoStore.getState().agregar({ id: 1, nombre: 'Ryzen 5', precio: 1, stock: 3 });
+    useAuthStore.getState().iniciarSesion({ id: 2, nombre: 'Cliente', email: 'prueba@nodopc.com', rol: 'cliente' });
+    useCarritoStore
+      .getState()
+      .agregar({ id: 1, nombre: 'Ryzen 5', precio: 1, stock: 3, categoria: 'Procesadores', imagen_url: null });
 
     render(
       <MemoryRouter initialEntries={['/salir']}>

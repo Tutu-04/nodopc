@@ -7,6 +7,7 @@ const DashboardAdmin = lazy(() => import('./DashboardAdmin'));
 
 export default function Dashboard() {
   const usuario = useAuthStore((estado) => estado.usuario);
+  if (!usuario) return null;
 
   return (
     <div>

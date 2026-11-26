@@ -9,8 +9,10 @@ import IconoCategoria from '../components/IconoCategoria';
 import Icono from '../components/Icono';
 import Cargando from '../components/Cargando';
 import MensajeError from '../components/MensajeError';
+import type { Categoria, Producto, ProductoDeLista } from '../tipos';
+import type { NombreDeIcono } from '../components/Icono';
 
-const BENEFICIOS = [
+const BENEFICIOS: { icono: NombreDeIcono; titulo: string; texto: string }[] = [
   { icono: 'envio', titulo: 'Envíos a todo el país', texto: 'Seguí tu pedido desde tu cuenta' },
   { icono: 'pago', titulo: 'Pagá como quieras', texto: 'Tarjeta o transferencia' },
   { icono: 'garantia', titulo: 'Garantía oficial', texto: 'En todos los productos' },
@@ -19,9 +21,9 @@ const BENEFICIOS = [
 export default function Home() {
   const usuario = useAuthStore((estado) => estado.usuario);
 
-  const [categorias, setCategorias] = useState([]);
-  const [productos, setProductos] = useState([]);
-  const [masVendidos, setMasVendidos] = useState([]);
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [productos, setProductos] = useState<Producto[]>([]);
+  const [masVendidos, setMasVendidos] = useState<ProductoDeLista[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
 

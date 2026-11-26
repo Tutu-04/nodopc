@@ -3,26 +3,30 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import api from '../api/api';
 import ProductoDetalle from './ProductoDetalle';
+import type { Producto } from '../tipos';
+import type * as ModuloApi from '../api/api';
 
 vi.mock('../api/api', async (original) => {
-  const modulo = await original();
+  const modulo = await original<typeof ModuloApi>();
   return { ...modulo, default: { get: vi.fn() } };
 });
 
-const MOTHERBOARD = {
+const MOTHERBOARD: Producto = {
   id: 28,
   nombre: 'Motherboard MSI MAG B650 Tomahawk WiFi',
   descripcion: 'Socket AM5, memoria DDR5, formato ATX y WiFi 6E.',
   precio: 349999,
   stock: 6,
   categoria: 'Motherboards',
+  categoria_id: 3,
+  marca_id: 5,
   marca: 'MSI',
   imagen_url: null,
   componente: 'motherboard',
   especificaciones: { socket: 'AM5', memoria: 'DDR5', formato: 'ATX' },
 };
 
-function mostrar(producto) {
+function mostrar(producto: Producto) {
   vi.mocked(api.get).mockResolvedValue({ data: producto });
   render(
     <MemoryRouter initialEntries={[`/producto/${producto.id}`]}>

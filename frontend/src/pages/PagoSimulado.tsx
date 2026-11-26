@@ -1,3 +1,4 @@
+import type { FormEvent } from 'react';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import api, { obtenerMensajeError } from '../api/api';
@@ -7,6 +8,7 @@ import Cargando from '../components/Cargando';
 import MensajeError from '../components/MensajeError';
 import Icono from '../components/Icono';
 import TiempoParaPagar from '../components/TiempoParaPagar';
+import type { PedidoConItems } from '../tipos';
 
 const TARJETA_VACIA = { numero: '', titular: '', vencimiento: '', cvv: '' };
 
@@ -14,7 +16,7 @@ export default function PagoSimulado() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [pedido, setPedido] = useState(null);
+  const [pedido, setPedido] = useState<PedidoConItems | null>(null);
   const [tarjeta, setTarjeta] = useState(TARJETA_VACIA);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
@@ -35,11 +37,11 @@ export default function PagoSimulado() {
     cargarPedido();
   }, [id]);
 
-  function cambiar(campo, valor) {
+  function cambiar(campo: keyof typeof TARJETA_VACIA, valor: string) {
     setTarjeta((actual) => ({ ...actual, [campo]: valor }));
   }
 
-  async function manejarSubmit(evento) {
+  async function manejarSubmit(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     setError('');
     setPagando(true);

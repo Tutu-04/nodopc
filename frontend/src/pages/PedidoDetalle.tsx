@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import api, { obtenerMensajeError, pedirLinkDeMercadoPago } from '../api/api';
@@ -11,10 +12,11 @@ import BotonEliminar from '../components/BotonEliminar';
 import Icono from '../components/Icono';
 import Cargando from '../components/Cargando';
 import MensajeError from '../components/MensajeError';
+import type { MediosDePago, PedidoConItems } from '../tipos';
 
-const MEDIOS = { mercadopago: 'Mercado Pago', simulado: 'Tarjeta de prueba' };
+const MEDIOS: Record<string, string> = { mercadopago: 'Mercado Pago', simulado: 'Tarjeta de prueba' };
 
-function Aviso({ tipo, children }) {
+function Aviso({ tipo, children }: { tipo: 'exito' | 'info' | 'alerta'; children: ReactNode }) {
   const estilos = {
     exito: 'border-green-200 bg-green-50 text-green-900',
     info: 'border-sky-200 bg-sky-50 text-sky-950',
@@ -28,7 +30,7 @@ function Aviso({ tipo, children }) {
   );
 }
 
-function avisoDelPago(resultado, pedido) {
+function avisoDelPago(resultado: string | null, pedido: PedidoConItems) {
   if (!resultado) return null;
   if (pedido.estado === 'pagado') {
     return <Aviso tipo="exito">¡Listo! Recibimos tu pago. Te avisamos cuando el pedido cambie de estado.</Aviso>;
@@ -47,8 +49,8 @@ export default function PedidoDetalle() {
   const [parametros] = useSearchParams();
   const usuario = useAuthStore((estado) => estado.usuario);
 
-  const [pedido, setPedido] = useState(null);
-  const [medios, setMedios] = useState(null);
+  const [pedido, setPedido] = useState<PedidoConItems | null>(null);
+  const [medios, setMedios] = useState<MediosDePago | null>(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [aviso, setAviso] = useState(state?.aviso ?? '');
@@ -83,6 +85,7 @@ export default function PedidoDetalle() {
   }, [cargarPedido]);
 
   async function pagarConMercadoPago() {
+    if (!pedido) return;
     setAviso('');
     setYendoAPagar(true);
     try {
@@ -94,6 +97,7 @@ export default function PedidoDetalle() {
   }
 
   async function cancelar() {
+    if (!pedido) return;
     setAviso('');
     try {
       const respuesta = await api.post(`/pedidos/${pedido.id}/cancelar`);
@@ -105,7 +109,7 @@ export default function PedidoDetalle() {
 
   if (cargando) return <Cargando />;
 
-  if (error) {
+  if (error || !pedido) {
     return (
       <div className="tarjeta flex flex-col items-start gap-4">
         <MensajeError texto={error} />
@@ -189,7 +193,7 @@ export default function PedidoDetalle() {
         <div>
           <dt className="subtitulo">Pago</dt>
           <dd className="mt-1 font-medium">
-            {pedido.pagado_en ? (MEDIOS[pedido.medio_pago] ?? 'Acreditado a mano') : 'Sin pagar'}
+            {pedido.pagado_en ? (MEDIOS[pedido.medio_pago ?? ''] ?? 'Acreditado a mano') : 'Sin pagar'}
             {pedido.pagado_en && (
               <span className="block text-sm font-normal text-neutral-500">
                 {formatearFecha(pedido.pagado_en)}
