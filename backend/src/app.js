@@ -14,6 +14,7 @@ import saludRoutes from './routes/salud.routes.js';
 import cuentaRoutes from './routes/cuenta.routes.js';
 import enviosRoutes from './routes/envios.routes.js';
 import pagosRoutes from './routes/pagos.routes.js';
+import armadorRoutes from './routes/armador.routes.js';
 import { rutaNoEncontrada, manejarErrores } from './middlewares/errores.js';
 import { config } from './config.js';
 
@@ -48,6 +49,7 @@ app.use('/api/productos', productosRoutes);
 app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/pedidos', pedidosRoutes);
 app.use('/api/pagos', pagosRoutes);
+app.use('/api/armador', armadorRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
 app.use(rutaNoEncontrada);
