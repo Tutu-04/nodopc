@@ -38,11 +38,62 @@ function prepararDatos(body) {
   };
 }
 
+function leerEntero(valor, { porDefecto, minimo, maximo }) {
+  if (valor === undefined || valor === '') return porDefecto;
+  if (!esEnteroValido(valor, minimo) || Number(valor) > maximo) return null;
+  return Number(valor);
+}
+
+function leerPrecio(valor) {
+  if (valor === undefined || valor === '') return undefined;
+  if (!esNumero(valor) || Number(valor) < 0) return null;
+  return Number(valor);
+}
+
+function leerIds(valor) {
+  if (valor === undefined || valor === '') return undefined;
+  const ids = String(valor).split(',');
+  if (ids.length > 100 || !ids.every((id) => esEnteroValido(id, 1))) return null;
+  return ids.map(Number);
+}
+
 export async function listar(req, res) {
-  const { categoria, marca } = req.query;
-  const buscar = typeof req.query.buscar === 'string' ? req.query.buscar.slice(0, 100) : '';
-  const productos = await Producto.obtenerTodos({ categoria, marca, buscar });
-  res.json(productos);
+  const consulta = req.query;
+
+  const pagina = leerEntero(consulta.pagina, { porDefecto: 1, minimo: 1, maximo: 10000 });
+  const porPagina = leerEntero(consulta.porPagina, { porDefecto: 12, minimo: 1, maximo: 100 });
+  const orden = consulta.orden || 'recientes';
+  const precioMin = leerPrecio(consulta.precioMin);
+  const precioMax = leerPrecio(consulta.precioMax);
+  const ids = leerIds(consulta.ids);
+
+  if (pagina === null || porPagina === null) {
+    return res.status(400).json({ error: 'La página tiene que ser un entero desde 1, y porPagina entre 1 y 100' });
+  }
+  if (!Producto.ORDENES_VALIDOS.includes(orden)) {
+    return res.status(400).json({ error: `El orden tiene que ser uno de: ${Producto.ORDENES_VALIDOS.join(', ')}` });
+  }
+  if (precioMin === null || precioMax === null) {
+    return res.status(400).json({ error: 'Los precios mínimo y máximo tienen que ser números, 0 o más' });
+  }
+  if (ids === null) {
+    return res.status(400).json({ error: 'ids tiene que ser una lista de hasta 100 números separados por comas' });
+  }
+
+  const { productos, total } = await Producto.buscar({
+    categoria: consulta.categoria,
+    marca: consulta.marca,
+    buscar: typeof consulta.buscar === 'string' ? consulta.buscar.slice(0, 100) : '',
+    conStock: consulta.conStock === '1' || consulta.conStock === 'true',
+    ids,
+    precioMin,
+    precioMax,
+    orden,
+    pagina,
+    porPagina,
+  });
+
+  res.json({ productos, total, pagina, porPagina, paginas: Math.ceil(total / porPagina) });
 }
 
 export async function masVendidos(req, res) {

@@ -29,11 +29,11 @@ export default function Home() {
     async function cargarDatos() {
       try {
         const respuestaCategorias = await api.get('/categorias');
-        const respuestaProductos = await api.get('/productos');
+        const respuestaProductos = await api.get('/productos', { params: { porPagina: 8 } });
         const respuestaMasVendidos = await api.get('/productos/mas-vendidos');
 
         setCategorias(respuestaCategorias.data);
-        setProductos(respuestaProductos.data);
+        setProductos(respuestaProductos.data.productos);
         setMasVendidos(respuestaMasVendidos.data);
       } catch (e) {
         setError(obtenerMensajeError(e));
@@ -44,12 +44,6 @@ export default function Home() {
 
     cargarDatos();
   }, []);
-
-  const ultimosProductos = productos.slice(0, 8);
-
-  function contarProductos(categoriaId) {
-    return productos.filter((producto) => producto.categoria_id === categoriaId).length;
-  }
 
   return (
     <div className="flex flex-col gap-14">
@@ -164,7 +158,7 @@ export default function Home() {
                   <span className="flex min-w-0 flex-col gap-0.5">
                     <span className="font-bold">{categoria.nombre}</span>
                     <span className="text-sm leading-snug text-neutral-500">
-                      {categoria.descripcion || `${contarProductos(categoria.id)} productos`}
+                      {categoria.descripcion || `${categoria.cantidad_productos} productos`}
                     </span>
                   </span>
                 </Link>
@@ -184,7 +178,7 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-              {ultimosProductos.map((producto) => (
+              {productos.map((producto) => (
                 <ProductoCard key={producto.id} producto={producto} />
               ))}
             </div>

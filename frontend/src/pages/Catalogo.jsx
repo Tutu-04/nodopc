@@ -68,9 +68,9 @@ export default function Catalogo() {
       setError('');
       try {
         const respuesta = await api.get('/productos', {
-          params: { categoria: categoriaId, marca: marcaId, buscar: buscar },
+          params: { categoria: categoriaId, marca: marcaId, buscar: buscar, porPagina: 100 },
         });
-        if (vigente) setProductos(respuesta.data);
+        if (vigente) setProductos(respuesta.data.productos);
       } catch (e) {
         if (vigente) setError(obtenerMensajeError(e));
       } finally {

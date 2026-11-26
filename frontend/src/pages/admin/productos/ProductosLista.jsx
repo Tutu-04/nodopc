@@ -16,8 +16,8 @@ export default function ProductosLista() {
   useEffect(() => {
     async function cargarProductos() {
       try {
-        const respuesta = await api.get('/productos');
-        setProductos(respuesta.data);
+        const respuesta = await api.get('/productos', { params: { porPagina: 100 } });
+        setProductos(respuesta.data.productos);
       } catch (e) {
         setError(obtenerMensajeError(e));
       } finally {
