@@ -193,7 +193,12 @@ export default function PedidoDetalle() {
             {pedido.pagado_en && (
               <span className="block text-sm font-normal text-neutral-500">
                 {formatearFecha(pedido.pagado_en)}
-                {pedido.pago_id && ` · Operación ${pedido.pago_id}`}
+                {pedido.pago_id && (
+                  <>
+                    {' · '}
+                    <span className="whitespace-nowrap">Operación {pedido.pago_id}</span>
+                  </>
+                )}
               </span>
             )}
           </dd>
