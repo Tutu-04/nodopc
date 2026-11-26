@@ -1,0 +1,13 @@
+# Dependencias (se vuelven a generar con "npm install")
+node_modules/
+
+# Versión compilada del frontend
+dist/
+
+# Configuración con datos reales: NO se sube al repositorio
+.env
+
+# Otros
+*.log
+.DS_Store
+.vscode/
