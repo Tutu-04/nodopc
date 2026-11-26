@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { reiniciarBase } from '../src/migraciones.js';
-import { api, conToken, ingresarComoAdmin } from './ayudantes.js';
+import { api, conSesion, ingresarComoAdmin } from './ayudantes.js';
 
 let admin;
 
@@ -72,38 +72,38 @@ describe('Alta, edición y baja', () => {
   ])('rechaza un producto con %s', async (_caso, cambio) => {
     const respuesta = await api()
       .post('/api/productos')
-      .set(conToken(admin))
+      .set(conSesion(admin))
       .send({ ...fuente, ...cambio });
     expect(respuesta.status).toBe(400);
   });
 
   it('crea, edita y elimina un producto', async () => {
-    const creado = await api().post('/api/productos').set(conToken(admin)).send(fuente);
+    const creado = await api().post('/api/productos').set(conSesion(admin)).send(fuente);
     expect(creado.status).toBe(201);
     expect(creado.body).toMatchObject({ precio: 75999.5, stock: 7, marca: 'Corsair', imagen_url: null });
 
     const editado = await api()
       .put(`/api/productos/${creado.body.id}`)
-      .set(conToken(admin))
+      .set(conSesion(admin))
       .send({ ...fuente, stock: 2, precio: 80000 });
     expect(editado.status).toBe(200);
     expect(editado.body).toMatchObject({ stock: 2, precio: 80000 });
 
-    const eliminado = await api().delete(`/api/productos/${creado.body.id}`).set(conToken(admin));
+    const eliminado = await api().delete(`/api/productos/${creado.body.id}`).set(conSesion(admin));
     expect(eliminado.status).toBe(200);
   });
 
   it('responde 404 al editar un producto que no existe', async () => {
-    const respuesta = await api().put('/api/productos/9999').set(conToken(admin)).send(fuente);
+    const respuesta = await api().put('/api/productos/9999').set(conSesion(admin)).send(fuente);
     expect(respuesta.status).toBe(404);
   });
 
   it('elimina un producto que figura en pedidos sin perder el historial', async () => {
-    const eliminado = await api().delete('/api/productos/12').set(conToken(admin));
+    const eliminado = await api().delete('/api/productos/12').set(conSesion(admin));
     expect(eliminado.status).toBe(200);
     expect((await api().get('/api/productos/12')).status).toBe(404);
 
-    const pedido = await api().get('/api/pedidos/20').set(conToken(admin));
+    const pedido = await api().get('/api/pedidos/20').set(conSesion(admin));
     const renglon = pedido.body.items.find((item) => item.producto.startsWith('SSD Kingston NV2'));
     expect(renglon.producto_id).toBeNull();
     expect(pedido.body.total).toBe(279997);

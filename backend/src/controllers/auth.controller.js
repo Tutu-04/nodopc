@@ -1,8 +1,7 @@
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
 import * as Usuario from '../models/usuario.model.js';
 import { esTextoValido, esEmailValido, validarPassword } from '../utils/validaciones.js';
-import { config } from '../config.js';
+import { borrarSesion, guardarSesion } from '../utils/sesion.js';
 
 const HASH_DE_RELLENO = '$2b$10$2cpuXqFIhYURbXTkjXf7LucR5/8yel6thdZDhRNYPU39LNhM3G9Ui';
 
@@ -48,12 +47,23 @@ export async function iniciarSesion(req, res) {
     return res.status(401).json({ error: 'Email o contraseña incorrectos' });
   }
 
-  const token = jwt.sign({ id: usuario.id, nombre: usuario.nombre, rol: usuario.rol }, config.jwtSecret, {
-    expiresIn: '8h',
-  });
+  guardarSesion(res, usuario);
 
   res.json({
-    token,
     usuario: { id: usuario.id, nombre: usuario.nombre, email: usuario.email, rol: usuario.rol },
   });
+}
+
+export async function obtenerSesion(req, res) {
+  const usuario = await Usuario.obtenerPorId(req.usuario.id);
+  if (!usuario) {
+    borrarSesion(res);
+    return res.status(401).json({ error: 'La cuenta ya no existe' });
+  }
+  res.json({ usuario: { id: usuario.id, nombre: usuario.nombre, email: usuario.email, rol: usuario.rol } });
+}
+
+export function cerrarSesion(req, res) {
+  borrarSesion(res);
+  res.json({ mensaje: 'Sesión cerrada' });
 }

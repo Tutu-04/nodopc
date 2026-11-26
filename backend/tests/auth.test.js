@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { reiniciarBase } from '../src/migraciones.js';
-import { api, conToken } from './ayudantes.js';
+import jwt from 'jsonwebtoken';
+import { api, conSesion, ingresarComoAdmin } from './ayudantes.js';
 
 beforeAll(reiniciarBase);
 
@@ -25,11 +26,15 @@ describe('POST /api/auth/login', () => {
     expect(malaPassword.body.error).toBe(sinCuenta.body.error);
   });
 
-  it('devuelve un token y el usuario sin la contraseña', async () => {
+  it('guarda la sesión en una cookie httpOnly y devuelve el usuario sin la contraseña', async () => {
     const respuesta = await api().post('/api/auth/login').send({ email: 'admin@nodopc.com', password: 'admin123' });
+    const cookie = respuesta.headers['set-cookie'][0];
 
     expect(respuesta.status).toBe(200);
-    expect(respuesta.body.token.split('.')).toHaveLength(3);
+    expect(cookie).toMatch(/^nodopc_sesion=[\w-]+\.[\w-]+\.[\w-]+;/);
+    expect(cookie).toMatch(/HttpOnly/);
+    expect(cookie).toMatch(/SameSite=Lax/);
+    expect(respuesta.body).not.toHaveProperty('token');
     expect(respuesta.body.usuario).toMatchObject({ email: 'admin@nodopc.com', rol: 'admin' });
     expect(respuesta.body.usuario).not.toHaveProperty('password');
   });
@@ -75,7 +80,22 @@ describe('Rutas protegidas', () => {
   });
 
   it('rechazan un token inventado', async () => {
-    const respuesta = await api().get('/api/pedidos/mios').set(conToken('abc.def.ghi'));
+    const respuesta = await api().get('/api/pedidos/mios').set(conSesion('nodopc_sesion=abc.def.ghi'));
+    expect(respuesta.status).toBe(401);
+  });
+
+  it('rechazan un token firmado con otra clave, aunque diga que es admin', async () => {
+    const falso = jwt.sign({ id: 1, nombre: 'Intruso', rol: 'admin' }, 'otra-clave');
+    const respuesta = await api()
+      .get('/api/usuarios')
+      .set(conSesion(`nodopc_sesion=${falso}`));
+    expect(respuesta.status).toBe(401);
+  });
+
+  it('no aceptan el token en la cabecera Authorization', async () => {
+    const cookie = await ingresarComoAdmin();
+    const token = cookie.split('=')[1];
+    const respuesta = await api().get('/api/usuarios').set('Authorization', `Bearer ${token}`);
     expect(respuesta.status).toBe(401);
   });
 
@@ -98,5 +118,24 @@ describe('Tiempo de respuesta del login', () => {
     const sinCuenta = await medir('nadie@nodopc.com');
 
     expect(sinCuenta).toBeGreaterThan(conCuenta * 0.5);
+  });
+});
+
+describe('GET /api/auth/yo y POST /api/auth/salir', () => {
+  it('devuelve el usuario de la sesión actual', async () => {
+    const cookie = await ingresarComoAdmin();
+    const respuesta = await api().get('/api/auth/yo').set(conSesion(cookie));
+    expect(respuesta.status).toBe(200);
+    expect(respuesta.body.usuario).toMatchObject({ id: 1, rol: 'admin' });
+  });
+
+  it('responde 401 sin sesión', async () => {
+    expect((await api().get('/api/auth/yo')).status).toBe(401);
+  });
+
+  it('salir borra la cookie', async () => {
+    const respuesta = await api().post('/api/auth/salir');
+    expect(respuesta.status).toBe(200);
+    expect(respuesta.headers['set-cookie'][0]).toMatch(/^nodopc_sesion=;.*Expires=Thu, 01 Jan 1970/);
   });
 });

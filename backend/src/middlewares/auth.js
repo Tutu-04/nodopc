@@ -1,17 +1,14 @@
-import jwt from 'jsonwebtoken';
-import { config } from '../config.js';
+import { NOMBRE_COOKIE, leerToken } from '../utils/sesion.js';
 
 export function verificarToken(req, res, next) {
-  const cabecera = req.headers.authorization;
+  const token = req.cookies?.[NOMBRE_COOKIE];
 
-  if (!cabecera || !cabecera.startsWith('Bearer ')) {
+  if (!token) {
     return res.status(401).json({ error: 'Tenés que iniciar sesión' });
   }
 
-  const token = cabecera.split(' ')[1];
-
   try {
-    req.usuario = jwt.verify(token, config.jwtSecret);
+    req.usuario = leerToken(token);
     next();
   } catch {
     res.status(401).json({ error: 'La sesión no es válida o venció. Volvé a iniciar sesión' });

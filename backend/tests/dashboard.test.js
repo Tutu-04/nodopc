@@ -1,13 +1,13 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { reiniciarBase } from '../src/migraciones.js';
-import { api, conToken, ingresarComoAdmin } from './ayudantes.js';
+import { api, conSesion, ingresarComoAdmin } from './ayudantes.js';
 
 let metricas;
 
 beforeAll(async () => {
   await reiniciarBase();
   const admin = await ingresarComoAdmin();
-  const respuesta = await api().get('/api/dashboard').set(conToken(admin));
+  const respuesta = await api().get('/api/dashboard').set(conSesion(admin));
   metricas = respuesta.body;
 });
 

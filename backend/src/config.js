@@ -4,6 +4,7 @@ export const config = {
   puerto: Number(process.env.PORT) || 3000,
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
   jwtSecret: process.env.JWT_SECRET,
+  cookieSegura: process.env.COOKIE_SEGURA === 'true',
   db: {
     host: process.env.DB_HOST,
     port: Number(process.env.DB_PORT) || 3306,

@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { reiniciarBase } from '../src/migraciones.js';
-import { api, conToken, ingresarComoCliente } from './ayudantes.js';
+import { api, conSesion, ingresarComoCliente } from './ayudantes.js';
 
 let cliente;
 
@@ -21,7 +21,7 @@ describe('Un cliente no puede usar las rutas del administrador', () => {
     ['PUT', '/api/pedidos/1'],
     ['GET', '/api/dashboard'],
   ])('%s %s responde 403', async (metodo, ruta) => {
-    const respuesta = await api()[metodo.toLowerCase()](ruta).set(conToken(cliente)).send({});
+    const respuesta = await api()[metodo.toLowerCase()](ruta).set(conSesion(cliente)).send({});
     expect(respuesta.status).toBe(403);
   });
 });

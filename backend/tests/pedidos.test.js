@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { reiniciarBase } from '../src/migraciones.js';
-import { api, conToken, ingresar, ingresarComoAdmin, ingresarComoCliente } from './ayudantes.js';
+import { api, conSesion, ingresar, ingresarComoAdmin, ingresarComoCliente } from './ayudantes.js';
 
 let admin;
 let cliente;
@@ -12,7 +12,7 @@ async function stockDe(id) {
 }
 
 function crearPedido(token, datos) {
-  return api().post('/api/pedidos').set(conToken(token)).send(datos);
+  return api().post('/api/pedidos').set(conSesion(token)).send(datos);
 }
 
 beforeAll(async () => {
@@ -24,22 +24,22 @@ beforeAll(async () => {
 
 describe('Consulta de pedidos', () => {
   it('cada cliente ve solo los suyos', async () => {
-    const respuesta = await api().get('/api/pedidos/mios').set(conToken(cliente));
+    const respuesta = await api().get('/api/pedidos/mios').set(conSesion(cliente));
     expect(respuesta.status).toBe(200);
     expect(respuesta.body).toHaveLength(2);
     expect(respuesta.body[0].id).toBe(24);
   });
 
   it('el administrador ve todos', async () => {
-    const respuesta = await api().get('/api/pedidos').set(conToken(admin));
+    const respuesta = await api().get('/api/pedidos').set(conSesion(admin));
     expect(respuesta.body).toHaveLength(28);
   });
 
   it('un cliente no puede ver el detalle de un pedido ajeno', async () => {
-    expect((await api().get('/api/pedidos/20').set(conToken(cliente))).status).toBe(200);
-    expect((await api().get('/api/pedidos/26').set(conToken(cliente))).status).toBe(403);
-    expect((await api().get('/api/pedidos/26').set(conToken(admin))).status).toBe(200);
-    expect((await api().get('/api/pedidos/999').set(conToken(cliente))).status).toBe(404);
+    expect((await api().get('/api/pedidos/20').set(conSesion(cliente))).status).toBe(200);
+    expect((await api().get('/api/pedidos/26').set(conSesion(cliente))).status).toBe(403);
+    expect((await api().get('/api/pedidos/26').set(conSesion(admin))).status).toBe(200);
+    expect((await api().get('/api/pedidos/999').set(conSesion(cliente))).status).toBe(404);
   });
 });
 
@@ -79,10 +79,10 @@ describe('Creación de pedidos', () => {
     expect(creado.body).toMatchObject({ total: 39999 * 3, estado: 'pendiente', direccion_envio: 'Calle Falsa 123' });
     expect(await stockDe(20)).toBe(stockInicial - 3);
 
-    const ajeno = await api().delete(`/api/pedidos/${creado.body.id}`).set(conToken(maria));
+    const ajeno = await api().delete(`/api/pedidos/${creado.body.id}`).set(conSesion(maria));
     expect(ajeno.status).toBe(403);
 
-    const cancelado = await api().delete(`/api/pedidos/${creado.body.id}`).set(conToken(cliente));
+    const cancelado = await api().delete(`/api/pedidos/${creado.body.id}`).set(conSesion(cliente));
     expect(cancelado.status).toBe(200);
     expect(await stockDe(20)).toBe(stockInicial);
   });
@@ -92,20 +92,20 @@ describe('Gestión del administrador', () => {
   it('cambia el estado de un pedido y valida los valores', async () => {
     const invalido = await api()
       .put('/api/pedidos/26')
-      .set(conToken(admin))
+      .set(conSesion(admin))
       .send({ estado: 'volando', direccion_envio: 'Calle 123' });
     expect(invalido.status).toBe(400);
 
     const enviado = await api()
       .put('/api/pedidos/26')
-      .set(conToken(admin))
+      .set(conSesion(admin))
       .send({ estado: 'enviado', direccion_envio: 'San Martín 456, Rosario' });
     expect(enviado.status).toBe(200);
     expect(enviado.body.estado).toBe('enviado');
   });
 
   it('no deja eliminar un pedido que ya salió', async () => {
-    const respuesta = await api().delete('/api/pedidos/26').set(conToken(admin));
+    const respuesta = await api().delete('/api/pedidos/26').set(conSesion(admin));
     expect(respuesta.status).toBe(409);
   });
 });
