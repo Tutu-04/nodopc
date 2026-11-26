@@ -14,6 +14,7 @@
     "formatear": "prettier --write .",
     "formato": "prettier --check .",
     "lint": "npm run lint --prefix backend && npm run lint --prefix frontend",
+    "tipos": "npm run typecheck --prefix backend && npm run typecheck --prefix frontend",
     "test": "npm test --prefix backend && npm test --prefix frontend"
   },
   "devDependencies": {

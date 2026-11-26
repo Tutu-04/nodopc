@@ -1,7 +1,7 @@
 # Dependencias (se vuelven a generar con "npm install")
 node_modules/
 
-# Versión compilada del frontend
+# Versiones compiladas del frontend y del backend
 dist/
 
 # Configuración con datos reales: NO se sube al repositorio

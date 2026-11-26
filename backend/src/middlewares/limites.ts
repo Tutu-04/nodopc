@@ -1,0 +1,48 @@
+import { rateLimit } from 'express-rate-limit';
+
+const QUINCE_MINUTOS = 15 * 60 * 1000;
+
+interface OpcionesDeLimite {
+  maximo: number;
+  ventanaMs?: number;
+  mensaje: string;
+  soloFallidos?: boolean;
+}
+
+export function crearLimitador({
+  maximo,
+  ventanaMs = QUINCE_MINUTOS,
+  mensaje,
+  soloFallidos = false,
+}: OpcionesDeLimite) {
+  return rateLimit({
+    windowMs: ventanaMs,
+    limit: maximo,
+    skipSuccessfulRequests: soloFallidos,
+    standardHeaders: 'draft-8',
+    legacyHeaders: false,
+    handler: (req, res) => res.status(429).json({ error: mensaje }),
+  });
+}
+
+export const limitarLogin = crearLimitador({
+  maximo: 10,
+  soloFallidos: true,
+  mensaje: 'Demasiados intentos fallidos. Esperá 15 minutos y volvé a probar.',
+});
+
+export const limitarRegistro = crearLimitador({
+  maximo: 20,
+  mensaje: 'Se crearon demasiadas cuentas desde esta conexión. Esperá 15 minutos y volvé a probar.',
+});
+
+export const limitarPagos = crearLimitador({
+  maximo: 10,
+  soloFallidos: true,
+  mensaje: 'Hubo demasiados pagos rechazados. Esperá 15 minutos y volvé a probar.',
+});
+
+export const limitarRecuperacion = crearLimitador({
+  maximo: 10,
+  mensaje: 'Ya pediste varios enlaces. Esperá 15 minutos y revisá tu correo, incluida la carpeta de spam.',
+});

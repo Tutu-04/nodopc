@@ -6,22 +6,22 @@ Qué protecciones tiene NodoPC, dónde está cada una en el código y cómo comp
 
 | Protección                    | Qué evita                                                            | Dónde                                                      |
 | ----------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------- |
-| Contraseñas con bcrypt        | Que un robo de la base exponga las contraseñas                       | `controllers/auth.controller.js`, `usuarios.controller.js` |
-| Contraseñas exigentes         | Contraseñas fáciles de adivinar                                      | `utils/validaciones.js` → `validarPassword`                |
-| Sesión en cookie `httpOnly`   | Que un script inyectado en la página robe la sesión                  | `utils/sesion.js`, `middlewares/auth.js`                   |
-| `SameSite=Lax` y CORS         | Que otro sitio haga pedidos en nombre del usuario (CSRF)             | `utils/sesion.js`, `app.js`                                |
-| Rol verificado en la base     | Que alguien conserve el acceso de administrador después de perderlo  | `middlewares/auth.js` → `soloAdmin`                        |
-| Límite de intentos            | Adivinar contraseñas por fuerza bruta                                | `middlewares/limites.js`                                   |
-| Login en tiempo constante     | Averiguar qué emails tienen cuenta midiendo el tiempo de respuesta   | `controllers/auth.controller.js` → `iniciarSesion`         |
-| Encabezados de helmet         | Ataques comunes del navegador, y anunciar que el servidor es Express | `app.js`                                                   |
+| Contraseñas con bcrypt        | Que un robo de la base exponga las contraseñas                       | `controllers/auth.controller.ts`, `usuarios.controller.ts` |
+| Contraseñas exigentes         | Contraseñas fáciles de adivinar                                      | `utils/validaciones.ts` → `validarPassword`                |
+| Sesión en cookie `httpOnly`   | Que un script inyectado en la página robe la sesión                  | `utils/sesion.ts`, `middlewares/auth.ts`                   |
+| `SameSite=Lax` y CORS         | Que otro sitio haga pedidos en nombre del usuario (CSRF)             | `utils/sesion.ts`, `app.ts`                                |
+| Rol verificado en la base     | Que alguien conserve el acceso de administrador después de perderlo  | `middlewares/auth.ts` → `soloAdmin`                        |
+| Límite de intentos            | Adivinar contraseñas por fuerza bruta                                | `middlewares/limites.ts`                                   |
+| Login en tiempo constante     | Averiguar qué emails tienen cuenta midiendo el tiempo de respuesta   | `controllers/auth.controller.ts` → `iniciarSesion`         |
+| Encabezados de helmet         | Ataques comunes del navegador, y anunciar que el servidor es Express | `app.ts`                                                   |
 | Consultas parametrizadas      | Inyección SQL                                                        | Todos los archivos de `models/`                            |
-| El precio lo pone el servidor | Comprar más barato cambiando el precio desde el navegador            | `models/pedido.model.js`                                   |
-| Stock bloqueado al comprar    | Vender más unidades de las que hay cuando dos compras coinciden      | `models/pedido.model.js` → `crear`                         |
-| Pagos verificados en origen   | Marcar un pedido como pagado sin haber pagado, o pagando menos       | `controllers/pagos.controller.js`                          |
-| Firma de las notificaciones   | Que alguien se haga pasar por Mercado Pago                           | `utils/firmaWebhook.js`                                    |
-| Límite de pagos rechazados    | Usar el pago simulado para probar tarjetas                           | `middlewares/limites.js`                                   |
-| Enlaces de recuperación       | Tomar una cuenta con un enlace viejo, robado o adivinado             | `controllers/auth.controller.js`, `utils/tokens.js`        |
-| HTML escapado en los correos  | Inyectar HTML en un correo a través del nombre de usuario            | `correos/plantilla.js` → `escaparHtml`                     |
+| El precio lo pone el servidor | Comprar más barato cambiando el precio desde el navegador            | `models/pedido.model.ts`                                   |
+| Stock bloqueado al comprar    | Vender más unidades de las que hay cuando dos compras coinciden      | `models/pedido.model.ts` → `crear`                         |
+| Pagos verificados en origen   | Marcar un pedido como pagado sin haber pagado, o pagando menos       | `controllers/pagos.controller.ts`                          |
+| Firma de las notificaciones   | Que alguien se haga pasar por Mercado Pago                           | `utils/firmaWebhook.ts`                                    |
+| Límite de pagos rechazados    | Usar el pago simulado para probar tarjetas                           | `middlewares/limites.ts`                                   |
+| Enlaces de recuperación       | Tomar una cuenta con un enlace viejo, robado o adivinado             | `controllers/auth.controller.ts`, `utils/tokens.ts`        |
+| HTML escapado en los correos  | Inyectar HTML en un correo a través del nombre de usuario            | `correos/plantilla.ts` → `escaparHtml`                     |
 | Usuario de MySQL propio       | Que la aplicación pueda tocar otras bases del servidor               | `docker-compose.yml`                                       |
 
 Todas las rutas son relativas a `backend/src/`, salvo `docker-compose.yml`.

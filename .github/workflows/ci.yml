@@ -20,6 +20,7 @@ jobs:
       - run: npm ci --prefix frontend
       - run: npm run formato
       - run: npm run lint
+      - run: npm run tipos
 
   backend:
     name: Tests del backend
