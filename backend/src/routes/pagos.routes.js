@@ -6,6 +6,7 @@ import { limitarPagos } from '../middlewares/limites.js';
 const router = Router();
 
 router.get('/medios', controlador.listarMedios);
+router.post('/webhook', controlador.recibirNotificacion);
 
 router.post('/:pedidoId/simulado', verificarToken, limitarPagos, controlador.pagarSimulado);
 router.post('/:pedidoId/mercadopago', verificarToken, controlador.pagarConMercadoPago);

@@ -11,6 +11,7 @@ export const config = {
   apiPublicaUrl: process.env.API_PUBLICA_URL || '',
   mercadoPago: {
     accessToken: process.env.MP_ACCESS_TOKEN || '',
+    secretoWebhook: process.env.MP_WEBHOOK_SECRET || '',
   },
   uploadsDir: process.env.UPLOADS_DIR || fileURLToPath(new URL('../uploads', import.meta.url)),
   db: {

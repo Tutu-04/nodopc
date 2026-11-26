@@ -1,7 +1,10 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { config } from '../src/config.js';
 import { reiniciarBase } from '../src/migraciones.js';
+import { calcularFirma, firmaEsValida } from '../src/utils/firmaWebhook.js';
 import { api, conSesion, ingresar, ingresarComoCliente } from './ayudantes.js';
+
+const SECRETO = 'secreto-de-prueba';
 
 let cliente;
 let maria;
@@ -53,11 +56,22 @@ async function estadoDe(pedidoId) {
   return respuesta.body;
 }
 
+function notificar(dataId, { firma, requestId = 'req-123', tipo = 'payment' } = {}) {
+  const ts = '1742505638683';
+  const v1 = firma ?? calcularFirma({ dataId: String(dataId), requestId, ts, secreto: SECRETO });
+  return api()
+    .post(`/api/pagos/webhook?data.id=${dataId}&type=${tipo}`)
+    .set('x-signature', `ts=${ts},v1=${v1}`)
+    .set('x-request-id', requestId)
+    .send({ type: tipo, data: { id: String(dataId) } });
+}
+
 beforeAll(async () => {
   await reiniciarBase();
   cliente = await ingresarComoCliente();
   maria = await ingresar('maria@nodopc.com', 'cliente123');
   config.mercadoPago.accessToken = 'TEST-token-de-prueba';
+  config.mercadoPago.secretoWebhook = SECRETO;
 });
 
 afterEach(() => {
@@ -67,6 +81,19 @@ afterEach(() => {
 
 afterAll(() => {
   config.mercadoPago.accessToken = '';
+  config.mercadoPago.secretoWebhook = '';
+});
+
+describe('Firma de las notificaciones', () => {
+  it('acepta solo la firma calculada con el secreto', () => {
+    const datos = { dataId: '123', requestId: 'abc', ts: '1' };
+    const firma = calcularFirma({ ...datos, secreto: SECRETO });
+
+    expect(firmaEsValida({ ...datos, encabezado: `ts=1,v1=${firma}`, secreto: SECRETO })).toBe(true);
+    expect(firmaEsValida({ ...datos, encabezado: `ts=2,v1=${firma}`, secreto: SECRETO })).toBe(false);
+    expect(firmaEsValida({ ...datos, encabezado: `ts=1,v1=${firma}`, secreto: 'otro' })).toBe(false);
+    expect(firmaEsValida({ ...datos, encabezado: undefined, secreto: SECRETO })).toBe(false);
+  });
 });
 
 describe('Checkout de Mercado Pago', () => {
@@ -138,6 +165,33 @@ describe('Confirmación del pago', () => {
     const respuesta = await api().post(`/api/pagos/${pedido.id}/verificar`).set(conSesion(cliente));
     expect(respuesta.body.estado).toBe('pendiente');
   });
+
+  it('rechaza las notificaciones sin una firma válida', async () => {
+    const fetchFalso = simularMercadoPago({});
+    const respuesta = await notificar(1324567890, { firma: 'firma-inventada' });
+
+    expect(respuesta.status).toBe(401);
+    expect(fetchFalso).not.toHaveBeenCalled();
+  });
+
+  it('ignora las notificaciones que no son de pagos', async () => {
+    const fetchFalso = simularMercadoPago({});
+    const respuesta = await notificar(55, { tipo: 'merchant_order' });
+
+    expect(respuesta.status).toBe(200);
+    expect(fetchFalso).not.toHaveBeenCalled();
+  });
+
+  it('acredita el pedido con la notificación aunque se repita', async () => {
+    const pedido = await pedidoConPreferencia();
+    const fetchFalso = simularMercadoPago({ '/v1/payments/987': [pagoAprobado(pedido, { id: 987 })] });
+
+    expect((await notificar(987)).status).toBe(200);
+    expect((await notificar(987)).status).toBe(200);
+
+    expect(fetchFalso).toHaveBeenCalledWith('https://api.mercadopago.com/v1/payments/987', expect.any(Object));
+    expect(await estadoDe(pedido.id)).toMatchObject({ estado: 'pagado', pago_id: '987' });
+  });
 });
 
 describe('Sin credenciales', () => {
@@ -147,6 +201,7 @@ describe('Sin credenciales', () => {
 
     expect((await api().get('/api/pagos/medios')).body.mercadopago).toBe(false);
     expect((await pedirPreferencia(pedido.id)).status).toBe(404);
+    expect((await notificar(1)).status).toBe(404);
 
     config.mercadoPago.accessToken = 'TEST-token-de-prueba';
   });

@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import * as Pedido from '../models/pedido.model.js';
 import { config } from '../config.js';
 import { motivoDeRechazo, validarTarjeta } from '../utils/tarjetas.js';
+import { firmaEsValida } from '../utils/firmaWebhook.js';
 import * as MercadoPago from '../services/mercadoPago.js';
 
 async function buscarPedidoParaPagar(req, res) {
@@ -97,4 +98,38 @@ export async function verificarMercadoPago(req, res) {
   }
 
   res.json(await Pedido.obtenerPorId(pedido.id));
+}
+
+export async function recibirNotificacion(req, res) {
+  if (!MercadoPago.estaConfigurado()) {
+    return res.sendStatus(404);
+  }
+
+  const tipo = req.query.type ?? req.body.type;
+  const dataId = req.query['data.id'] ?? req.body.data?.id;
+  if (tipo !== 'payment' || !dataId) {
+    return res.sendStatus(200);
+  }
+
+  const { secretoWebhook } = config.mercadoPago;
+  if (secretoWebhook) {
+    const valida = firmaEsValida({
+      encabezado: req.get('x-signature'),
+      requestId: req.get('x-request-id'),
+      dataId: String(dataId),
+      secreto: secretoWebhook,
+    });
+    if (!valida) {
+      return res.sendStatus(401);
+    }
+  }
+
+  const pago = await MercadoPago.obtenerPago(dataId);
+  const pedidoId = Number(pago.external_reference);
+  const pedido = Number.isInteger(pedidoId) ? await Pedido.obtenerPorId(pedidoId) : undefined;
+  if (pedido) {
+    await acreditarSiCorresponde(pago, pedido);
+  }
+
+  res.sendStatus(200);
 }
