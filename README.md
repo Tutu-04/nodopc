@@ -2,6 +2,7 @@
 
 Tienda online de hardware full stack, hecha con **React, Express y MySQL**.
 
+[![CI](https://github.com/Tutu-04/nodopc/actions/workflows/ci.yml/badge.svg)](https://github.com/Tutu-04/nodopc/actions/workflows/ci.yml)
 ![React](https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB)
 ![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-0F172A?logo=tailwindcss&logoColor=38BDF8)
@@ -16,38 +17,42 @@ NodoPC vende componentes de PC, PC armadas, monitores y periféricos. Los visita
 
 ## Capturas
 
-| Inicio | Catálogo |
-|---|---|
-| ![Inicio](docs/capturas/inicio.png) | ![Catálogo con filtros](docs/capturas/catalogo.png) |
-| **Detalle de producto** | **Carrito** |
-| ![Detalle de producto](docs/capturas/detalle.png) | ![Carrito](docs/capturas/carrito.png) |
-| **Gestión de productos** | **Panel del administrador** |
+| Inicio                                                     | Catálogo                                             |
+| ---------------------------------------------------------- | ---------------------------------------------------- |
+| ![Inicio](docs/capturas/inicio.png)                        | ![Catálogo con filtros](docs/capturas/catalogo.png)  |
+| **Detalle de producto**                                    | **Carrito**                                          |
+| ![Detalle de producto](docs/capturas/detalle.png)          | ![Carrito](docs/capturas/carrito.png)                |
+| **Gestión de productos**                                   | **Panel del administrador**                          |
 | ![Gestión de productos](docs/capturas/admin-productos.png) | ![Panel con métricas](docs/capturas/panel-admin.png) |
 
 ## Funcionalidades
 
 **Visitante**
+
 - Portada con los productos más vendidos, las categorías y las últimas novedades.
 - Catálogo con búsqueda por palabras y filtros por categoría, marca y stock.
 - Carrito que se guarda en el navegador y se actualiza con el precio y el stock reales.
 
 **Cliente**
+
 - Registro e inicio de sesión.
 - Compra con dirección de envío y seguimiento de sus pedidos.
 - Cancelación de pedidos pendientes, que devuelve el stock.
 
 **Administrador**
+
 - Panel con métricas: ventas por mes, ventas por categoría, pedidos por estado, productos más vendidos, mejores clientes y productos con poco stock.
 - Alta, edición y baja de productos, categorías, marcas y usuarios.
 - Gestión de pedidos y de su estado (pendiente, enviado, entregado).
 
 ## Tecnologías
 
-| Parte | Tecnologías |
-|---|---|
-| Frontend | React 19, Vite, React Router, Zustand, Axios, Tailwind CSS 4, Recharts |
-| Backend | Node.js, Express 5, mysql2, bcrypt, jsonwebtoken |
-| Base de datos | MySQL 8 |
+| Parte         | Tecnologías                                                            |
+| ------------- | ---------------------------------------------------------------------- |
+| Frontend      | React 19, Vite, React Router, Zustand, Axios, Tailwind CSS 4, Recharts |
+| Backend       | Node.js, Express 5, mysql2, bcrypt, jsonwebtoken                       |
+| Base de datos | MySQL 8                                                                |
+| Calidad       | Vitest, Supertest, Testing Library, ESLint, Prettier, GitHub Actions   |
 
 ## Arquitectura
 
@@ -81,49 +86,78 @@ La [guía de instalación](GUIA_DE_INSTALACION.md) explica cada paso en Windows 
 
 ### Usuarios de prueba
 
-| Rol | Email | Contraseña |
-|---|---|---|
-| Administrador | `admin@nodopc.com` | `admin123` |
-| Cliente | `cliente@nodopc.com` | `cliente123` |
+| Rol           | Email                | Contraseña   |
+| ------------- | -------------------- | ------------ |
+| Administrador | `admin@nodopc.com`   | `admin123`   |
+| Cliente       | `cliente@nodopc.com` | `cliente123` |
 
 Hay otros 5 clientes con pedidos de varios meses (`maria@`, `lucas@`, `sofia@`, `julian@` y `valentina@nodopc.com`, todos con `cliente123`), para que el panel de métricas tenga datos.
+
+### Scripts
+
+Todos se corren desde la carpeta principal.
+
+| Comando              | Qué hace                                                         |
+| -------------------- | ---------------------------------------------------------------- |
+| `npm run instalar`   | Instala las dependencias de la raíz, del backend y del frontend  |
+| `npm run crear-base` | Borra la base y la crea de nuevo con los datos de prueba         |
+| `npm run migrar`     | Aplica solo las migraciones nuevas, sin tocar los datos          |
+| `npm run backend`    | Arranca la API y la reinicia al guardar cambios                  |
+| `npm run frontend`   | Arranca la tienda con Vite                                       |
+| `npm test`           | Corre los tests del backend y del frontend                       |
+| `npm run lint`       | Revisa el código con ESLint                                      |
+| `npm run formatear`  | Ordena el código con Prettier (`npm run formato` solo lo revisa) |
+
+## Tests
+
+- **Backend:** Vitest y Supertest prueban la API de punta a punta contra MySQL: autenticación, permisos por rol, validaciones, stock, transacciones y métricas. Usan una base aparte, `tienda_hardware_test`, que se reinicia antes de cada archivo de tests y se crea sola la primera vez.
+- **Frontend:** Vitest y Testing Library prueban el carrito, el formato de precios y componentes como las rutas protegidas.
+- **Integración continua:** GitHub Actions corre el formato, el lint, todos los tests y el build en cada push.
 
 ## Estructura del proyecto
 
 ```
 nodopc/
-├── package.json             Atajos: instalar, crear-base, backend y frontend
+├── package.json               Scripts para manejar todo desde la raíz
+├── .github/workflows/         Integración continua
 ├── database/
-│   └── tienda_hardware.sql  Tablas y datos de prueba
-├── docs/                    Diagrama de la base, capturas y documentación
-├── backend/src/
-│   ├── index.js             Arranque de Express, middlewares y rutas
-│   ├── db.js                Conexión a MySQL
-│   ├── routes/              Qué URL y qué método llama a cada función
-│   ├── controllers/         Validan los datos y arman la respuesta
-│   ├── models/              Consultas SQL
-│   ├── middlewares/         Token, rol y manejo de errores
-│   └── utils/               Validaciones y mensajes de error de MySQL
+│   ├── migraciones/           Cambios del esquema, en orden (001, 002...)
+│   └── semillas/              Datos de prueba
+├── docs/                      Diagrama de la base, capturas y documentación
+├── backend/
+│   ├── scripts/               migrar y crear-base
+│   ├── tests/                 Tests de la API
+│   └── src/
+│       ├── app.js             Aplicación Express: middlewares y rutas
+│       ├── index.js           Arranque del servidor
+│       ├── config.js          Variables de entorno
+│       ├── db.js              Conexión a MySQL
+│       ├── migraciones.js     Aplica las migraciones y los datos de prueba
+│       ├── routes/            Qué URL y qué método llama a cada función
+│       ├── controllers/       Validan los datos y arman la respuesta
+│       ├── models/            Consultas SQL
+│       ├── middlewares/       Token, rol y manejo de errores
+│       └── utils/             Validaciones y mensajes de error de MySQL
 └── frontend/src/
-    ├── App.jsx              Mapa de rutas
-    ├── api/                 Cliente Axios que agrega el token a cada pedido
-    ├── store/               Estado global con Zustand (sesión y carrito)
-    ├── components/          Menú, rutas protegidas, gráficos y piezas reutilizables
-    ├── pages/               Una vista por archivo
-    └── utils/               Formato de precios y fechas, colores de los gráficos
+    ├── App.jsx                Mapa de rutas
+    ├── api/                   Cliente Axios que agrega el token a cada pedido
+    ├── store/                 Estado global con Zustand (sesión y carrito)
+    ├── components/            Menú, rutas protegidas, gráficos y piezas reutilizables
+    ├── pages/                 Una vista por archivo
+    └── utils/                 Formato de precios y fechas, colores de los gráficos
 ```
 
 ## Base de datos
 
 ![Diagrama entidad-relación](docs/diagrama-er.png)
 
-| Tabla | Guarda |
-|---|---|
-| `usuarios` | Cuentas, con su rol y el hash de la contraseña |
-| `categorias` | Tipos de producto |
-| `marcas` | Fabricantes |
-| `productos` | Lo que vende la tienda, con precio y stock |
-| `pedidos` | Cada compra, con su estado y su total |
+| Tabla            | Guarda                                                                           |
+| ---------------- | -------------------------------------------------------------------------------- |
+| `usuarios`       | Cuentas, con su rol y el hash de la contraseña                                   |
+| `categorias`     | Tipos de producto                                                                |
+| `marcas`         | Fabricantes                                                                      |
+| `productos`      | Lo que vende la tienda, con precio y stock                                       |
+| `pedidos`        | Cada compra, con su estado y su total                                            |
 | `detalle_pedido` | Los productos de cada pedido, con el nombre y el precio del momento de la compra |
 
 ## Decisiones técnicas
@@ -147,13 +181,13 @@ nodopc/
 ## Hoja de ruta
 
 - [x] Catálogo, carrito, pedidos, roles y panel con métricas
+- [x] Migraciones, tests automáticos e integración continua con GitHub Actions
 - [ ] Levantar todo con un comando usando Docker Compose
 - [ ] Seguridad: encabezados con helmet, límite de intentos de login y token en cookie `httpOnly`
 - [ ] Pagos con Mercado Pago en modo prueba
 - [ ] Emails de confirmación de pedido y de recuperación de contraseña
 - [ ] Subida de imágenes desde el panel del administrador
 - [ ] Paginación, orden y filtro por precio en el catálogo
-- [ ] Tests automáticos e integración continua con GitHub Actions
 
 ## Autor
 

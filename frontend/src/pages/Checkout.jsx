@@ -102,7 +102,9 @@ export default function Checkout() {
           </ul>
           <p className="flex items-baseline justify-between border-t border-neutral-100 pt-4 font-bold">
             Total
-            <span className="text-2xl font-black tracking-tight tabular-nums">{formatearPrecio(calcularTotal(items))}</span>
+            <span className="text-2xl font-black tracking-tight tabular-nums">
+              {formatearPrecio(calcularTotal(items))}
+            </span>
           </p>
         </aside>
       </div>

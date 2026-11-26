@@ -8,19 +8,19 @@ Cómo dejar funcionando el proyecto en una computadora con Windows, desde cero.
 
 ## 1. Qué hay que instalar
 
-| Programa | ¿Obligatorio? | Para qué sirve |
-|---|---|---|
-| **Node.js** (versión LTS) | Sí | Ejecuta el backend y el frontend. Trae `npm` incluido. |
-| **Visual Studio Code** | Sí (recomendado) | Editor de código con terminal incorporada. |
-| **MySQL**: XAMPP **o** MySQL Server | Sí, uno de los dos | La base de datos. |
-| MySQL Workbench | No | Programa con ventanas para mirar las tablas. |
-| Git | No | Para clonar el repositorio. Sin Git, se puede bajar como ZIP desde GitHub. |
+| Programa                            | ¿Obligatorio?      | Para qué sirve                                                             |
+| ----------------------------------- | ------------------ | -------------------------------------------------------------------------- |
+| **Node.js** (versión LTS)           | Sí                 | Ejecuta el backend y el frontend. Trae `npm` incluido.                     |
+| **Visual Studio Code**              | Sí (recomendado)   | Editor de código con terminal incorporada.                                 |
+| **MySQL**: XAMPP **o** MySQL Server | Sí, uno de los dos | La base de datos.                                                          |
+| MySQL Workbench                     | No                 | Programa con ventanas para mirar las tablas.                               |
+| Git                                 | No                 | Para clonar el repositorio. Sin Git, se puede bajar como ZIP desde GitHub. |
 
 ### 1.1 Node.js
 
 1. Entrá a <https://nodejs.org>.
 2. Descargá la versión **LTS** (el botón verde).
-3. Abrí el instalador y avanzá con **Next** dejando todo como viene. Si aparece la casilla *"Automatically install the necessary tools"*, dejala **sin marcar**.
+3. Abrí el instalador y avanzá con **Next** dejando todo como viene. Si aparece la casilla _"Automatically install the necessary tools"_, dejala **sin marcar**.
 4. Para comprobar que quedó instalado, abrí una terminal nueva (PowerShell) y escribí:
 
 ```powershell
@@ -39,21 +39,21 @@ Tienen que aparecer dos números de versión. Para Node, tiene que ser **22 o ma
 
 Ninguna es obligatoria: el proyecto funciona sin ellas. Para instalarlas: en VS Code, clic en el ícono de **Extensiones** de la barra izquierda (o `Ctrl + Shift + X`), buscalas por nombre y apretá **Install**.
 
-| Extensión | Para qué sirve |
-|---|---|
-| **Tailwind CSS IntelliSense** | Autocompleta las clases de Tailwind y muestra qué hace cada una al pasar el mouse. |
-| **Prettier - Code formatter** | Ordena el código automáticamente (sangrías, comillas, etc.). |
-| **Spanish Language Pack** (opcional) | Pone los menús de VS Code en español. |
-| **Thunder Client** (opcional) | Permite probar la API (GET, POST, PUT, DELETE) desde VS Code, sin el frontend. |
+| Extensión                            | Para qué sirve                                                                     |
+| ------------------------------------ | ---------------------------------------------------------------------------------- |
+| **Tailwind CSS IntelliSense**        | Autocompleta las clases de Tailwind y muestra qué hace cada una al pasar el mouse. |
+| **Prettier - Code formatter**        | Ordena el código automáticamente (sangrías, comillas, etc.).                       |
+| **Spanish Language Pack** (opcional) | Pone los menús de VS Code en español.                                              |
+| **Thunder Client** (opcional)        | Permite probar la API (GET, POST, PUT, DELETE) desde VS Code, sin el frontend.     |
 
 ### 1.4 MySQL
 
 Elegí **una** opción:
 
-| Opción | Cuándo conviene |
-|---|---|
-| **A. XAMPP** | Es la más simple. El usuario `root` no tiene contraseña. |
-| **B. MySQL Server** | Es el MySQL oficial. Pide crear una contraseña al instalarlo. |
+| Opción                      | Cuándo conviene                                                 |
+| --------------------------- | --------------------------------------------------------------- |
+| **A. XAMPP**                | Es la más simple. El usuario `root` no tiene contraseña.        |
+| **B. MySQL Server**         | Es el MySQL oficial. Pide crear una contraseña al instalarlo.   |
 | **C. La PC ya tiene MySQL** | Si en esa máquina ya hay un MySQL instalado (ver el punto 1.5). |
 
 #### Opción A: XAMPP
@@ -125,6 +125,7 @@ npm run instalar
 Tarda uno o dos minutos. Al final no tiene que aparecer ningún `npm error`.
 
 > Avisos que podés ignorar:
+>
 > - `npm warn allow-scripts ... bcrypt`: no es un error, bcrypt funciona igual.
 > - `1 high severity vulnerability` (o parecido) en el frontend: viene de una herramienta interna de Vite que solo se usa mientras programás, no de la página. **No corras** `npm audit fix --force`: cambia la versión de Vite y puede romper el proyecto.
 
@@ -137,12 +138,12 @@ Tarda uno o dos minutos. Al final no tiene que aparecer ningún `npm error`.
 3. Renombrá la copia (clic derecho → **Cambiar nombre**, o `F2`) a exactamente `.env`.
 4. Abrí `.env` y completá según tu MySQL:
 
-| Línea | XAMPP | MySQL Server / MySQL que ya estaba |
-|---|---|---|
-| `DB_HOST` | `127.0.0.1` | `127.0.0.1` |
-| `DB_PORT` | `3306` (o `3307` si lo cambiaste) | `3306` |
-| `DB_USER` | `root` | `root` |
-| `DB_PASSWORD` | **vacío** (`DB_PASSWORD=`) | la contraseña de root |
+| Línea         | XAMPP                             | MySQL Server / MySQL que ya estaba |
+| ------------- | --------------------------------- | ---------------------------------- |
+| `DB_HOST`     | `127.0.0.1`                       | `127.0.0.1`                        |
+| `DB_PORT`     | `3306` (o `3307` si lo cambiaste) | `3306`                             |
+| `DB_USER`     | `root`                            | `root`                             |
+| `DB_PASSWORD` | **vacío** (`DB_PASSWORD=`)        | la contraseña de root              |
 
 5. En `JWT_SECRET` poné una frase larga cualquiera.
 6. Guardá con `Ctrl + S`.
@@ -175,9 +176,11 @@ Tiene que decir:
 Base de datos "tienda_hardware" creada con los datos de prueba.
 ```
 
-Este comando ejecuta el archivo `database\tienda_hardware.sql`. No hace falta abrir Workbench ni phpMyAdmin.
+Este comando crea la base, aplica las migraciones de `database\migraciones` (las tablas) y carga `database\semillas\datos_prueba.sql` (los datos de prueba). No hace falta abrir Workbench ni phpMyAdmin.
 
 > **Ojo:** si la base ya existía, la borra y la crea de nuevo. Sirve para volver a los datos de prueba originales cuando quieras.
+>
+> Para actualizar una base que ya tiene datos sin borrarlos, usá `npm run migrar`: aplica solo las migraciones nuevas.
 
 Si da error, el mensaje dice qué revisar. Los casos más comunes están en la sección 8.
 
@@ -221,11 +224,11 @@ En cada terminal, apretá `Ctrl + C`.
 
 ## 6. Usuarios de prueba
 
-| Rol | Email | Contraseña |
-|---|---|---|
-| Administrador | `admin@nodopc.com` | `admin123` |
-| Cliente | `cliente@nodopc.com` | `cliente123` |
-| Cliente | `maria@nodopc.com` | `cliente123` |
+| Rol           | Email                | Contraseña   |
+| ------------- | -------------------- | ------------ |
+| Administrador | `admin@nodopc.com`   | `admin123`   |
+| Cliente       | `cliente@nodopc.com` | `cliente123` |
+| Cliente       | `maria@nodopc.com`   | `cliente123` |
 
 ---
 
@@ -314,9 +317,9 @@ Node.js no está instalado, o VS Code estaba abierto cuando lo instalaste. Cerr�
 
 Todos se corren desde la carpeta principal del proyecto.
 
-| Comando | Qué hace | ¿Cuándo? |
-|---|---|---|
-| `npm run instalar` | Instala las dependencias de backend y frontend | Una vez, al copiar el proyecto |
+| Comando              | Qué hace                                                 | ¿Cuándo?                            |
+| -------------------- | -------------------------------------------------------- | ----------------------------------- |
+| `npm run instalar`   | Instala las dependencias de backend y frontend           | Una vez, al copiar el proyecto      |
 | `npm run crear-base` | Crea la base con los datos de prueba (borra la anterior) | Una vez, o para reiniciar los datos |
-| `npm run backend` | Arranca la API en el puerto 3000 | Cada vez (terminal 1) |
-| `npm run frontend` | Arranca la página en el puerto 5173 | Cada vez (terminal 2) |
+| `npm run backend`    | Arranca la API en el puerto 3000                         | Cada vez (terminal 1)               |
+| `npm run frontend`   | Arranca la página en el puerto 5173                      | Cada vez (terminal 2)               |

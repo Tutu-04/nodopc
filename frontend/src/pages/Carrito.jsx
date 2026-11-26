@@ -131,7 +131,10 @@ export default function Carrito() {
             <span className="tabular-nums">{contarProductos(items)}</span>
           </div>
           <p className="flex items-baseline justify-between border-t border-neutral-100 pt-4 text-lg font-bold">
-            Total: <span className="text-2xl font-black tracking-tight tabular-nums">{formatearPrecio(calcularTotal(items))}</span>
+            Total:{' '}
+            <span className="text-2xl font-black tracking-tight tabular-nums">
+              {formatearPrecio(calcularTotal(items))}
+            </span>
           </p>
           <button type="button" className="btn btn-acento min-h-12 text-base" onClick={() => navigate('/checkout')}>
             Finalizar compra

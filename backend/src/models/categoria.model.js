@@ -11,18 +11,15 @@ export async function obtenerPorId(id) {
 }
 
 export async function crear({ nombre, descripcion }) {
-  const [resultado] = await pool.execute(
-    'INSERT INTO categorias (nombre, descripcion) VALUES (?, ?)',
-    [nombre, descripcion]
-  );
+  const [resultado] = await pool.execute('INSERT INTO categorias (nombre, descripcion) VALUES (?, ?)', [
+    nombre,
+    descripcion,
+  ]);
   return resultado.insertId;
 }
 
 export async function actualizar(id, { nombre, descripcion }) {
-  await pool.execute(
-    'UPDATE categorias SET nombre = ?, descripcion = ? WHERE id = ?',
-    [nombre, descripcion, id]
-  );
+  await pool.execute('UPDATE categorias SET nombre = ?, descripcion = ? WHERE id = ?', [nombre, descripcion, id]);
 }
 
 export async function eliminar(id) {

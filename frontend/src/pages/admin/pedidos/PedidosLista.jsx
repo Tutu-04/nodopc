@@ -76,9 +76,7 @@ export default function PedidosLista() {
                       <Link to={`/admin/pedidos/${pedido.id}/editar`} className="btn btn-secundario btn-chico">
                         Editar
                       </Link>
-                      {pedido.estado === 'pendiente' && (
-                        <BotonEliminar onConfirmar={() => eliminar(pedido)} />
-                      )}
+                      {pedido.estado === 'pendiente' && <BotonEliminar onConfirmar={() => eliminar(pedido)} />}
                     </div>
                   </td>
                 </tr>

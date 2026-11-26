@@ -1,5 +1,7 @@
+import { config } from '../config.js';
+
 export function explicarErrorMysql(error) {
-  const servidor = `${process.env.DB_HOST}:${process.env.DB_PORT}`;
+  const servidor = `${config.db.host}:${config.db.port}`;
 
   switch (error.code) {
     case 'ECONNREFUSED':
@@ -7,9 +9,9 @@ export function explicarErrorMysql(error) {
     case 'ER_ACCESS_DENIED_ERROR':
       return `MySQL rechazó el usuario o la contraseña. Revisá DB_USER y DB_PASSWORD en el .env (con XAMPP la contraseña va vacía). Detalle: ${error.message}`;
     case 'ER_BAD_DB_ERROR':
-      return 'La base tienda_hardware todavía no existe. Creala con:  npm run crear-base';
+      return `La base ${config.db.database} todavía no existe. Creala con:  npm run crear-base`;
     case 'ENOENT':
-      return 'No se encontró el archivo database/tienda_hardware.sql. Revisá que la carpeta del proyecto esté completa.';
+      return 'No se encontraron los archivos de la carpeta database. Revisá que el proyecto esté completo.';
     default:
       return `${error.code ?? ''} ${error.message}`.trim();
   }

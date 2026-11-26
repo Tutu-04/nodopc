@@ -11,10 +11,7 @@ export async function obtenerPorId(id) {
 }
 
 export async function crear({ nombre, pais }) {
-  const [resultado] = await pool.execute(
-    'INSERT INTO marcas (nombre, pais) VALUES (?, ?)',
-    [nombre, pais]
-  );
+  const [resultado] = await pool.execute('INSERT INTO marcas (nombre, pais) VALUES (?, ?)', [nombre, pais]);
   return resultado.insertId;
 }
 

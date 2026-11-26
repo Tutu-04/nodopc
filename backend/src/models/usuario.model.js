@@ -18,18 +18,17 @@ export async function obtenerPorEmail(email) {
 }
 
 export async function crear({ nombre, email, password, rol }) {
-  const [resultado] = await pool.execute(
-    'INSERT INTO usuarios (nombre, email, password, rol) VALUES (?, ?, ?, ?)',
-    [nombre, email, password, rol]
-  );
+  const [resultado] = await pool.execute('INSERT INTO usuarios (nombre, email, password, rol) VALUES (?, ?, ?, ?)', [
+    nombre,
+    email,
+    password,
+    rol,
+  ]);
   return resultado.insertId;
 }
 
 export async function actualizar(id, { nombre, email, rol }) {
-  await pool.execute(
-    'UPDATE usuarios SET nombre = ?, email = ?, rol = ? WHERE id = ?',
-    [nombre, email, rol, id]
-  );
+  await pool.execute('UPDATE usuarios SET nombre = ?, email = ?, rol = ? WHERE id = ?', [nombre, email, rol, id]);
 }
 
 export async function actualizarPassword(id, passwordHasheada) {

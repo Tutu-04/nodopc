@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import * as Usuario from '../models/usuario.model.js';
 import { esTextoValido, esEmailValido } from '../utils/validaciones.js';
+import { config } from '../config.js';
 
 export async function registrar(req, res) {
   const { nombre, email, password } = req.body;
@@ -44,11 +45,9 @@ export async function iniciarSesion(req, res) {
     return res.status(401).json({ error: 'Email o contraseña incorrectos' });
   }
 
-  const token = jwt.sign(
-    { id: usuario.id, nombre: usuario.nombre, rol: usuario.rol },
-    process.env.JWT_SECRET,
-    { expiresIn: '8h' }
-  );
+  const token = jwt.sign({ id: usuario.id, nombre: usuario.nombre, rol: usuario.rol }, config.jwtSecret, {
+    expiresIn: '8h',
+  });
 
   res.json({
     token,

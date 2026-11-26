@@ -13,9 +13,7 @@ export const useCarritoStore = create(
           if (yaEsta) {
             return {
               items: estado.items.map((item) =>
-                item.id === producto.id
-                  ? { ...item, cantidad: Math.min(item.cantidad + 1, item.stock) }
-                  : item
+                item.id === producto.id ? { ...item, cantidad: Math.min(item.cantidad + 1, item.stock) } : item
               ),
             };
           }
@@ -35,14 +33,11 @@ export const useCarritoStore = create(
       cambiarCantidad: (id, cantidad) =>
         set((estado) => ({
           items: estado.items.map((item) =>
-            item.id === id
-              ? { ...item, cantidad: Math.max(1, Math.min(cantidad, item.stock)) }
-              : item
+            item.id === id ? { ...item, cantidad: Math.max(1, Math.min(cantidad, item.stock)) } : item
           ),
         })),
 
-      quitar: (id) =>
-        set((estado) => ({ items: estado.items.filter((item) => item.id !== id) })),
+      quitar: (id) => set((estado) => ({ items: estado.items.filter((item) => item.id !== id) })),
 
       vaciar: () => set({ items: [] }),
 

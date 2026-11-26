@@ -78,7 +78,11 @@ export default function ProductosLista() {
                   <td>{producto.categoria}</td>
                   <td>{producto.marca}</td>
                   <td className="tabular-nums">{formatearPrecio(producto.precio)}</td>
-                  <td className={producto.stock === 0 ? 'whitespace-nowrap tabular-nums font-bold text-red-700' : 'tabular-nums'}>
+                  <td
+                    className={
+                      producto.stock === 0 ? 'whitespace-nowrap tabular-nums font-bold text-red-700' : 'tabular-nums'
+                    }
+                  >
                     {producto.stock === 0 ? '0 (sin stock)' : producto.stock}
                   </td>
                   <td>

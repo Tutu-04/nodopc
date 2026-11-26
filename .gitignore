@@ -6,6 +6,8 @@ dist/
 
 # Configuración con datos reales: NO se sube al repositorio
 .env
+.env.*
+!.env.example
 
 # Otros
 *.log

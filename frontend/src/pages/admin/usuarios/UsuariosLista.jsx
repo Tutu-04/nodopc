@@ -78,9 +78,7 @@ export default function UsuariosLista() {
                       <Link to={`/admin/usuarios/${usuario.id}/editar`} className="btn btn-secundario btn-chico">
                         Editar
                       </Link>
-                      {usuario.id !== usuarioActual.id && (
-                        <BotonEliminar onConfirmar={() => eliminar(usuario)} />
-                      )}
+                      {usuario.id !== usuarioActual.id && <BotonEliminar onConfirmar={() => eliminar(usuario)} />}
                     </div>
                   </td>
                 </tr>
