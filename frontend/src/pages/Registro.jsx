@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api, { obtenerMensajeError } from '../api/api';
 import MensajeError from '../components/MensajeError';
+import { AYUDA_PASSWORD, PATRON_PASSWORD } from '../utils/password';
 
 export default function Registro() {
   const navigate = useNavigate();
@@ -85,11 +86,13 @@ export default function Registro() {
             type="password"
             className="campo"
             required
-            minLength={6}
+            pattern={PATRON_PASSWORD}
+            title={AYUDA_PASSWORD}
+            autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-          <p className="ayuda">Mínimo 6 caracteres.</p>
+          <p className="ayuda">{AYUDA_PASSWORD}</p>
         </div>
 
         <div>
