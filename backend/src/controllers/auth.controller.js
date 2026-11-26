@@ -4,6 +4,8 @@ import * as Usuario from '../models/usuario.model.js';
 import { esTextoValido, esEmailValido, validarPassword } from '../utils/validaciones.js';
 import { config } from '../config.js';
 
+const HASH_DE_RELLENO = '$2b$10$2cpuXqFIhYURbXTkjXf7LucR5/8yel6thdZDhRNYPU39LNhM3G9Ui';
+
 export async function registrar(req, res) {
   const { nombre, email, password } = req.body;
 
@@ -40,9 +42,9 @@ export async function iniciarSesion(req, res) {
 
   const usuario = await Usuario.obtenerPorEmail(email);
 
-  const passwordCorrecta = usuario && (await bcrypt.compare(password, usuario.password));
+  const passwordCorrecta = await bcrypt.compare(password, usuario?.password ?? HASH_DE_RELLENO);
 
-  if (!passwordCorrecta) {
+  if (!usuario || !passwordCorrecta) {
     return res.status(401).json({ error: 'Email o contraseña incorrectos' });
   }
 

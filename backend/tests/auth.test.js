@@ -84,3 +84,19 @@ describe('Rutas protegidas', () => {
     expect(respuesta.status).toBe(404);
   });
 });
+
+describe('Tiempo de respuesta del login', () => {
+  it('tarda lo mismo si el email no existe, para no revelar qué cuentas hay', async () => {
+    const medir = async (email) => {
+      const inicio = performance.now();
+      await api().post('/api/auth/login').send({ email, password: 'incorrecta1' });
+      return performance.now() - inicio;
+    };
+
+    await medir('admin@nodopc.com');
+    const conCuenta = await medir('admin@nodopc.com');
+    const sinCuenta = await medir('nadie@nodopc.com');
+
+    expect(sinCuenta).toBeGreaterThan(conCuenta * 0.5);
+  });
+});
