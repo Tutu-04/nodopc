@@ -1,16 +1,21 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import api, { obtenerMensajeError } from '../../../api/api';
 import { formatearFecha, formatearPrecio } from '../../../utils/formato';
-import EstadoPedido from '../../../components/EstadoPedido';
+import EstadoPedido, { textoDeEstado } from '../../../components/EstadoPedido';
 import Cargando from '../../../components/Cargando';
 import MensajeError from '../../../components/MensajeError';
 import BotonEliminar from '../../../components/BotonEliminar';
 
+const ESTADOS = ['pendiente', 'pagado', 'enviado', 'entregado', 'cancelado'];
+
 export default function PedidosLista() {
+  const [parametros, setParametros] = useSearchParams();
   const [pedidos, setPedidos] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
+
+  const filtro = parametros.get('estado') ?? '';
 
   useEffect(() => {
     async function cargarPedidos() {
@@ -27,6 +32,20 @@ export default function PedidosLista() {
     cargarPedidos();
   }, []);
 
+  function filtrar(estado) {
+    setParametros(estado ? { estado } : {}, { replace: true });
+  }
+
+  async function cancelar(pedido) {
+    setError('');
+    try {
+      const respuesta = await api.post(`/pedidos/${pedido.id}/cancelar`);
+      setPedidos((actuales) => actuales.map((p) => (p.id === pedido.id ? { ...p, ...respuesta.data } : p)));
+    } catch (e) {
+      setError(obtenerMensajeError(e));
+    }
+  }
+
   async function eliminar(pedido) {
     setError('');
     try {
@@ -37,9 +56,27 @@ export default function PedidosLista() {
     }
   }
 
+  const visibles = filtro ? pedidos.filter((pedido) => pedido.estado === filtro) : pedidos;
+  const cantidad = (estado) => pedidos.filter((pedido) => pedido.estado === estado).length;
+
   return (
     <div>
-      <h1 className="titulo mb-4">Pedidos</h1>
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
+        <h1 className="titulo">Pedidos</h1>
+        <div className="w-full sm:w-64">
+          <label htmlFor="filtro-estado" className="etiqueta">
+            Estado
+          </label>
+          <select id="filtro-estado" className="campo" value={filtro} onChange={(e) => filtrar(e.target.value)}>
+            <option value="">Todos ({pedidos.length})</option>
+            {ESTADOS.map((estado) => (
+              <option key={estado} value={estado}>
+                {textoDeEstado(estado)} ({cantidad(estado)})
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
 
       <MensajeError texto={error} />
 
@@ -53,17 +90,19 @@ export default function PedidosLista() {
                 <th>N.º</th>
                 <th>Cliente</th>
                 <th>Fecha</th>
+                <th>Entrega</th>
                 <th>Estado</th>
                 <th>Total</th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
-              {pedidos.map((pedido) => (
+              {visibles.map((pedido) => (
                 <tr key={pedido.id}>
                   <td className="tabular-nums">#{pedido.id}</td>
                   <td>{pedido.cliente}</td>
-                  <td>{formatearFecha(pedido.fecha)}</td>
+                  <td className="whitespace-nowrap">{formatearFecha(pedido.fecha)}</td>
+                  <td>{pedido.metodo_entrega === 'envio' ? pedido.provincia : 'Retiro'}</td>
                   <td>
                     <EstadoPedido estado={pedido.estado} />
                   </td>
@@ -73,17 +112,30 @@ export default function PedidosLista() {
                       <Link to={`/pedidos/${pedido.id}`} className="btn btn-secundario btn-chico">
                         Ver
                       </Link>
-                      <Link to={`/admin/pedidos/${pedido.id}/editar`} className="btn btn-secundario btn-chico">
-                        Editar
-                      </Link>
-                      {pedido.estado === 'pendiente' && <BotonEliminar onConfirmar={() => eliminar(pedido)} />}
+                      {!['entregado', 'cancelado'].includes(pedido.estado) && (
+                        <Link to={`/admin/pedidos/${pedido.id}/editar`} className="btn btn-secundario btn-chico">
+                          Gestionar
+                        </Link>
+                      )}
+                      {['pendiente', 'pagado'].includes(pedido.estado) && (
+                        <BotonEliminar
+                          onConfirmar={() => cancelar(pedido)}
+                          texto="Cancelar"
+                          textoConfirmar="Sí, cancelar"
+                        />
+                      )}
+                      {pedido.estado === 'cancelado' && <BotonEliminar onConfirmar={() => eliminar(pedido)} />}
                     </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          {pedidos.length === 0 && !error && <p className="py-6 text-neutral-600">Todavía no hay pedidos.</p>}
+          {visibles.length === 0 && !error && (
+            <p className="px-4 py-6 text-neutral-600">
+              {filtro ? 'No hay pedidos en este estado.' : 'Todavía no hay pedidos.'}
+            </p>
+          )}
         </div>
       )}
     </div>

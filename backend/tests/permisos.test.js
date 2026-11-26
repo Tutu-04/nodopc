@@ -19,6 +19,7 @@ describe('Un cliente no puede usar las rutas del administrador', () => {
     ['GET', '/api/usuarios'],
     ['GET', '/api/pedidos'],
     ['PUT', '/api/pedidos/1'],
+    ['DELETE', '/api/pedidos/25'],
     ['GET', '/api/dashboard'],
   ])('%s %s responde 403', async (metodo, ruta) => {
     const respuesta = await api()[metodo.toLowerCase()](ruta).set(conSesion(cliente)).send({});

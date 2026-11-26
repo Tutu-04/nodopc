@@ -1,4 +1,5 @@
 import pool from '../db.js';
+import { calcularCostoDeEnvio } from '../utils/envios.js';
 
 function crearError(status, mensaje) {
   const error = new Error(mensaje);
@@ -7,7 +8,10 @@ function crearError(status, mensaje) {
 }
 
 const SELECT_PEDIDOS = `
-  SELECT p.*, u.nombre AS cliente, u.email AS cliente_email
+  SELECT p.*, u.nombre AS cliente, u.email AS cliente_email,
+         IF(p.estado = 'pendiente' AND p.vence_en IS NOT NULL,
+            GREATEST(TIMESTAMPDIFF(SECOND, NOW(), p.vence_en), 0),
+            NULL) AS segundos_para_pagar
   FROM pedidos p
   JOIN usuarios u ON u.id = p.usuario_id
 `;
@@ -39,19 +43,20 @@ export async function obtenerPorId(id) {
   return pedido;
 }
 
-export async function crear(usuarioId, direccionEnvio, items) {
+export async function crear(usuarioId, { metodoEntrega, provincia, direccionEnvio, items, minutosParaPagar }) {
   const conexion = await pool.getConnection();
 
   try {
     await conexion.beginTransaction();
 
-    let total = 0;
+    let subtotal = 0;
     const renglones = [];
 
     for (const item of items) {
-      const [filas] = await conexion.execute('SELECT id, nombre, precio, stock FROM productos WHERE id = ?', [
-        item.producto_id,
-      ]);
+      const [filas] = await conexion.execute(
+        'SELECT id, nombre, precio, stock FROM productos WHERE id = ? FOR UPDATE',
+        [item.producto_id]
+      );
       const producto = filas[0];
 
       if (!producto) {
@@ -61,7 +66,7 @@ export async function crear(usuarioId, direccionEnvio, items) {
         throw crearError(409, `No hay stock suficiente de "${producto.nombre}" (quedan ${producto.stock})`);
       }
 
-      total += producto.precio * item.cantidad;
+      subtotal += producto.precio * item.cantidad;
       renglones.push({
         producto_id: producto.id,
         producto_nombre: producto.nombre,
@@ -70,9 +75,12 @@ export async function crear(usuarioId, direccionEnvio, items) {
       });
     }
 
+    const costoEnvio = calcularCostoDeEnvio({ metodo: metodoEntrega, provincia, subtotal });
+
     const [resultado] = await conexion.execute(
-      'INSERT INTO pedidos (usuario_id, direccion_envio, total) VALUES (?, ?, ?)',
-      [usuarioId, direccionEnvio, total]
+      `INSERT INTO pedidos (usuario_id, metodo_entrega, provincia, direccion_envio, costo_envio, total, vence_en)
+       VALUES (?, ?, ?, ?, ?, ?, NOW() + INTERVAL ? MINUTE)`,
+      [usuarioId, metodoEntrega, provincia, direccionEnvio, costoEnvio, subtotal + costoEnvio, minutosParaPagar]
     );
     const pedidoId = resultado.insertId;
 
@@ -97,15 +105,26 @@ export async function crear(usuarioId, direccionEnvio, items) {
   }
 }
 
-export async function actualizar(id, { estado, direccion_envio }) {
-  await pool.execute('UPDATE pedidos SET estado = ?, direccion_envio = ? WHERE id = ?', [estado, direccion_envio, id]);
+export async function actualizar(id, { estado, direccionEnvio }) {
+  await pool.execute(
+    `UPDATE pedidos
+     SET estado = ?, direccion_envio = ?, pagado_en = IF(? = 'pagado' AND pagado_en IS NULL, NOW(), pagado_en)
+     WHERE id = ?`,
+    [estado, direccionEnvio, estado, id]
+  );
 }
 
-export async function eliminar(id) {
+export async function cancelar(id, estadosCancelables = ['pendiente', 'pagado']) {
   const conexion = await pool.getConnection();
 
   try {
     await conexion.beginTransaction();
+
+    const [filas] = await conexion.execute('SELECT estado FROM pedidos WHERE id = ? FOR UPDATE', [id]);
+    if (!estadosCancelables.includes(filas[0]?.estado)) {
+      await conexion.rollback();
+      return false;
+    }
 
     const [items] = await conexion.execute(
       'SELECT producto_id, cantidad FROM detalle_pedido WHERE pedido_id = ? AND producto_id IS NOT NULL',
@@ -114,14 +133,43 @@ export async function eliminar(id) {
     for (const item of items) {
       await conexion.execute('UPDATE productos SET stock = stock + ? WHERE id = ?', [item.cantidad, item.producto_id]);
     }
-
-    await conexion.execute('DELETE FROM pedidos WHERE id = ?', [id]);
+    await conexion.execute("UPDATE pedidos SET estado = 'cancelado', vence_en = NULL WHERE id = ?", [id]);
 
     await conexion.commit();
+    return true;
   } catch (error) {
     await conexion.rollback();
     throw error;
   } finally {
     conexion.release();
   }
+}
+
+export async function eliminar(id) {
+  await pool.execute('DELETE FROM pedidos WHERE id = ?', [id]);
+}
+
+export async function cancelarVencidos() {
+  const [filas] = await pool.execute(
+    "SELECT id FROM pedidos WHERE estado = 'pendiente' AND vence_en IS NOT NULL AND vence_en < NOW()"
+  );
+
+  let cancelados = 0;
+  for (const fila of filas) {
+    if (await cancelar(fila.id, ['pendiente'])) cancelados++;
+  }
+  return cancelados;
+}
+
+export async function marcarPagado(id, { medio, pagoId }) {
+  const [resultado] = await pool.execute(
+    `UPDATE pedidos SET estado = 'pagado', medio_pago = ?, pago_id = ?, pagado_en = NOW(), vence_en = NULL
+     WHERE id = ? AND estado = 'pendiente'`,
+    [medio, pagoId, id]
+  );
+  return resultado.affectedRows === 1;
+}
+
+export async function elegirMedioDePago(id, medio) {
+  await pool.execute("UPDATE pedidos SET medio_pago = ? WHERE id = ? AND estado = 'pendiente'", [medio, id]);
 }

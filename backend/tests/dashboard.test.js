@@ -19,9 +19,21 @@ describe('GET /api/dashboard', () => {
       marcas: 12,
       usuarios: 7,
       pedidos: 28,
-      pedidos_pendientes: 4,
-      unidades_vendidas: 60,
+      pedidos_pendientes: 1,
+      pedidos_para_despachar: 3,
+      pedidos_cobrados: 26,
+      unidades_vendidas: 53,
+      total_vendido: 14941447,
     });
+  });
+
+  it('no suma como venta los pedidos sin pagar ni los cancelados', () => {
+    const cobrado = metricas.pedidosPorEstado
+      .filter((fila) => ['pagado', 'enviado', 'entregado'].includes(fila.estado))
+      .reduce((suma, fila) => suma + fila.total, 0);
+
+    expect(cobrado).toBe(metricas.resumen.total_vendido);
+    expect(metricas.resumen.ticket_promedio).toBeCloseTo(14941447 / 26, 2);
   });
 
   it('agrupa las ventas de los últimos meses en orden', () => {
@@ -33,6 +45,12 @@ describe('GET /api/dashboard', () => {
   it('devuelve los rankings y la distribución por estado', () => {
     expect(metricas.productosMasVendidos).toHaveLength(5);
     expect(metricas.mejoresClientes).toHaveLength(5);
-    expect(metricas.pedidosPorEstado.map((fila) => fila.estado).sort()).toEqual(['entregado', 'enviado', 'pendiente']);
+    expect(metricas.pedidosPorEstado.map((fila) => fila.estado)).toEqual([
+      'pendiente',
+      'pagado',
+      'enviado',
+      'entregado',
+      'cancelado',
+    ]);
   });
 });

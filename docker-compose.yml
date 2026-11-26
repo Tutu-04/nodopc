@@ -29,6 +29,11 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-nodopc}
       DB_NAME: tienda_hardware
       JWT_SECRET: ${JWT_SECRET:-clave-solo-para-desarrollo-cambiala-en-produccion}
+      MINUTOS_PARA_PAGAR: ${MINUTOS_PARA_PAGAR:-30}
+      PAGO_SIMULADO: ${PAGO_SIMULADO:-true}
+      MP_ACCESS_TOKEN: ${MP_ACCESS_TOKEN:-}
+      MP_WEBHOOK_SECRET: ${MP_WEBHOOK_SECRET:-}
+      API_PUBLICA_URL: ${API_PUBLICA_URL:-}
     ports:
       - '3000:3000'
     volumes:

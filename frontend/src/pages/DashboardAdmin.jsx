@@ -13,7 +13,7 @@ import Dato from '../components/Dato';
 import GraficoBarras from '../components/GraficoBarras';
 import GraficoTorta from '../components/GraficoTorta';
 import Seccion from '../components/Seccion';
-import EstadoPedido from '../components/EstadoPedido';
+import EstadoPedido, { textoDeEstado } from '../components/EstadoPedido';
 import Cargando from '../components/Cargando';
 import MensajeError from '../components/MensajeError';
 
@@ -23,10 +23,6 @@ function Muestra({ color }) {
   return (
     <span className="mr-2 inline-block size-3 shrink-0 rounded-full" style={{ background: color }} aria-hidden="true" />
   );
-}
-
-function capitalizar(texto) {
-  return texto.charAt(0).toUpperCase() + texto.slice(1);
 }
 
 export default function DashboardAdmin() {
@@ -85,7 +81,7 @@ export default function DashboardAdmin() {
   }
 
   const datosEstados = pedidosPorEstado.map((fila) => ({
-    nombre: capitalizar(fila.estado),
+    nombre: textoDeEstado(fila.estado),
     valor: fila.cantidad,
     fill: COLORES_ESTADOS[fila.estado],
   }));
@@ -94,11 +90,11 @@ export default function DashboardAdmin() {
     <div className="flex flex-col gap-8">
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Dato titulo="Total vendido" valor={formatearPrecio(resumen.total_vendido)} />
-        <Dato titulo="Pedidos" valor={resumen.pedidos} />
+        <Dato titulo="Pedidos cobrados" valor={resumen.pedidos_cobrados} />
         <Dato titulo="Ticket promedio" valor={formatearPrecio(resumen.ticket_promedio)} />
         <Dato titulo="Unidades vendidas" valor={resumen.unidades_vendidas} />
-        <Dato titulo="Clientes" valor={resumen.clientes} />
-        <Dato titulo="Pedidos pendientes" valor={resumen.pedidos_pendientes} />
+        <Dato titulo="Para despachar" valor={resumen.pedidos_para_despachar} />
+        <Dato titulo="Esperando pago" valor={resumen.pedidos_pendientes} />
         <Dato titulo="Productos" valor={resumen.productos} />
         <Dato
           titulo="Sin stock / poco stock"
@@ -106,7 +102,7 @@ export default function DashboardAdmin() {
         />
       </div>
 
-      <Seccion titulo="Ventas por mes" descripcion="Facturación de los últimos 6 meses con pedidos.">
+      <Seccion titulo="Ventas por mes" descripcion="Facturación cobrada de los últimos 6 meses con ventas.">
         {ventasPorMes.length === 0 ? (
           <p className="text-neutral-600">Todavía no hay ventas.</p>
         ) : (
@@ -179,7 +175,10 @@ export default function DashboardAdmin() {
           </div>
         </Seccion>
 
-        <Seccion titulo="Pedidos por estado" descripcion="Cuántos pedidos hay en cada etapa del envío.">
+        <Seccion
+          titulo="Pedidos por estado"
+          descripcion="Cuántos pedidos hay en cada etapa, desde el pago hasta la entrega."
+        >
           <GraficoTorta datos={datosEstados} formatoValor={(valor) => `${valor} pedidos`} />
           <div className="overflow-x-auto">
             <table className="tabla">

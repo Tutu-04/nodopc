@@ -114,6 +114,7 @@ export async function obtenerMasVendidos() {
     `SELECT p.id, p.nombre, p.precio, p.stock, p.imagen_url, c.nombre AS categoria,
             SUM(d.cantidad) AS vendidos
      FROM detalle_pedido d
+     JOIN pedidos pe ON pe.id = d.pedido_id AND pe.estado IN ('pagado', 'enviado', 'entregado')
      JOIN productos p ON p.id = d.producto_id
      JOIN categorias c ON c.id = p.categoria_id
      GROUP BY p.id, p.nombre, p.precio, p.stock, p.imagen_url, c.nombre

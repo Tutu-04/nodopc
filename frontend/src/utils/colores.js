@@ -6,6 +6,8 @@ export const COLOR_OTRAS = '#6e6d68';
 
 export const COLORES_ESTADOS = {
   pendiente: '#eda100',
-  enviado: '#2a78d6',
+  pagado: '#2a78d6',
+  enviado: '#e87ba4',
   entregado: '#008300',
+  cancelado: COLOR_OTRAS,
 };

@@ -23,3 +23,9 @@ export const limitarRegistro = crearLimitador({
   maximo: 20,
   mensaje: 'Se crearon demasiadas cuentas desde esta conexión. Esperá 15 minutos y volvé a probar.',
 });
+
+export const limitarPagos = crearLimitador({
+  maximo: 10,
+  soloFallidos: true,
+  mensaje: 'Hubo demasiados pagos rechazados. Esperá 15 minutos y volvé a probar.',
+});

@@ -20,6 +20,11 @@ export function subirImagenDeProducto(id, archivo) {
   return api.post(`/productos/${id}/imagen`, formulario);
 }
 
+export async function pedirLinkDeMercadoPago(pedidoId) {
+  const respuesta = await api.post(`/pagos/${pedidoId}/mercadopago`);
+  return respuesta.data.url;
+}
+
 api.interceptors.response.use(
   (respuesta) => respuesta,
   (error) => {

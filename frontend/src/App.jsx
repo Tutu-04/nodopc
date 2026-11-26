@@ -16,6 +16,7 @@ import Dashboard from './pages/Dashboard';
 import Checkout from './pages/Checkout';
 import MisPedidos from './pages/MisPedidos';
 import PedidoDetalle from './pages/PedidoDetalle';
+import PagoSimulado from './pages/PagoSimulado';
 import Salir from './pages/Salir';
 import MiCuenta from './pages/MiCuenta';
 import NoEncontrada from './pages/NoEncontrada';
@@ -58,6 +59,7 @@ export default function App() {
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/mis-pedidos" element={<MisPedidos />} />
             <Route path="/pedidos/:id" element={<PedidoDetalle />} />
+            <Route path="/pedidos/:id/pagar" element={<PagoSimulado />} />
           </Route>
 
           <Route element={<RutaProtegida soloAdmin />}>

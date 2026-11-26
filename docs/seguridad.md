@@ -16,6 +16,10 @@ Qué protecciones tiene NodoPC, dónde está cada una en el código y cómo comp
 | Encabezados de helmet         | Ataques comunes del navegador, y anunciar que el servidor es Express | `app.js`                                                   |
 | Consultas parametrizadas      | Inyección SQL                                                        | Todos los archivos de `models/`                            |
 | El precio lo pone el servidor | Comprar más barato cambiando el precio desde el navegador            | `models/pedido.model.js`                                   |
+| Stock bloqueado al comprar    | Vender más unidades de las que hay cuando dos compras coinciden      | `models/pedido.model.js` → `crear`                         |
+| Pagos verificados en origen   | Marcar un pedido como pagado sin haber pagado, o pagando menos       | `controllers/pagos.controller.js`                          |
+| Firma de las notificaciones   | Que alguien se haga pasar por Mercado Pago                           | `utils/firmaWebhook.js`                                    |
+| Límite de pagos rechazados    | Usar el pago simulado para probar tarjetas                           | `middlewares/limites.js`                                   |
 | Usuario de MySQL propio       | Que la aplicación pueda tocar otras bases del servidor               | `docker-compose.yml`                                       |
 
 Todas las rutas son relativas a `backend/src/`, salvo `docker-compose.yml`.
@@ -36,6 +40,15 @@ Todas las rutas son relativas a `backend/src/`, salvo `docker-compose.yml`.
 5. `POST /api/auth/salir` borra la cookie.
 
 **Límite conocido:** un JWT no se puede anular antes de que venza. Si alguien copiara la cookie de otra persona, le serviría hasta 8 horas aunque esa persona cierre sesión, salvo en las rutas de administrador, que miran el rol en la base. Resolverlo del todo requiere guardar las sesiones en el servidor.
+
+## Pedidos y pagos
+
+- **Stock.** Al crear un pedido, cada producto se lee con `SELECT ... FOR UPDATE` dentro de la transacción. Si dos clientes compran la última unidad al mismo tiempo, el segundo espera al primero y recibe `409`. Un test dispara compras en paralelo para comprobarlo.
+- **Montos.** El total lo calcula la API con los precios y el costo de envío de la base. Un pago de Mercado Pago solo acredita el pedido si está aprobado, si su `external_reference` es el pedido, si la moneda es ARS y si el monto es exactamente el total guardado.
+- **Notificaciones.** Con `MP_WEBHOOK_SECRET`, cada aviso tiene que traer una firma `x-signature` válida (HMAC-SHA256 del id, el request-id y el timestamp), que se compara en tiempo constante. Aun con la firma válida, la API no confía en el contenido: vuelve a pedirle el pago a Mercado Pago con su propia credencial.
+- **Avisos repetidos.** `marcarPagado` solo cambia pedidos pendientes, así que un aviso que llega dos veces no tiene efecto. Si un pago se acredita sobre un pedido que ya se canceló, queda registrado en el log para devolver el dinero.
+- **Tarjetas.** El pago simulado valida los datos y los descarta: el pedido guarda solo el medio y un id de operación. Después de 10 pagos rechazados en 15 minutos desde la misma conexión, responde `429`.
+- **Credenciales.** `MP_ACCESS_TOKEN` y `MP_WEBHOOK_SECRET` viven solo en `backend/.env`, que no se sube al repositorio. El frontend nunca las ve.
 
 ## Usuario de MySQL con permisos mínimos
 
