@@ -8,6 +8,7 @@ import productosRoutes from './routes/productos.routes.js';
 import usuariosRoutes from './routes/usuarios.routes.js';
 import pedidosRoutes from './routes/pedidos.routes.js';
 import dashboardRoutes from './routes/dashboard.routes.js';
+import saludRoutes from './routes/salud.routes.js';
 import { rutaNoEncontrada, manejarErrores } from './middlewares/errores.js';
 import { config } from './config.js';
 
@@ -21,6 +22,7 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use('/api/salud', saludRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/categorias', categoriasRoutes);
 app.use('/api/marcas', marcasRoutes);
