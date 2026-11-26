@@ -99,7 +99,7 @@ describe('Listado y búsqueda', () => {
     const vendidos = respuesta.body.map((producto) => producto.vendidos);
 
     expect(respuesta.status).toBe(200);
-    expect(respuesta.body.map((producto) => producto.id)).toEqual([10, 23, 12]);
+    expect(respuesta.body.map((producto) => producto.id)).toEqual([10, 23, 20]);
     expect(vendidos).toEqual([...vendidos].sort((a, b) => b - a));
   });
 

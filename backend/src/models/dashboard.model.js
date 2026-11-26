@@ -1,5 +1,8 @@
 import pool from '../db.js';
 
+const COBRADO = "estado IN ('pagado', 'enviado', 'entregado')";
+const DETALLE_COBRADO = `detalle_pedido d JOIN pedidos pe ON pe.id = d.pedido_id AND pe.${COBRADO}`;
+
 export async function obtenerResumen() {
   const [filas] = await pool.execute(`
     SELECT
@@ -12,9 +15,11 @@ export async function obtenerResumen() {
       (SELECT COUNT(*) FROM usuarios WHERE rol = 'cliente')     AS clientes,
       (SELECT COUNT(*) FROM pedidos)                            AS pedidos,
       (SELECT COUNT(*) FROM pedidos WHERE estado = 'pendiente') AS pedidos_pendientes,
-      (SELECT COALESCE(SUM(total), 0) FROM pedidos)             AS total_vendido,
-      (SELECT COALESCE(AVG(total), 0) FROM pedidos)             AS ticket_promedio,
-      (SELECT COALESCE(SUM(cantidad), 0) FROM detalle_pedido)   AS unidades_vendidas
+      (SELECT COUNT(*) FROM pedidos WHERE estado = 'pagado')    AS pedidos_para_despachar,
+      (SELECT COUNT(*) FROM pedidos WHERE ${COBRADO})           AS pedidos_cobrados,
+      (SELECT COALESCE(SUM(total), 0) FROM pedidos WHERE ${COBRADO}) AS total_vendido,
+      (SELECT COALESCE(AVG(total), 0) FROM pedidos WHERE ${COBRADO}) AS ticket_promedio,
+      (SELECT COALESCE(SUM(d.cantidad), 0) FROM ${DETALLE_COBRADO})  AS unidades_vendidas
   `);
   return filas[0];
 }
@@ -23,6 +28,7 @@ export async function obtenerVentasPorMes() {
   const [filas] = await pool.execute(`
     SELECT DATE_FORMAT(fecha, '%Y-%m') AS mes, COUNT(*) AS pedidos, SUM(total) AS total
     FROM pedidos
+    WHERE ${COBRADO}
     GROUP BY mes
     ORDER BY mes DESC
     LIMIT 6
@@ -35,18 +41,18 @@ export async function obtenerPedidosPorEstado() {
     SELECT estado, COUNT(*) AS cantidad, SUM(total) AS total
     FROM pedidos
     GROUP BY estado
-    ORDER BY FIELD(estado, 'pendiente', 'enviado', 'entregado')
+    ORDER BY FIELD(estado, 'pendiente', 'pagado', 'enviado', 'entregado', 'cancelado')
   `);
   return filas;
 }
 
 export async function obtenerProductosMasVendidos() {
   const [filas] = await pool.execute(`
-    SELECT producto_nombre AS producto,
-           SUM(cantidad) AS unidades,
-           SUM(cantidad * precio_unitario) AS ingresos
-    FROM detalle_pedido
-    GROUP BY producto_nombre
+    SELECT d.producto_nombre AS producto,
+           SUM(d.cantidad) AS unidades,
+           SUM(d.cantidad * d.precio_unitario) AS ingresos
+    FROM ${DETALLE_COBRADO}
+    GROUP BY d.producto_nombre
     ORDER BY unidades DESC, ingresos DESC
     LIMIT 5
   `);
@@ -58,7 +64,7 @@ export async function obtenerVentasPorCategoria() {
     SELECT COALESCE(c.nombre, 'Productos eliminados') AS categoria,
            SUM(d.cantidad) AS unidades,
            SUM(d.cantidad * d.precio_unitario) AS ingresos
-    FROM detalle_pedido d
+    FROM ${DETALLE_COBRADO}
     LEFT JOIN productos p ON p.id = d.producto_id
     LEFT JOIN categorias c ON c.id = p.categoria_id
     GROUP BY categoria
@@ -72,6 +78,7 @@ export async function obtenerMejoresClientes() {
     SELECT u.nombre AS cliente, u.email, COUNT(p.id) AS pedidos, SUM(p.total) AS total
     FROM pedidos p
     JOIN usuarios u ON u.id = p.usuario_id
+    WHERE p.${COBRADO}
     GROUP BY u.id, u.nombre, u.email
     ORDER BY total DESC
     LIMIT 5
