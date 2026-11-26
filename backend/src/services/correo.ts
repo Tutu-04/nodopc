@@ -1,9 +1,17 @@
 import nodemailer from 'nodemailer';
+import type { Transporter } from 'nodemailer';
 import { config } from '../config.js';
 
-let transporte;
+export interface Correo {
+  para: string;
+  asunto: string;
+  html: string;
+  texto: string;
+}
 
-function obtenerTransporte() {
+let transporte: Transporter | undefined;
+
+function obtenerTransporte(): Transporter {
   if (!transporte) {
     const { host, puerto, usuario, password } = config.correo;
     transporte = host
@@ -21,7 +29,7 @@ function obtenerTransporte() {
   return transporte;
 }
 
-export async function enviarCorreo({ para, asunto, html, texto }) {
+export async function enviarCorreo({ para, asunto, html, texto }: Correo): Promise<boolean> {
   try {
     await obtenerTransporte().sendMail({ from: config.correo.remitente, to: para, subject: asunto, html, text: texto });
 
@@ -30,7 +38,7 @@ export async function enviarCorreo({ para, asunto, html, texto }) {
     }
     return true;
   } catch (error) {
-    console.error(`No se pudo enviar el correo "${asunto}" a ${para}:`, error.message);
+    console.error(`No se pudo enviar el correo "${asunto}" a ${para}:`, (error as Error).message);
     return false;
   }
 }

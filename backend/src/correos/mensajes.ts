@@ -1,11 +1,23 @@
 import { armarCorreo, enlace } from './plantilla.js';
+import type { CorreoArmado } from './plantilla.js';
+import type { PedidoConItems } from '../tipos.js';
 import { LOCAL } from '../utils/tienda.js';
 
-function primerNombre(nombre) {
-  return String(nombre).trim().split(/\s+/)[0];
+export interface Mensaje extends CorreoArmado {
+  asunto: string;
 }
 
-export function bienvenida(usuario) {
+interface Destinatario {
+  nombre: string;
+}
+
+export type MotivoDeCancelacion = 'cliente' | 'tienda' | 'vencido';
+
+function primerNombre(nombre: string): string {
+  return nombre.trim().split(/\s+/)[0];
+}
+
+export function bienvenida(usuario: Destinatario): Mensaje {
   return {
     asunto: 'Te damos la bienvenida a NodoPC',
     ...armarCorreo({
@@ -22,13 +34,13 @@ export function bienvenida(usuario) {
 
 const formatoPrecio = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' });
 
-function precio(numero) {
+function precio(numero: number): string {
   return formatoPrecio.format(numero);
 }
 
-function detalleDelPedido(pedido) {
+function detalleDelPedido(pedido: PedidoConItems): [string, string][] {
   return [
-    ...pedido.items.map((item) => [
+    ...pedido.items.map((item): [string, string] => [
       `${item.cantidad} × ${item.producto_nombre}`,
       precio(item.cantidad * item.precio_unitario),
     ]),
@@ -37,15 +49,15 @@ function detalleDelPedido(pedido) {
   ];
 }
 
-function botonDelPedido(pedido) {
+function botonDelPedido(pedido: PedidoConItems): { texto: string; url: string } {
   return { texto: 'Ver el pedido', url: enlace(`/pedidos/${pedido.id}`) };
 }
 
-function destino(pedido) {
+function destino(pedido: PedidoConItems): string {
   return `${pedido.direccion_envio}, ${pedido.provincia}`;
 }
 
-export function pedidoPagado(pedido) {
+export function pedidoPagado(pedido: PedidoConItems): Mensaje {
   const proximoPaso =
     pedido.metodo_entrega === 'envio'
       ? `Te avisamos cuando lo despachemos a ${destino(pedido)}.`
@@ -65,7 +77,7 @@ export function pedidoPagado(pedido) {
   };
 }
 
-export function pedidoEnviado(pedido) {
+export function pedidoEnviado(pedido: PedidoConItems): Mensaje {
   return {
     asunto: `Tu pedido #${pedido.id} está en camino`,
     ...armarCorreo({
@@ -76,7 +88,7 @@ export function pedidoEnviado(pedido) {
   };
 }
 
-export function pedidoEntregado(pedido) {
+export function pedidoEntregado(pedido: PedidoConItems): Mensaje {
   const retiro = pedido.metodo_entrega === 'retiro';
   return {
     asunto: retiro ? `Retiraste tu pedido #${pedido.id}` : `Entregamos tu pedido #${pedido.id}`,
@@ -91,13 +103,21 @@ export function pedidoEntregado(pedido) {
   };
 }
 
-const MOTIVOS_DE_CANCELACION = {
+const MOTIVOS_DE_CANCELACION: Record<MotivoDeCancelacion, (pedido: PedidoConItems) => string> = {
   cliente: (pedido) => `Cancelaste tu pedido #${pedido.id}.`,
   tienda: (pedido) => `Tuvimos que cancelar tu pedido #${pedido.id}.`,
   vencido: (pedido) => `Cancelamos tu pedido #${pedido.id} porque no se pagó dentro del tiempo de reserva.`,
 };
 
-export function pedidoCancelado(pedido, { motivo = 'tienda', estabaPagado = false } = {}) {
+export interface OpcionesDeCancelacion {
+  motivo?: MotivoDeCancelacion;
+  estabaPagado?: boolean;
+}
+
+export function pedidoCancelado(
+  pedido: PedidoConItems,
+  { motivo = 'tienda', estabaPagado = false }: OpcionesDeCancelacion = {}
+): Mensaje {
   const parrafos = [`Hola, ${primerNombre(pedido.cliente)}. ${MOTIVOS_DE_CANCELACION[motivo](pedido)}`];
   if (estabaPagado) {
     parrafos.push('Te vamos a devolver el dinero por el mismo medio con el que pagaste.');
@@ -115,7 +135,7 @@ export function pedidoCancelado(pedido, { motivo = 'tienda', estabaPagado = fals
   };
 }
 
-export function recuperarPassword(usuario, { url, minutos }) {
+export function recuperarPassword(usuario: Destinatario, { url, minutos }: { url: string; minutos: number }): Mensaje {
   return {
     asunto: 'Restablecé tu contraseña de NodoPC',
     ...armarCorreo({
@@ -130,7 +150,7 @@ export function recuperarPassword(usuario, { url, minutos }) {
   };
 }
 
-export function passwordCambiada(usuario) {
+export function passwordCambiada(usuario: Destinatario): Mensaje {
   return {
     asunto: 'Tu contraseña de NodoPC cambió',
     ...armarCorreo({

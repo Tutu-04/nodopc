@@ -3,7 +3,7 @@ import { notificarPedido } from './services/notificaciones.js';
 
 const CADA_UN_MINUTO = 60 * 1000;
 
-async function cancelarPedidosVencidos() {
+async function cancelarPedidosVencidos(): Promise<void> {
   try {
     const cancelados = await cancelarVencidos();
     for (const id of cancelados) {
@@ -13,11 +13,11 @@ async function cancelarPedidosVencidos() {
       console.log(`Se cancelaron ${cancelados.length} pedido(s) que no se pagaron a tiempo`);
     }
   } catch (error) {
-    console.error('No se pudieron revisar los pedidos vencidos:', error.message);
+    console.error('No se pudieron revisar los pedidos vencidos:', (error as Error).message);
   }
 }
 
-export function iniciarTareas() {
+export function iniciarTareas(): void {
   cancelarPedidosVencidos();
   setInterval(cancelarPedidosVencidos, CADA_UN_MINUTO).unref();
 }

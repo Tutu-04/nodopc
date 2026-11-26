@@ -1,8 +1,21 @@
 import { config } from '../config.js';
 
+export interface ContenidoDeCorreo {
+  titulo: string;
+  parrafos: string[];
+  tabla?: [string, string][];
+  boton?: { texto: string; url: string };
+  notaFinal?: string;
+}
+
+export interface CorreoArmado {
+  html: string;
+  texto: string;
+}
+
 const NARANJA = '#c2410c';
 
-export function escaparHtml(texto) {
+export function escaparHtml(texto: unknown): string {
   return String(texto ?? '')
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
@@ -11,11 +24,11 @@ export function escaparHtml(texto) {
     .replaceAll("'", '&#39;');
 }
 
-export function enlace(ruta) {
+export function enlace(ruta: string): string {
   return `${config.frontendUrl}${ruta}`;
 }
 
-export function armarCorreo({ titulo, parrafos, tabla = [], boton, notaFinal }) {
+export function armarCorreo({ titulo, parrafos, tabla = [], boton, notaFinal }: ContenidoDeCorreo): CorreoArmado {
   const filasHtml = tabla
     .map(
       ([etiqueta, valor]) =>

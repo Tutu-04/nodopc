@@ -1,11 +1,13 @@
+import type { NextFunction, Request, Response } from 'express';
 import * as Usuario from '../models/usuario.model.js';
 import { NOMBRE_COOKIE, leerToken } from '../utils/sesion.js';
 
-export function verificarToken(req, res, next) {
+export function verificarToken(req: Request, res: Response, next: NextFunction): void {
   const token = req.cookies?.[NOMBRE_COOKIE];
 
   if (!token) {
-    return res.status(401).json({ error: 'Tenés que iniciar sesión' });
+    res.status(401).json({ error: 'Tenés que iniciar sesión' });
+    return;
   }
 
   try {
@@ -16,14 +18,16 @@ export function verificarToken(req, res, next) {
   }
 }
 
-export async function soloAdmin(req, res, next) {
+export async function soloAdmin(req: Request, res: Response, next: NextFunction): Promise<void> {
   if (req.usuario.rol !== 'admin') {
-    return res.status(403).json({ error: 'No tenés permiso para hacer esto' });
+    res.status(403).json({ error: 'No tenés permiso para hacer esto' });
+    return;
   }
 
   const usuario = await Usuario.obtenerPorId(req.usuario.id);
   if (usuario?.rol !== 'admin') {
-    return res.status(403).json({ error: 'No tenés permiso para hacer esto' });
+    res.status(403).json({ error: 'No tenés permiso para hacer esto' });
+    return;
   }
   next();
 }

@@ -1,16 +1,48 @@
 import { randomUUID } from 'node:crypto';
 import { config } from '../config.js';
+import type { ErrorConStatus, PedidoConItems } from '../tipos.js';
 
 const API = 'https://api.mercadopago.com';
 
-function crearError(status, mensaje) {
-  const error = new Error(mensaje);
+export interface PagoDeMercadoPago {
+  id: number;
+  status: string;
+  external_reference: string | null;
+  currency_id: string;
+  transaction_amount: number;
+}
+
+interface ItemDePreferencia {
+  id: string;
+  title: string;
+  quantity: number;
+  unit_price: number;
+  currency_id: 'ARS';
+}
+
+interface Preferencia {
+  external_reference: string;
+  items: ItemDePreferencia[];
+  payer: { name: string; email: string };
+  back_urls: { success: string; pending: string; failure: string };
+  statement_descriptor: string;
+  expires: boolean;
+  expiration_date_to: string;
+  auto_return?: 'approved';
+  notification_url?: string;
+}
+
+function crearError(status: number, mensaje: string): ErrorConStatus {
+  const error: ErrorConStatus = new Error(mensaje);
   error.status = status;
   return error;
 }
 
-async function llamar(ruta, { metodo = 'GET', cuerpo } = {}) {
-  let respuesta;
+async function llamar<T>(
+  ruta: string,
+  { metodo = 'GET', cuerpo }: { metodo?: string; cuerpo?: unknown } = {}
+): Promise<T> {
+  let respuesta: Response;
   try {
     respuesta = await fetch(API + ruta, {
       method: metodo,
@@ -19,14 +51,14 @@ async function llamar(ruta, { metodo = 'GET', cuerpo } = {}) {
         'Content-Type': 'application/json',
         ...(metodo === 'POST' && { 'X-Idempotency-Key': randomUUID() }),
       },
-      body: cuerpo && JSON.stringify(cuerpo),
+      body: cuerpo === undefined ? undefined : JSON.stringify(cuerpo),
       signal: AbortSignal.timeout(10000),
     });
   } catch {
     throw crearError(502, 'No se pudo conectar con Mercado Pago. Probá de nuevo en unos minutos.');
   }
 
-  const datos = await respuesta.json().catch(() => ({}));
+  const datos = (await respuesta.json().catch(() => ({}))) as T & { message?: string };
   if (!respuesta.ok) {
     console.error(`Mercado Pago respondió ${respuesta.status} en ${ruta}:`, datos.message ?? datos);
     throw crearError(502, 'Mercado Pago rechazó la operación. Probá de nuevo en unos minutos.');
@@ -34,16 +66,16 @@ async function llamar(ruta, { metodo = 'GET', cuerpo } = {}) {
   return datos;
 }
 
-export function estaConfigurado() {
+export function estaConfigurado(): boolean {
   return Boolean(config.mercadoPago.accessToken);
 }
 
-function esCredencialDePrueba() {
+function esCredencialDePrueba(): boolean {
   return config.mercadoPago.accessToken.startsWith('TEST-');
 }
 
-function armarItems(pedido) {
-  const items = pedido.items.map((item) => ({
+function armarItems(pedido: PedidoConItems): ItemDePreferencia[] {
+  const items: ItemDePreferencia[] = pedido.items.map((item) => ({
     id: String(item.producto_id ?? 'producto'),
     title: item.producto_nombre,
     quantity: item.cantidad,
@@ -63,11 +95,11 @@ function armarItems(pedido) {
   return items;
 }
 
-export async function crearPreferencia(pedido) {
+export async function crearPreferencia(pedido: PedidoConItems): Promise<string> {
   const urlDelPedido = `${config.frontendUrl}/pedidos/${pedido.id}`;
-  const venceEn = new Date(Date.now() + pedido.segundos_para_pagar * 1000);
+  const venceEn = new Date(Date.now() + (pedido.segundos_para_pagar ?? 0) * 1000);
 
-  const preferencia = {
+  const preferencia: Preferencia = {
     external_reference: String(pedido.id),
     items: armarItems(pedido),
     payer: { name: pedido.cliente, email: pedido.cliente_email },
@@ -88,26 +120,29 @@ export async function crearPreferencia(pedido) {
     preferencia.notification_url = `${config.apiPublicaUrl}/api/pagos/webhook`;
   }
 
-  const datos = await llamar('/checkout/preferences', { metodo: 'POST', cuerpo: preferencia });
+  const datos = await llamar<{ init_point: string; sandbox_init_point: string }>('/checkout/preferences', {
+    metodo: 'POST',
+    cuerpo: preferencia,
+  });
   return esCredencialDePrueba() ? datos.sandbox_init_point : datos.init_point;
 }
 
-export function obtenerPago(id) {
-  return llamar(`/v1/payments/${encodeURIComponent(id)}`);
+export function obtenerPago(id: string | number): Promise<PagoDeMercadoPago> {
+  return llamar<PagoDeMercadoPago>(`/v1/payments/${encodeURIComponent(id)}`);
 }
 
-export async function buscarPagoAprobado(pedidoId) {
+export async function buscarPagoAprobado(pedidoId: number): Promise<PagoDeMercadoPago | null> {
   const parametros = new URLSearchParams({
     external_reference: String(pedidoId),
     status: 'approved',
     sort: 'date_created',
     criteria: 'desc',
   });
-  const datos = await llamar(`/v1/payments/search?${parametros}`);
+  const datos = await llamar<{ results?: PagoDeMercadoPago[] }>(`/v1/payments/search?${parametros}`);
   return datos.results?.[0] ?? null;
 }
 
-export function pagoCubrePedido(pago, pedido) {
+export function pagoCubrePedido(pago: PagoDeMercadoPago | null, pedido: PedidoConItems): pago is PagoDeMercadoPago {
   return (
     pago?.status === 'approved' &&
     String(pago.external_reference) === String(pedido.id) &&

@@ -2,7 +2,19 @@ import { rateLimit } from 'express-rate-limit';
 
 const QUINCE_MINUTOS = 15 * 60 * 1000;
 
-export function crearLimitador({ maximo, ventanaMs = QUINCE_MINUTOS, mensaje, soloFallidos = false }) {
+interface OpcionesDeLimite {
+  maximo: number;
+  ventanaMs?: number;
+  mensaje: string;
+  soloFallidos?: boolean;
+}
+
+export function crearLimitador({
+  maximo,
+  ventanaMs = QUINCE_MINUTOS,
+  mensaje,
+  soloFallidos = false,
+}: OpcionesDeLimite) {
   return rateLimit({
     windowMs: ventanaMs,
     limit: maximo,
