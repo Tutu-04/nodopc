@@ -36,21 +36,21 @@ describe('Pedidos sin pagar', () => {
     const vigente = await crearPedido();
     await pool.execute('UPDATE pedidos SET vence_en = NOW() - INTERVAL 1 MINUTE WHERE id = ?', [vencido.id]);
 
-    expect(await cancelarVencidos()).toBe(1);
+    expect(await cancelarVencidos()).toEqual([vencido.id]);
     expect(await estadoDe(vencido.id)).toBe('cancelado');
     expect(await estadoDe(vigente.id)).toBe('pendiente');
     expect(await stockDe(12)).toBe(stockInicial - 2);
   });
 
   it('no tocan los pedidos sin plazo ni los que ya se pagaron', async () => {
-    expect(await cancelarVencidos()).toBe(0);
+    expect(await cancelarVencidos()).toEqual([]);
     expect(await estadoDe(23)).toBe('pendiente');
 
     await pool.execute('UPDATE pedidos SET vence_en = NOW() - INTERVAL 1 DAY WHERE id IN (23, 26)');
 
-    expect(await cancelarVencidos()).toBe(1);
+    expect(await cancelarVencidos()).toEqual([23]);
     expect(await estadoDe(23)).toBe('cancelado');
     expect(await estadoDe(26)).toBe('pagado');
-    expect(await cancelarVencidos()).toBe(0);
+    expect(await cancelarVencidos()).toEqual([]);
   });
 });
