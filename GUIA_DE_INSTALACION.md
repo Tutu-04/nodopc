@@ -14,7 +14,7 @@ Cómo dejar funcionando el proyecto en una computadora con Windows, desde cero.
 | **Visual Studio Code** | Sí (recomendado) | Editor de código con terminal incorporada. |
 | **MySQL**: XAMPP **o** MySQL Server | Sí, uno de los dos | La base de datos. |
 | MySQL Workbench | No | Programa con ventanas para mirar las tablas. |
-| Git | No | Solo para subir el proyecto a GitHub. |
+| Git | No | Para clonar el repositorio. Sin Git, se puede bajar como ZIP desde GitHub. |
 
 ### 1.1 Node.js
 
@@ -92,16 +92,19 @@ netstat -ano | findstr :3306
 
 ## 2. Preparar la carpeta del proyecto
 
-1. Descomprimí el `.zip` en una carpeta **fuera de OneDrive**, por ejemplo `C:\proyectos\tienda-hardware`.
+1. Bajá el proyecto en una carpeta **fuera de OneDrive**, por ejemplo `C:\proyectos`. Hay dos formas:
+
+   - **Con Git:** en una terminal, escribí `cd C:\proyectos` y después `git clone https://github.com/Tutu-04/nodopc.git`. Se crea la carpeta `C:\proyectos\nodopc`.
+   - **Sin Git:** en <https://github.com/Tutu-04/nodopc>, botón verde **Code** → **Download ZIP**. Descomprimilo en `C:\proyectos`. La carpeta se llama `nodopc-main`.
 
    > OneDrive intenta sincronizar la carpeta `node_modules`, que tiene miles de archivos. Eso hace que la instalación tarde muchísimo o falle.
 
-2. Abrí VS Code → menú **Archivo** → **Abrir carpeta...** → elegí la carpeta `tienda-hardware`.
+2. Abrí VS Code → menú **Archivo** → **Abrir carpeta...** → elegí la carpeta `nodopc` (o `nodopc-main`, si bajaste el ZIP).
 
    La carpeta correcta es la que tiene adentro estas cuatro carpetas y el archivo `package.json`:
 
    ```
-   tienda-hardware\
+   nodopc\
    ├── backend\
    ├── database\
    ├── docs\
@@ -109,7 +112,7 @@ netstat -ano | findstr :3306
    └── package.json
    ```
 
-   Si al descomprimir te quedó `tienda-hardware\tienda-hardware\`, abrí la de **adentro**.
+   Si al descomprimir el ZIP te quedó `nodopc-main\nodopc-main\`, abrí la de **adentro**.
 
 3. Abrí una terminal en VS Code: menú **Terminal** → **Nueva terminal** (o `Ctrl + ñ`).
 
@@ -160,7 +163,7 @@ JWT_SECRET=mi_frase_secreta_para_el_proyecto_2026
 
 ## 4. Crear la base de datos
 
-Con MySQL encendido, en la terminal de VS Code (parado en la carpeta `tienda-hardware`):
+Con MySQL encendido, en la terminal de VS Code (parado en la carpeta del proyecto):
 
 ```powershell
 npm run crear-base
@@ -309,7 +312,7 @@ Node.js no está instalado, o VS Code estaba abierto cuando lo instalaste. Cerr�
 
 ## 9. Comandos de referencia
 
-Todos se corren desde la carpeta principal `tienda-hardware`.
+Todos se corren desde la carpeta principal del proyecto.
 
 | Comando | Qué hace | ¿Cuándo? |
 |---|---|---|
