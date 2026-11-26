@@ -11,6 +11,7 @@
     "start": "node src/index.js",
     "migrar": "node scripts/migrar.js",
     "crear-base": "node scripts/crearBase.js",
+    "preparar": "node scripts/preparar.js",
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest"

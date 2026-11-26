@@ -70,6 +70,16 @@ export async function cargarDatosDePrueba() {
   }
 }
 
+export async function estaVacia() {
+  const conexion = await conectar();
+  try {
+    const [filas] = await conexion.query('SELECT COUNT(*) AS cantidad FROM usuarios');
+    return filas[0].cantidad === 0;
+  } finally {
+    await conexion.end();
+  }
+}
+
 export async function reiniciarBase() {
   await crearBase({ borrarAntes: true });
   await aplicarMigraciones();
