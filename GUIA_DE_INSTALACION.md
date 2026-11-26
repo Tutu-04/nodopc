@@ -282,6 +282,17 @@ Al terminar el pago, Mercado Pago te devuelve al detalle del pedido y la tienda 
 
 > Mercado Pago también puede avisarle a la tienda cada vez que cambia un pago (webhooks), pero para eso la API tiene que tener una dirección pública en internet. En local no hace falta: la confirmación al volver alcanza.
 
+### Correos
+
+Sin configurar nada, la tienda no manda correos de verdad: los muestra en la terminal del backend (Terminal 1). Por ejemplo, para recuperar una contraseña:
+
+1. En el login, apretá **¿Te la olvidaste?**.
+2. Escribí `maria@nodopc.com` y apretá **Mandarme el enlace**.
+3. Mirá la Terminal 1: aparece el correo, con una línea que empieza con `Elegir una contraseña nueva: http://localhost:5173/restablecer-password?token=`.
+4. Copiá esa dirección completa y abrila en el navegador.
+
+Con Docker es más cómodo: los correos llegan a <http://localhost:8025>, que se ve como una bandeja de entrada.
+
 ---
 
 ## 7. La segunda vez (el día de la presentación)

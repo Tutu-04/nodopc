@@ -39,7 +39,8 @@ NodoPC vende componentes de PC, PC armadas, monitores y periféricos. Los visita
 - Checkout con envío a domicilio (costo por provincia, gratis desde $1.500.000) o retiro en el local.
 - Pago con Mercado Pago (Checkout Pro en modo prueba) o con una tarjeta de prueba simulada.
 - Seguimiento de cada pedido, desde el pago hasta la entrega, y cancelación mientras está pendiente.
-- Página Mi cuenta para cambiar sus datos y su contraseña.
+- Página Mi cuenta para cambiar sus datos y su contraseña, y recuperación de la contraseña por correo.
+- Correos de bienvenida, de pago acreditado y de cada cambio de su pedido.
 
 **Administrador**
 
@@ -87,6 +88,7 @@ La primera vez tarda unos minutos. Cuando termina:
 | Tienda   | <http://localhost:5173>                                             |
 | API      | <http://localhost:3000/api>                                         |
 | MySQL    | `localhost:3307`, usuario `nodopc`, contraseña `nodopc` (Workbench) |
+| Correos  | <http://localhost:8025> (Mailpit: los correos que manda la tienda)  |
 
 La base se crea con los datos de prueba la primera vez y se conserva entre reinicios.
 
@@ -95,6 +97,8 @@ La base se crea con los datos de prueba la primera vez y se conserva entre reini
 | `docker compose down`                            | Apaga todo y conserva los datos         |
 | `docker compose down --volumes`                  | Apaga todo y borra la base              |
 | `docker compose exec backend npm run crear-base` | Vuelve a los datos de prueba originales |
+
+Los correos que manda la tienda (bienvenida, pagos, cambios de los pedidos y recuperación de contraseña) no salen a internet: quedan en Mailpit, en <http://localhost:8025>.
 
 ### Sin Docker
 
@@ -132,6 +136,9 @@ Viven en `backend/.env` (con Docker, se pueden pasar al correr `docker compose u
 | `MP_ACCESS_TOKEN`                              | Access Token de Mercado Pago. Sin él, Mercado Pago no aparece como medio de pago                   |
 | `MP_WEBHOOK_SECRET`                            | Clave secreta de los webhooks, para validar la firma de cada notificación                          |
 | `API_PUBLICA_URL`                              | Dirección pública de la API (por ejemplo, un túnel), para que Mercado Pago pueda mandar los avisos |
+| `SMTP_HOST`, `SMTP_PORT`                       | Servidor de correo. Sin `SMTP_HOST`, los correos se muestran en la terminal del backend            |
+| `SMTP_USER`, `SMTP_PASS`                       | Usuario y contraseña del servidor de correo, si los pide                                           |
+| `MAIL_FROM`                                    | Remitente de los correos                                                                           |
 
 Los pasos para conseguir las credenciales de prueba de Mercado Pago están en la [guía de instalación](GUIA_DE_INSTALACION.md#pagos-con-mercado-pago).
 
@@ -225,6 +232,8 @@ nodopc/
 - **Pedidos con transacciones.** Crear un pedido toca tres tablas. Si algo falla en el medio, se deshace todo. Cada producto se bloquea con `SELECT ... FOR UPDATE`, así dos compras simultáneas no pueden vender la misma última unidad.
 - **Reserva de stock con vencimiento.** Un pedido sin pagar reserva el stock durante 30 minutos; después se cancela solo y el stock vuelve al catálogo. El tiempo restante lo calcula MySQL, así no depende de la zona horaria de cada máquina.
 - **Pagos que no se creen a ciegas.** Ni la vuelta de Mercado Pago ni su notificación marcan un pedido como pagado por sí solas: la API consulta el pago con su credencial y lo acredita solo si el monto y la moneda coinciden. Las notificaciones se validan con la firma HMAC de Mercado Pago, y acreditar el mismo pago dos veces no tiene efecto.
+- **Correos que no frenan nada.** Se mandan sin esperar la respuesta del servidor de correo y un error al enviarlos queda en el log sin cortar la compra. Sin SMTP se muestran en la terminal; con Docker llegan a Mailpit. Todo dato del usuario se escapa antes de ponerlo en el HTML.
+- **Recuperación de contraseña sin filtrar cuentas.** Responde igual exista o no el email, guarda solo el hash del token y cada enlace sirve una vez durante una hora.
 - **Integración sin SDK y testeable.** Mercado Pago se usa por su API REST con `fetch`. En los tests `fetch` se reemplaza, así la suite corre sin red ni cuenta.
 - **Historial intacto.** `detalle_pedido` guarda el nombre y el precio de cada producto al momento de la compra, así los pedidos viejos no cambian si después se modifica o se elimina el producto.
 - **Buscador sin consultas de más.** Busca cada palabra por separado en el nombre, la descripción, la marca y la categoría. Espera a que el usuario deje de escribir antes de consultar la API, y descarta las respuestas que llegan fuera de orden.
@@ -248,7 +257,7 @@ nodopc/
 - [x] Catálogo paginado con orden y filtro por precio, Mi cuenta, menú para celulares y página 404
 - [x] Subida de imágenes desde el panel del administrador
 - [x] Envíos por provincia, pagos con Mercado Pago en modo prueba y pago simulado
-- [ ] Emails de confirmación de pedido y de recuperación de contraseña
+- [x] Correos de bienvenida, pagos y estado de los pedidos, y recuperación de contraseña
 
 ## Autor
 
