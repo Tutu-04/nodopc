@@ -1,10 +1,12 @@
 import 'dotenv/config';
+import { fileURLToPath } from 'node:url';
 
 export const config = {
   puerto: Number(process.env.PORT) || 3000,
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
   jwtSecret: process.env.JWT_SECRET,
   cookieSegura: process.env.COOKIE_SEGURA === 'true',
+  uploadsDir: process.env.UPLOADS_DIR || fileURLToPath(new URL('../uploads', import.meta.url)),
   db: {
     host: process.env.DB_HOST,
     port: Number(process.env.DB_PORT) || 3306,

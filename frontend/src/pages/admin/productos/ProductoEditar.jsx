@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import api, { obtenerMensajeError } from '../../../api/api';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import api, { obtenerMensajeError, subirImagenDeProducto } from '../../../api/api';
 import Cargando from '../../../components/Cargando';
 import MensajeError from '../../../components/MensajeError';
 import ProductoForm from './ProductoForm';
@@ -8,10 +8,11 @@ import ProductoForm from './ProductoForm';
 export default function ProductoEditar() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [producto, setProducto] = useState(null);
   const [cargando, setCargando] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(location.state?.error ?? '');
   const [guardando, setGuardando] = useState(false);
 
   useEffect(() => {
@@ -29,11 +30,14 @@ export default function ProductoEditar() {
     cargarProducto();
   }, [id]);
 
-  async function guardar(datos) {
+  async function guardar(datos, archivo) {
     setError('');
     setGuardando(true);
     try {
       await api.put(`/productos/${id}`, datos);
+      if (archivo) {
+        await subirImagenDeProducto(id, archivo);
+      }
       navigate('/admin/productos');
     } catch (e) {
       setError(obtenerMensajeError(e));

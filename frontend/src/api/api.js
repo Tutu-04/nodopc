@@ -1,10 +1,24 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 
+const URL_API = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const ORIGEN_API = URL_API.replace(/\/api\/?$/, '');
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
+  baseURL: URL_API,
   withCredentials: true,
 });
+
+export function urlDeImagen(url) {
+  if (url?.startsWith('/uploads/')) return ORIGEN_API + url;
+  return url;
+}
+
+export function subirImagenDeProducto(id, archivo) {
+  const formulario = new FormData();
+  formulario.append('imagen', archivo);
+  return api.post(`/productos/${id}/imagen`, formulario);
+}
 
 api.interceptors.response.use(
   (respuesta) => respuesta,

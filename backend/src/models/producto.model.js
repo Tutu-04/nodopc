@@ -100,6 +100,10 @@ export async function actualizar(id, { nombre, descripcion, precio, stock, image
   );
 }
 
+export async function actualizarImagen(id, imagenUrl) {
+  await pool.execute('UPDATE productos SET imagen_url = ? WHERE id = ?', [imagenUrl, id]);
+}
+
 export async function eliminar(id) {
   const [resultado] = await pool.execute('DELETE FROM productos WHERE id = ?', [id]);
   return resultado.affectedRows;
