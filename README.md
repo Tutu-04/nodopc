@@ -53,6 +53,7 @@ NodoPC vende componentes de PC, PC armadas, monitores y periféricos. Los visita
 | Backend       | Node.js, Express 5, mysql2, bcrypt, jsonwebtoken                       |
 | Base de datos | MySQL 8                                                                |
 | Calidad       | Vitest, Supertest, Testing Library, ESLint, Prettier, GitHub Actions   |
+| Entorno       | Docker Compose, nginx                                                  |
 
 ## Arquitectura
 
@@ -65,6 +66,34 @@ Navegador (React, puerto 5173)  ──HTTP + JSON──▶  API REST (Express, p
 - Los **middlewares** verifican el token y el rol antes de llegar al controlador, y centralizan el manejo de errores.
 
 ## Cómo correrlo
+
+### Con Docker (recomendado)
+
+Solo hace falta [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+
+```bash
+git clone https://github.com/Tutu-04/nodopc.git
+cd nodopc
+docker compose up --build
+```
+
+La primera vez tarda unos minutos. Cuando termina:
+
+| Servicio | Dirección                                                           |
+| -------- | ------------------------------------------------------------------- |
+| Tienda   | <http://localhost:5173>                                             |
+| API      | <http://localhost:3000/api>                                         |
+| MySQL    | `localhost:3307`, usuario `nodopc`, contraseña `nodopc` (Workbench) |
+
+La base se crea con los datos de prueba la primera vez y se conserva entre reinicios.
+
+| Comando                                          | Qué hace                                |
+| ------------------------------------------------ | --------------------------------------- |
+| `docker compose down`                            | Apaga todo y conserva los datos         |
+| `docker compose down --volumes`                  | Apaga todo y borra la base              |
+| `docker compose exec backend npm run crear-base` | Vuelve a los datos de prueba originales |
+
+### Sin Docker
 
 **Requisitos:** Node.js 22 o superior y MySQL 8.
 
@@ -82,7 +111,7 @@ npm run backend       # terminal 1: API en http://localhost:3000
 npm run frontend      # terminal 2: tienda en http://localhost:5173
 ```
 
-La [guía de instalación](GUIA_DE_INSTALACION.md) explica cada paso en Windows desde cero, con la instalación de MySQL y la solución a los errores más comunes.
+Así el backend y el frontend se recargan solos al guardar cambios, que es la forma cómoda de desarrollar. La [guía de instalación](GUIA_DE_INSTALACION.md) explica cada paso en Windows desde cero, con la instalación de MySQL y la solución a los errores más comunes.
 
 ### Usuarios de prueba
 
@@ -119,6 +148,7 @@ Todos se corren desde la carpeta principal.
 ```
 nodopc/
 ├── package.json               Scripts para manejar todo desde la raíz
+├── docker-compose.yml         MySQL, backend y frontend con un comando
 ├── .github/workflows/         Integración continua
 ├── database/
 │   ├── migraciones/           Cambios del esquema, en orden (001, 002...)
@@ -182,7 +212,7 @@ nodopc/
 
 - [x] Catálogo, carrito, pedidos, roles y panel con métricas
 - [x] Migraciones, tests automáticos e integración continua con GitHub Actions
-- [ ] Levantar todo con un comando usando Docker Compose
+- [x] Levantar todo con un comando usando Docker Compose
 - [ ] Seguridad: encabezados con helmet, límite de intentos de login y token en cookie `httpOnly`
 - [ ] Pagos con Mercado Pago en modo prueba
 - [ ] Emails de confirmación de pedido y de recuperación de contraseña

@@ -4,6 +4,28 @@ Cómo dejar funcionando el proyecto en una computadora con Windows, desde cero.
 
 **Resumen:** instalás Node.js, VS Code y MySQL (o XAMPP). Después, desde la carpeta del proyecto, corrés 4 comandos: `npm run instalar`, `npm run crear-base`, `npm run backend` y `npm run frontend`.
 
+> **¿Solo querés probarlo?** Con Docker no hace falta instalar Node.js ni MySQL. Mirá la sección 0.
+
+---
+
+## 0. La forma rápida: Docker
+
+1. Descargá **Docker Desktop** desde <https://www.docker.com/products/docker-desktop/> e instalalo con las opciones que vienen marcadas. Si te pide reiniciar la PC, reiniciala.
+2. Abrí Docker Desktop y esperá a que abajo a la izquierda diga **Engine running**.
+3. Bajá el proyecto como explica la sección 2, paso 1.
+4. Abrí una terminal en la carpeta del proyecto (en VS Code: **Terminal** → **Nueva terminal**) y escribí:
+
+   ```powershell
+   docker compose up --build
+   ```
+
+5. La primera vez tarda unos minutos porque descarga MySQL y Node. Está listo cuando dejan de aparecer líneas nuevas.
+6. Abrí <http://localhost:5173>.
+
+Para apagarlo, apretá `Ctrl + C` en esa terminal. La próxima vez alcanza con `docker compose up`.
+
+> El MySQL de Docker usa el puerto **3307**, así que no choca con un MySQL instalado en la PC. Para verlo en Workbench: host `127.0.0.1`, puerto `3307`, usuario `nodopc`, contraseña `nodopc`.
+
 ---
 
 ## 1. Qué hay que instalar
