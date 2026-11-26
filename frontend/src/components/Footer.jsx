@@ -27,8 +27,10 @@ export default function Footer() {
 
           <div className="flex flex-col gap-2.5 text-sm">
             <span className="text-xs font-bold uppercase tracking-widest text-white">Proyecto</span>
-            <span>Proyecto final de Programación</span>
-            <span>Lazarte · Paez Carabajal</span>
+            <span>Desarrollado por Gonzalo Romeo Lazarte</span>
+            <a href="https://github.com/Tutu-04/nodopc" target="_blank" rel="noreferrer" className="hover:text-white">
+              Ver el código en GitHub
+            </a>
           </div>
         </div>
 

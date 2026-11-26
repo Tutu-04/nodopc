@@ -4,10 +4,9 @@ Proyecto final de Programación. Aplicación web full stack con **React + Expres
 
 NodoPC es una tienda online de componentes de PC, PC armadas, monitores y periféricos. Los visitantes pueden recorrer el catálogo y armar un carrito, los clientes registrados pueden comprar y seguir sus pedidos, y los administradores gestionan todo el contenido de la tienda.
 
-## Integrantes
+## Autor
 
-- Lazarte, Gonzalo Romeo
-- Paez Carabajal, Santiago
+Gonzalo Romeo Lazarte
 
 ## Tecnologías
 
