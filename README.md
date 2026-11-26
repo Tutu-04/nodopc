@@ -97,7 +97,8 @@ Hay otros 5 clientes con pedidos de varios meses (`maria@`, `lucas@`, `sofia@`, 
 nodopc/
 ├── package.json             Atajos: instalar, crear-base, backend y frontend
 ├── database/
-│   └── tienda_hardware.sql  Tablas y datos de prueba
+│   ├── migraciones/         Cambios del esquema, en orden (001, 002...)
+│   └── semillas/            Datos de prueba
 ├── docs/                    Diagrama de la base, capturas y documentación
 ├── backend/src/
 │   ├── index.js             Arranque de Express, middlewares y rutas

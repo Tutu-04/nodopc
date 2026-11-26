@@ -9,7 +9,8 @@
   "scripts": {
     "dev": "node --watch src/index.js",
     "start": "node src/index.js",
-    "crear-base": "node src/crearBase.js",
+    "migrar": "node scripts/migrar.js",
+    "crear-base": "node scripts/crearBase.js",
     "lint": "eslint ."
   },
   "dependencies": {

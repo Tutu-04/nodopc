@@ -176,9 +176,11 @@ Tiene que decir:
 Base de datos "tienda_hardware" creada con los datos de prueba.
 ```
 
-Este comando ejecuta el archivo `database\tienda_hardware.sql`. No hace falta abrir Workbench ni phpMyAdmin.
+Este comando crea la base, aplica las migraciones de `database\migraciones` (las tablas) y carga `database\semillas\datos_prueba.sql` (los datos de prueba). No hace falta abrir Workbench ni phpMyAdmin.
 
 > **Ojo:** si la base ya existía, la borra y la crea de nuevo. Sirve para volver a los datos de prueba originales cuando quieras.
+>
+> Para actualizar una base que ya tiene datos sin borrarlos, usá `npm run migrar`: aplica solo las migraciones nuevas.
 
 Si da error, el mensaje dice qué revisar. Los casos más comunes están en la sección 8.
 
