@@ -7,7 +7,10 @@ Todas las rutas empiezan con `http://localhost:3000/api`.
 | Método                 | Ruta                             | Acceso        | Qué hace                                                                                                                                         |
 | ---------------------- | -------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | POST                   | `/auth/registro`                 | Público       | Crea una cuenta de cliente                                                                                                                       |
-| POST                   | `/auth/login`                    | Público       | Valida las credenciales y devuelve un token JWT                                                                                                  |
+| POST                   | `/auth/login`                    | Público       | Valida las credenciales, guarda la sesión en la cookie `nodopc_sesion` y devuelve el usuario                                                     |
+| GET                    | `/auth/yo`                       | Con sesión    | Devuelve el usuario de la sesión actual                                                                                                          |
+| POST                   | `/auth/salir`                    | Público       | Borra la cookie de sesión                                                                                                                        |
+| GET                    | `/salud`                         | Público       | Confirma que la API y la base de datos responden                                                                                                 |
 | GET                    | `/categorias`, `/categorias/:id` | Público       | Lista o devuelve una categoría                                                                                                                   |
 | POST, PUT, DELETE      | `/categorias`, `/categorias/:id` | Admin         | Crea, edita o elimina                                                                                                                            |
 | GET                    | `/marcas`, `/marcas/:id`         | Público       | Lista o devuelve una marca                                                                                                                       |
@@ -24,7 +27,9 @@ Todas las rutas empiezan con `http://localhost:3000/api`.
 | DELETE                 | `/pedidos/:id`                   | Dueño o admin | Elimina un pedido pendiente y devuelve el stock                                                                                                  |
 | GET                    | `/dashboard`                     | Admin         | Métricas: totales, ventas por mes, productos más vendidos, ventas por categoría, pedidos por estado, mejores clientes y productos con poco stock |
 
-Códigos de respuesta que usa la API: `200` correcto, `201` creado, `400` datos inválidos, `401` sin sesión o token inválido, `403` sin permiso, `404` no existe, `409` conflicto (dato repetido, registro en uso o sin stock) y `500` error inesperado.
+Códigos de respuesta que usa la API: `200` correcto, `201` creado, `400` datos inválidos, `401` sin sesión o sesión inválida, `403` sin permiso, `404` no existe, `409` conflicto (dato repetido, registro en uso o sin stock), `429` demasiados intentos y `500` error inesperado.
+
+La sesión viaja en una cookie `httpOnly`. Para probar la API con Thunder Client o Postman, primero hacé el login: el programa guarda la cookie y la manda sola en los pedidos siguientes.
 
 ## Vistas del frontend
 
