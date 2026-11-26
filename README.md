@@ -36,15 +36,17 @@ NodoPC vende componentes de PC, PC armadas, monitores y periféricos. Los visita
 **Cliente**
 
 - Registro e inicio de sesión.
-- Compra con dirección de envío y seguimiento de sus pedidos.
+- Checkout con envío a domicilio (costo por provincia, gratis desde $1.500.000) o retiro en el local.
+- Pago con Mercado Pago (Checkout Pro en modo prueba) o con una tarjeta de prueba simulada.
+- Seguimiento de cada pedido, desde el pago hasta la entrega, y cancelación mientras está pendiente.
 - Página Mi cuenta para cambiar sus datos y su contraseña.
-- Cancelación de pedidos pendientes, que devuelve el stock.
 
 **Administrador**
 
 - Panel con métricas: ventas por mes, ventas por categoría, pedidos por estado, productos más vendidos, mejores clientes y productos con poco stock.
 - Alta, edición y baja de productos, categorías, marcas y usuarios, con subida de imágenes y vista previa.
-- Gestión de pedidos y de su estado (pendiente, enviado, entregado).
+- Gestión de pedidos con filtro por estado: solo ofrece el paso siguiente del recorrido (pagado, enviado, entregado), y permite cancelar o eliminar cancelados.
+- Las métricas cuentan solo lo cobrado.
 
 ## Tecnologías
 
@@ -114,6 +116,25 @@ npm run frontend      # terminal 2: tienda en http://localhost:5173
 
 Así el backend y el frontend se recargan solos al guardar cambios, que es la forma cómoda de desarrollar. La [guía de instalación](GUIA_DE_INSTALACION.md) explica cada paso en Windows desde cero, con la instalación de MySQL y la solución a los errores más comunes.
 
+### Variables de entorno
+
+Viven en `backend/.env` (con Docker, se pueden pasar al correr `docker compose up`). Las de pagos son opcionales.
+
+| Variable                                       | Para qué sirve                                                                                     |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD` | Conexión a MySQL                                                                                   |
+| `DB_NAME`                                      | Nombre de la base (`tienda_hardware`)                                                              |
+| `JWT_SECRET`                                   | Clave para firmar las sesiones                                                                     |
+| `FRONTEND_URL`                                 | Dirección de la tienda, para CORS y para volver desde Mercado Pago                                 |
+| `COOKIE_SEGURA`                                | `true` para mandar la cookie solo por HTTPS                                                        |
+| `MINUTOS_PARA_PAGAR`                           | Cuánto dura la reserva de stock de un pedido sin pagar (30 por defecto)                            |
+| `PAGO_SIMULADO`                                | `false` para ocultar la tarjeta de prueba                                                          |
+| `MP_ACCESS_TOKEN`                              | Access Token de Mercado Pago. Sin él, Mercado Pago no aparece como medio de pago                   |
+| `MP_WEBHOOK_SECRET`                            | Clave secreta de los webhooks, para validar la firma de cada notificación                          |
+| `API_PUBLICA_URL`                              | Dirección pública de la API (por ejemplo, un túnel), para que Mercado Pago pueda mandar los avisos |
+
+Los pasos para conseguir las credenciales de prueba de Mercado Pago están en la [guía de instalación](GUIA_DE_INSTALACION.md#pagos-con-mercado-pago).
+
 ### Usuarios de prueba
 
 | Rol           | Email                | Contraseña   |
@@ -122,6 +143,8 @@ Así el backend y el frontend se recargan solos al guardar cambios, que es la fo
 | Cliente       | `cliente@nodopc.com` | `cliente123` |
 
 Hay otros 5 clientes con pedidos de varios meses (`maria@`, `lucas@`, `sofia@`, `julian@` y `valentina@nodopc.com`, todos con `cliente123`), para que el panel de métricas tenga datos.
+
+Para pagar sin configurar Mercado Pago, elegí **Tarjeta de prueba** en el checkout y apretá **Completar con la tarjeta de prueba**. Con `FUND` como titular, el pago se rechaza.
 
 ### Scripts
 
@@ -199,7 +222,10 @@ nodopc/
 - **Defensas del login.** Límite de intentos fallidos, contraseñas de al menos 8 caracteres con letras y números, y el mismo tiempo de respuesta exista o no el email.
 - **Protección doble.** El frontend oculta y redirige las rutas privadas, y el backend vuelve a verificar el token y el rol en cada endpoint. Aunque alguien cambie su rol en el navegador, la API lo rechaza.
 - **El precio lo pone el servidor.** Al comprar, el frontend manda solo el id y la cantidad de cada producto. El backend lee el precio y el stock de la base.
-- **Pedidos con transacciones.** Crear un pedido toca tres tablas. Si algo falla en el medio, se deshace todo.
+- **Pedidos con transacciones.** Crear un pedido toca tres tablas. Si algo falla en el medio, se deshace todo. Cada producto se bloquea con `SELECT ... FOR UPDATE`, así dos compras simultáneas no pueden vender la misma última unidad.
+- **Reserva de stock con vencimiento.** Un pedido sin pagar reserva el stock durante 30 minutos; después se cancela solo y el stock vuelve al catálogo. El tiempo restante lo calcula MySQL, así no depende de la zona horaria de cada máquina.
+- **Pagos que no se creen a ciegas.** Ni la vuelta de Mercado Pago ni su notificación marcan un pedido como pagado por sí solas: la API consulta el pago con su credencial y lo acredita solo si el monto y la moneda coinciden. Las notificaciones se validan con la firma HMAC de Mercado Pago, y acreditar el mismo pago dos veces no tiene efecto.
+- **Integración sin SDK y testeable.** Mercado Pago se usa por su API REST con `fetch`. En los tests `fetch` se reemplaza, así la suite corre sin red ni cuenta.
 - **Historial intacto.** `detalle_pedido` guarda el nombre y el precio de cada producto al momento de la compra, así los pedidos viejos no cambian si después se modifica o se elimina el producto.
 - **Buscador sin consultas de más.** Busca cada palabra por separado en el nombre, la descripción, la marca y la categoría. Espera a que el usuario deje de escribir antes de consultar la API, y descarta las respuestas que llegan fuera de orden.
 - **Métricas accesibles.** Cada gráfico de Recharts tiene al lado su tabla con los números exactos.
@@ -221,7 +247,7 @@ nodopc/
 - [x] Seguridad: helmet, límite de intentos, sesión en cookie `httpOnly` y rol verificado en la base
 - [x] Catálogo paginado con orden y filtro por precio, Mi cuenta, menú para celulares y página 404
 - [x] Subida de imágenes desde el panel del administrador
-- [ ] Pagos con Mercado Pago en modo prueba
+- [x] Envíos por provincia, pagos con Mercado Pago en modo prueba y pago simulado
 - [ ] Emails de confirmación de pedido y de recuperación de contraseña
 
 ## Autor

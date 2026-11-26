@@ -252,6 +252,36 @@ En cada terminal, apretá `Ctrl + C`.
 | Cliente       | `cliente@nodopc.com` | `cliente123` |
 | Cliente       | `maria@nodopc.com`   | `cliente123` |
 
+### Pagos de prueba
+
+La tienda viene con un **pago simulado** que funciona sin configurar nada. En la pantalla de pago:
+
+1. Apretá **Completar con la tarjeta de prueba**.
+2. Apretá **Pagar**. El pedido queda pagado.
+
+Para ver un rechazo, escribí `FUND` en **Titular** antes de pagar.
+
+### Pagos con Mercado Pago
+
+Es opcional. Sin estos pasos, la opción de Mercado Pago simplemente no aparece en el checkout.
+
+1. Entrá a <https://www.mercadopago.com.ar/developers> con una cuenta de Mercado Pago.
+2. Arriba a la derecha, apretá **Tus integraciones** → **Crear aplicación**. Ponele un nombre (por ejemplo `NodoPC`), elegí **Pagos online** y **Checkout Pro**, y confirmá.
+3. Dentro de la aplicación, en el menú de la izquierda, entrá a **Credenciales de prueba** y copiá el **Access Token**.
+4. Abrí `backend/.env` y pegalo así:
+
+   ```env
+   MP_ACCESS_TOKEN=el-access-token-que-copiaste
+   ```
+
+5. Reiniciá el backend (`Ctrl + C` en su terminal y otra vez `npm run backend`).
+6. En el menú de la aplicación, entrá a **Cuentas de prueba** y creá una cuenta **Comprador**. Para pagar, iniciá sesión en Mercado Pago con esa cuenta (no con la tuya).
+7. Para pagar con tarjeta, usá las tarjetas de prueba que muestra la documentación de Mercado Pago, con `APRO` como titular.
+
+Al terminar el pago, Mercado Pago te devuelve al detalle del pedido y la tienda confirma el pago sola.
+
+> Mercado Pago también puede avisarle a la tienda cada vez que cambia un pago (webhooks), pero para eso la API tiene que tener una dirección pública en internet. En local no hace falta: la confirmación al volver alcanza.
+
 ---
 
 ## 7. La segunda vez (el día de la presentación)
