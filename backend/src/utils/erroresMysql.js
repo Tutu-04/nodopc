@@ -1,5 +1,7 @@
+import { config } from '../config.js';
+
 export function explicarErrorMysql(error) {
-  const servidor = `${process.env.DB_HOST}:${process.env.DB_PORT}`;
+  const servidor = `${config.db.host}:${config.db.port}`;
 
   switch (error.code) {
     case 'ECONNREFUSED':
