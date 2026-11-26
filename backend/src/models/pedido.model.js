@@ -49,9 +49,10 @@ export async function crear(usuarioId, direccionEnvio, items) {
     const renglones = [];
 
     for (const item of items) {
-      const [filas] = await conexion.execute('SELECT id, nombre, precio, stock FROM productos WHERE id = ?', [
-        item.producto_id,
-      ]);
+      const [filas] = await conexion.execute(
+        'SELECT id, nombre, precio, stock FROM productos WHERE id = ? FOR UPDATE',
+        [item.producto_id]
+      );
       const producto = filas[0];
 
       if (!producto) {

@@ -88,6 +88,23 @@ describe('Creación de pedidos', () => {
   });
 });
 
+describe('Compras al mismo tiempo', () => {
+  it('no venden más unidades de las que hay en stock', async () => {
+    const stockInicial = await stockDe(19);
+    const compras = Array.from({ length: stockInicial + 3 }, () =>
+      crearPedido(cliente, { direccion_envio: 'Calle 123', items: [{ producto_id: 19, cantidad: 1 }] })
+    );
+
+    const respuestas = await Promise.all(compras);
+    const aprobadas = respuestas.filter((respuesta) => respuesta.status === 201);
+    const rechazadas = respuestas.filter((respuesta) => respuesta.status === 409);
+
+    expect(aprobadas).toHaveLength(stockInicial);
+    expect(rechazadas).toHaveLength(3);
+    expect(await stockDe(19)).toBe(0);
+  });
+});
+
 describe('Gestión del administrador', () => {
   it('cambia el estado de un pedido y valida los valores', async () => {
     const invalido = await api()
