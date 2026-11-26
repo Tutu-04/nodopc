@@ -28,21 +28,21 @@ describe('Listado y búsqueda', () => {
   it('devuelve la primera página, del más nuevo al más viejo', async () => {
     const respuesta = await api().get('/api/productos');
     expect(respuesta.status).toBe(200);
-    expect(respuesta.body).toMatchObject({ total: 24, pagina: 1, porPagina: 12, paginas: 2 });
+    expect(respuesta.body).toMatchObject({ total: 33, pagina: 1, porPagina: 12, paginas: 3 });
     expect(respuesta.body.productos).toHaveLength(12);
-    expect(respuesta.body.productos[0].id).toBe(24);
+    expect(respuesta.body.productos[0].id).toBe(33);
     expect(typeof respuesta.body.productos[0].precio).toBe('number');
     expect(respuesta.body.productos[0].categoria).toBeTruthy();
   });
 
   it('pagina sin repetir ni saltear productos', async () => {
-    const primera = await listar('?porPagina=10&pagina=1');
-    const segunda = await listar('?porPagina=10&pagina=2');
-    const tercera = await listar('?porPagina=10&pagina=3');
+    const primera = await listar('?porPagina=12&pagina=1');
+    const segunda = await listar('?porPagina=12&pagina=2');
+    const tercera = await listar('?porPagina=12&pagina=3');
     const ids = [...primera.productos, ...segunda.productos, ...tercera.productos].map((producto) => producto.id);
 
-    expect(tercera.productos).toHaveLength(4);
-    expect(new Set(ids).size).toBe(24);
+    expect(tercera.productos).toHaveLength(9);
+    expect(new Set(ids).size).toBe(33);
   });
 
   it.each([
@@ -79,7 +79,7 @@ describe('Listado y búsqueda', () => {
 
   it.each([
     ['categoría', '?categoria=8', 5],
-    ['marca', '?marca=6', 3],
+    ['marca', '?marca=6', 4],
     ['categoría, marca y texto', '?categoria=5&marca=6&buscar=nvme', 1],
     ['varias palabras', '?buscar=placa%20de%20video%20asus', 1],
     ['nombre de la categoría', '?buscar=monitores', 3],

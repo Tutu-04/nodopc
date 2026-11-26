@@ -74,7 +74,7 @@ jobs:
       - uses: actions/checkout@v4
       - run: docker compose up -d --build --wait
       - run: curl --fail --silent http://localhost:3000/api/salud
-      - run: test "$(curl --silent http://localhost:3000/api/productos | jq .total)" -eq 24
+      - run: test "$(curl --silent http://localhost:3000/api/productos | jq .total)" -eq 33
       - run: curl --fail --silent http://localhost:5173/ | grep -q 'id="root"'
       - run: curl --fail --silent http://localhost:5173/catalogo | grep -q 'id="root"'
       - name: Los correos llegan a Mailpit

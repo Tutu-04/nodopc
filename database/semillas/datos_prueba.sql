@@ -7,15 +7,17 @@ INSERT INTO usuarios (id, nombre, email, password, rol) VALUES
   (6, 'Julián Pérez',       'julian@nodopc.com',  '$2b$10$L0ks1VwGCwqEVKZ.9mtzKODG4EBmt2ZFYMh2WXE5sjtzkvPd47ATm', 'cliente'),
   (7, 'Valentina Ruiz',     'valentina@nodopc.com', '$2b$10$HZDjvWNJ9q9QcaLdanJ0PeNQNQfVNbBiF7nPA4KEwjq.7yuFUPa6a', 'cliente');
 
-INSERT INTO categorias (id, nombre, descripcion) VALUES
-  (1, 'Procesadores',    'Microprocesadores para PC de escritorio'),
-  (2, 'Placas de video', 'Tarjetas gráficas'),
-  (3, 'Motherboards',    'Placas madre'),
-  (4, 'Memorias RAM',    'Módulos de memoria'),
-  (5, 'Almacenamiento',  'Discos SSD y HDD'),
-  (6, 'PC armadas',      'Equipos completos listos para usar'),
-  (7, 'Monitores',       'Pantallas para oficina y gaming'),
-  (8, 'Periféricos',     'Teclados, mouses y auriculares');
+INSERT INTO categorias (id, nombre, descripcion, componente) VALUES
+  (1,  'Procesadores',    'Microprocesadores para PC de escritorio', 'procesador'),
+  (2,  'Placas de video', 'Tarjetas gráficas',                       'placa_de_video'),
+  (3,  'Motherboards',    'Placas madre',                            'motherboard'),
+  (4,  'Memorias RAM',    'Módulos de memoria',                      'memoria'),
+  (5,  'Almacenamiento',  'Discos SSD y HDD',                        'almacenamiento'),
+  (6,  'PC armadas',      'Equipos completos listos para usar',      NULL),
+  (7,  'Monitores',       'Pantallas para oficina y gaming',         NULL),
+  (8,  'Periféricos',     'Teclados, mouses y auriculares',          NULL),
+  (9,  'Fuentes',         'Fuentes de alimentación',                 'fuente'),
+  (10, 'Gabinetes',       'Gabinetes para PC de escritorio',         'gabinete');
 
 INSERT INTO marcas (id, nombre, pais) VALUES
   (1,  'AMD',      'Estados Unidos'),
@@ -55,7 +57,36 @@ INSERT INTO productos (id, nombre, descripcion, precio, stock, categoria_id, mar
   (21, 'Auriculares Logitech G435 inalámbricos',                'Bluetooth y Lightspeed, 18 horas de batería.',                    119999, 13, 8, 10),
   (22, 'Teclado mecánico Redragon Kumara K552',                 'Formato compacto sin teclado numérico, retroiluminado.',           59999, 20, 8, 11),
   (23, 'Mouse Redragon Cobra M711',                             '10000 DPI, luces RGB, 7 botones.',                                 29999, 18, 8, 11),
-  (24, 'Teclado Corsair K55 RGB Pro',                           'Teclado de membrana con 6 teclas macro.',                          79999,  9, 8, 7);
+  (24, 'Teclado Corsair K55 RGB Pro',                           'Teclado de membrana con 6 teclas macro.',                          79999,  9, 8, 7),
+  (25, 'Procesador AMD Ryzen 5 5600',                           '6 núcleos y 12 hilos, socket AM4. Incluye cooler.',                         179999, 12, 1,  1),
+  (26, 'Procesador Intel Core i7-14700K',                       '20 núcleos y 28 hilos, socket LGA1700. Con gráficos integrados, sin cooler.', 619999, 6,  1,  2),
+  (27, 'Memoria RAM Kingston Fury Beast 16GB DDR4 3200MHz',     'Un módulo de 16 GB, latencia CL16.',                                        59999,  20, 4,  6),
+  (28, 'Motherboard MSI MAG B650 Tomahawk WiFi',                'Socket AM5, memoria DDR5, formato ATX y WiFi 6E.',                          349999, 6,  3,  5),
+  (29, 'Fuente Gigabyte P450B 450W 80 Plus Bronze',             'Fuente de 450 W con certificación 80 Plus Bronze.',                         69999,  15, 9,  4),
+  (30, 'Fuente Corsair CX650 650W 80 Plus Bronze',              'Fuente de 650 W con ventilador silencioso de 120 mm.',                      109999, 12, 9,  7),
+  (31, 'Fuente MSI MAG A850GL 850W 80 Plus Gold',               'Fuente modular de 850 W, lista para PCIe 5.0.',                             179999, 8,  9,  5),
+  (32, 'Gabinete Corsair 4000D Airflow',                        'Formato ATX, frente mallado y dos ventiladores incluidos.',                 149999, 10, 10, 7),
+  (33, 'Gabinete NodoPC Compact M1',                            'Gabinete Micro ATX con vidrio templado y tres ventiladores.',               79999,  14, 10, 12);
+
+UPDATE productos SET especificaciones = '{"socket": "AM5", "consumo": 88, "graficos_integrados": true}' WHERE id = 1;
+UPDATE productos SET especificaciones = '{"socket": "AM5", "consumo": 162, "graficos_integrados": true}' WHERE id = 2;
+UPDATE productos SET especificaciones = '{"socket": "LGA1700", "consumo": 148, "graficos_integrados": false}' WHERE id = 3;
+UPDATE productos SET especificaciones = '{"socket": "AM4", "consumo": 76, "graficos_integrados": false}' WHERE id = 25;
+UPDATE productos SET especificaciones = '{"socket": "LGA1700", "consumo": 253, "graficos_integrados": true}' WHERE id = 26;
+UPDATE productos SET especificaciones = '{"consumo": 115}' WHERE id = 4;
+UPDATE productos SET especificaciones = '{"consumo": 165}' WHERE id = 5;
+UPDATE productos SET especificaciones = '{"consumo": 220}' WHERE id = 6;
+UPDATE productos SET especificaciones = '{"socket": "AM5", "memoria": "DDR5", "formato": "Micro ATX"}' WHERE id = 7;
+UPDATE productos SET especificaciones = '{"socket": "LGA1700", "memoria": "DDR5", "formato": "Micro ATX"}' WHERE id = 8;
+UPDATE productos SET especificaciones = '{"socket": "AM4", "memoria": "DDR4", "formato": "Micro ATX"}' WHERE id = 9;
+UPDATE productos SET especificaciones = '{"socket": "AM5", "memoria": "DDR5", "formato": "ATX"}' WHERE id = 28;
+UPDATE productos SET especificaciones = '{"memoria": "DDR5"}' WHERE id IN (10, 11);
+UPDATE productos SET especificaciones = '{"memoria": "DDR4"}' WHERE id = 27;
+UPDATE productos SET especificaciones = '{"potencia": 450}' WHERE id = 29;
+UPDATE productos SET especificaciones = '{"potencia": 650}' WHERE id = 30;
+UPDATE productos SET especificaciones = '{"potencia": 850}' WHERE id = 31;
+UPDATE productos SET especificaciones = '{"formatos": ["ATX", "Micro ATX", "Mini ITX"]}' WHERE id = 32;
+UPDATE productos SET especificaciones = '{"formatos": ["Micro ATX", "Mini ITX"]}' WHERE id = 33;
 
 INSERT INTO pedidos (id, usuario_id, fecha, estado, metodo_entrega, provincia, direccion_envio, costo_envio, total, medio_pago, pago_id, pagado_en) VALUES
   (1, 5, '2026-06-01 20:30:00', 'entregado', 'envio', 'Ciudad Autónoma de Buenos Aires', 'Rivadavia 2150, Buenos Aires', 4500, 654498, 'simulado', 'SIM-0001', '2026-06-01 20:34:00'),
