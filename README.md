@@ -189,7 +189,7 @@ nodopc/
 ├── database/
 │   ├── migraciones/           Cambios del esquema, en orden (001, 002...)
 │   └── semillas/              Datos de prueba
-├── docs/                      Diagrama de la base, capturas y documentación
+├── docs/                      Capturas, demo y documentación de la API y la seguridad
 ├── backend/
 │   ├── scripts/               migrar, preparar y crear-base
 │   ├── uploads/               Imágenes subidas (no se suben a Git)
@@ -222,7 +222,77 @@ nodopc/
 
 ## Base de datos
 
-![Diagrama entidad-relación](docs/diagrama-er.png)
+```mermaid
+erDiagram
+    usuarios ||--o{ pedidos : "hace"
+    usuarios ||--o{ recuperaciones_password : "pide"
+    pedidos ||--|{ detalle_pedido : "incluye"
+    productos |o--o{ detalle_pedido : "aparece en"
+    categorias ||--o{ productos : "agrupa"
+    marcas ||--o{ productos : "fabrica"
+
+    usuarios {
+        int id PK
+        varchar nombre
+        varchar email UK
+        varchar password "hash bcrypt"
+        enum rol "admin o cliente"
+        datetime creado_en
+    }
+    categorias {
+        int id PK
+        varchar nombre UK
+        varchar descripcion
+        enum componente UK "pieza del armador, opcional"
+    }
+    marcas {
+        int id PK
+        varchar nombre UK
+        varchar pais
+    }
+    productos {
+        int id PK
+        varchar nombre
+        text descripcion
+        json especificaciones "ficha técnica"
+        decimal precio
+        int stock
+        varchar imagen_url
+        int categoria_id FK
+        int marca_id FK
+    }
+    pedidos {
+        int id PK
+        int usuario_id FK
+        datetime fecha
+        enum estado
+        enum metodo_entrega "envio o retiro"
+        varchar provincia
+        varchar direccion_envio
+        decimal costo_envio
+        decimal total
+        enum medio_pago
+        varchar pago_id
+        datetime pagado_en
+        datetime vence_en "fin de la reserva"
+    }
+    detalle_pedido {
+        int id PK
+        int pedido_id FK
+        int producto_id FK "null si se borró"
+        varchar producto_nombre
+        int cantidad
+        decimal precio_unitario
+    }
+    recuperaciones_password {
+        int id PK
+        int usuario_id FK
+        char token_hash UK "SHA-256"
+        datetime vence_en
+        datetime usado_en
+        datetime creado_en
+    }
+```
 
 | Tabla                     | Guarda                                                                                 |
 | ------------------------- | -------------------------------------------------------------------------------------- |
