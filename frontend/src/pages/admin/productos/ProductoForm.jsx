@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import api, { obtenerMensajeError } from '../../../api/api';
+import api, { obtenerMensajeError, urlDeImagen } from '../../../api/api';
 import MensajeError from '../../../components/MensajeError';
+import IconoCategoria from '../../../components/IconoCategoria';
+
+const TIPOS_DE_IMAGEN = ['image/jpeg', 'image/png', 'image/webp'];
+const TAMANO_MAXIMO = 2 * 1024 * 1024;
 
 export default function ProductoForm({ inicial, onGuardar, guardando }) {
   const [nombre, setNombre] = useState(inicial?.nombre ?? '');
@@ -11,6 +15,10 @@ export default function ProductoForm({ inicial, onGuardar, guardando }) {
   const [imagenUrl, setImagenUrl] = useState(inicial?.imagen_url ?? '');
   const [categoriaId, setCategoriaId] = useState(inicial?.categoria_id ?? '');
   const [marcaId, setMarcaId] = useState(inicial?.marca_id ?? '');
+
+  const [archivo, setArchivo] = useState(null);
+  const [vistaPrevia, setVistaPrevia] = useState('');
+  const [errorImagen, setErrorImagen] = useState('');
 
   const [categorias, setCategorias] = useState([]);
   const [marcas, setMarcas] = useState([]);
@@ -31,17 +39,56 @@ export default function ProductoForm({ inicial, onGuardar, guardando }) {
     cargarListas();
   }, []);
 
+  useEffect(() => {
+    if (!archivo) {
+      setVistaPrevia('');
+      return;
+    }
+    const url = URL.createObjectURL(archivo);
+    setVistaPrevia(url);
+    return () => URL.revokeObjectURL(url);
+  }, [archivo]);
+
+  function elegirArchivo(evento) {
+    const elegido = evento.target.files[0];
+    setErrorImagen('');
+
+    if (!elegido) return;
+    if (!TIPOS_DE_IMAGEN.includes(elegido.type)) {
+      setErrorImagen('La imagen tiene que ser JPG, PNG o WebP.');
+      evento.target.value = '';
+      return;
+    }
+    if (elegido.size > TAMANO_MAXIMO) {
+      setErrorImagen('La imagen no puede pesar más de 2 MB.');
+      evento.target.value = '';
+      return;
+    }
+    setArchivo(elegido);
+  }
+
+  function quitarImagen() {
+    setArchivo(null);
+    setImagenUrl('');
+  }
+
+  const categoriaElegida = categorias.find((categoria) => String(categoria.id) === String(categoriaId));
+  const imagenActual = vistaPrevia || urlDeImagen(imagenUrl);
+
   function manejarSubmit(evento) {
     evento.preventDefault();
-    onGuardar({
-      nombre,
-      descripcion,
-      precio,
-      stock,
-      imagen_url: imagenUrl,
-      categoria_id: categoriaId,
-      marca_id: marcaId,
-    });
+    onGuardar(
+      {
+        nombre,
+        descripcion,
+        precio,
+        stock,
+        imagen_url: imagenUrl,
+        categoria_id: categoriaId,
+        marca_id: marcaId,
+      },
+      archivo
+    );
   }
 
   return (
@@ -145,21 +192,57 @@ export default function ProductoForm({ inicial, onGuardar, guardando }) {
         </div>
       </div>
 
-      <div>
-        <label htmlFor="imagen" className="etiqueta">
-          Dirección de la imagen (opcional)
-        </label>
-        <input
-          id="imagen"
-          type="text"
-          className="campo"
-          placeholder="https://... o /productos/1.jpg"
-          maxLength={500}
-          value={imagenUrl}
-          onChange={(e) => setImagenUrl(e.target.value)}
-        />
-        <p className="ayuda">Si queda vacío, se muestra el ícono de la categoría en lugar de la foto.</p>
-      </div>
+      <fieldset className="flex flex-col gap-3">
+        <legend className="etiqueta">Imagen (opcional)</legend>
+
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex size-28 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-neutral-200 bg-white">
+            {imagenActual ? (
+              <img src={imagenActual} alt="Vista previa de la imagen" className="size-full object-contain p-1" />
+            ) : (
+              <IconoCategoria categoria={categoriaElegida?.nombre} className="size-10 text-neutral-300" grosor={1.2} />
+            )}
+          </div>
+
+          <div className="flex flex-col items-start gap-2">
+            <label className="btn btn-secundario btn-chico focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-orange-600">
+              <input
+                id="imagen-archivo"
+                type="file"
+                accept={TIPOS_DE_IMAGEN.join(',')}
+                className="sr-only"
+                onChange={elegirArchivo}
+              />
+              {imagenActual ? 'Cambiar imagen' : 'Elegir imagen'}
+            </label>
+            {imagenActual && (
+              <button type="button" className="btn btn-peligro btn-chico" onClick={quitarImagen}>
+                Quitar imagen
+              </button>
+            )}
+            <p className="ayuda">{archivo ? archivo.name : 'JPG, PNG o WebP, hasta 2 MB.'}</p>
+          </div>
+        </div>
+
+        <MensajeError texto={errorImagen} />
+
+        {!archivo && (
+          <div>
+            <label htmlFor="imagen" className="ayuda">
+              O pegá la dirección de una imagen
+            </label>
+            <input
+              id="imagen"
+              type="text"
+              className="campo"
+              placeholder="https://..."
+              maxLength={500}
+              value={imagenUrl}
+              onChange={(e) => setImagenUrl(e.target.value)}
+            />
+          </div>
+        )}
+      </fieldset>
 
       <div className="flex flex-wrap gap-3">
         <button type="submit" className="btn btn-acento" disabled={guardando}>

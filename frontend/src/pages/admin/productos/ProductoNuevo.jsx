@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api, { obtenerMensajeError } from '../../../api/api';
+import api, { obtenerMensajeError, subirImagenDeProducto } from '../../../api/api';
 import MensajeError from '../../../components/MensajeError';
 import ProductoForm from './ProductoForm';
 
@@ -9,16 +9,32 @@ export default function ProductoNuevo() {
   const [error, setError] = useState('');
   const [guardando, setGuardando] = useState(false);
 
-  async function guardar(datos) {
+  async function guardar(datos, archivo) {
     setError('');
     setGuardando(true);
+
+    let creado;
     try {
-      await api.post('/productos', datos);
-      navigate('/admin/productos');
+      const respuesta = await api.post('/productos', datos);
+      creado = respuesta.data;
     } catch (e) {
       setError(obtenerMensajeError(e));
       setGuardando(false);
+      return;
     }
+
+    if (archivo) {
+      try {
+        await subirImagenDeProducto(creado.id, archivo);
+      } catch (e) {
+        navigate(`/admin/productos/${creado.id}/editar`, {
+          state: { error: `El producto se creó, pero la imagen no se pudo subir: ${obtenerMensajeError(e)}` },
+        });
+        return;
+      }
+    }
+
+    navigate('/admin/productos');
   }
 
   return (
