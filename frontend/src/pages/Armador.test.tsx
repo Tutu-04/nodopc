@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import api from '../api/api';
@@ -111,7 +111,9 @@ describe('Armador', () => {
     await usuario.click(within(opciones).getByRole('button', { name: /Ryzen 5 7600/ }));
 
     expect(ubicacion.search).toBe('?procesador=1');
-    expect(api.post).toHaveBeenLastCalledWith('/armador/verificar', { seleccion: { procesador: 1 } });
+    await waitFor(() =>
+      expect(api.post).toHaveBeenLastCalledWith('/armador/verificar', { seleccion: { procesador: 1 } })
+    );
     expect(await screen.findByRole('list', { name: 'Opciones de Motherboard' })).toBeInTheDocument();
   });
 
@@ -119,7 +121,7 @@ describe('Armador', () => {
     mostrar('/armador?procesador=3&motherboard=99');
 
     await screen.findByText('Procesador Intel Core i5-14400F', { selector: 'p' });
-    expect(api.post).toHaveBeenCalledWith('/armador/verificar', { seleccion: { procesador: 3 } });
+    await waitFor(() => expect(api.post).toHaveBeenCalledWith('/armador/verificar', { seleccion: { procesador: 3 } }));
   });
 
   it('deshabilita las opciones incompatibles y explica por qué', async () => {
