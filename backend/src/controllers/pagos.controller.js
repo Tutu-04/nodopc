@@ -4,6 +4,7 @@ import { config } from '../config.js';
 import { motivoDeRechazo, validarTarjeta } from '../utils/tarjetas.js';
 import { firmaEsValida } from '../utils/firmaWebhook.js';
 import * as MercadoPago from '../services/mercadoPago.js';
+import { notificarPedido } from '../services/notificaciones.js';
 
 async function buscarPedidoParaPagar(req, res) {
   const pedido = await Pedido.obtenerPorId(req.params.pedidoId);
@@ -57,6 +58,7 @@ export async function pagarSimulado(req, res) {
     return res.status(409).json({ error: 'Este pedido ya no está pendiente de pago' });
   }
 
+  notificarPedido(pedido.id);
   res.json(await Pedido.obtenerPorId(pedido.id));
 }
 
@@ -77,7 +79,9 @@ async function acreditarSiCorresponde(pago, pedido) {
   if (!MercadoPago.pagoCubrePedido(pago, pedido)) return false;
 
   const acreditado = await Pedido.marcarPagado(pedido.id, { medio: 'mercadopago', pagoId: String(pago.id) });
-  if (!acreditado && pedido.estado === 'cancelado') {
+  if (acreditado) {
+    notificarPedido(pedido.id);
+  } else if (pedido.estado === 'cancelado') {
     console.warn(`El pago ${pago.id} llegó con el pedido ${pedido.id} ya cancelado: hay que devolver el dinero`);
   }
   return acreditado;

@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import api, { obtenerMensajeError } from '../api/api';
 import { useAuthStore } from '../store/authStore';
 import MensajeError from '../components/MensajeError';
+import EncabezadoAcceso from '../components/EncabezadoAcceso';
 
 export default function Login() {
   const location = useLocation();
@@ -32,13 +33,7 @@ export default function Login() {
 
   return (
     <div className="mx-auto w-full max-w-md py-4">
-      <div className="mb-6 flex flex-col items-center gap-3 text-center">
-        <span className="flex size-12 items-center justify-center rounded-xl bg-neutral-950 text-xl font-black text-white">
-          N
-        </span>
-        <h1 className="titulo">Ingresar</h1>
-        <p className="text-sm text-neutral-500">Entrá a tu cuenta para comprar y seguir tus pedidos.</p>
-      </div>
+      <EncabezadoAcceso titulo="Ingresar" descripcion="Entrá a tu cuenta para comprar y seguir tus pedidos." />
 
       {mensaje && (
         <p className="mb-5 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-900">
@@ -63,9 +58,14 @@ export default function Login() {
         </div>
 
         <div>
-          <label htmlFor="password" className="etiqueta">
-            Contraseña
-          </label>
+          <div className="mb-1.5 flex items-baseline justify-between gap-3">
+            <label htmlFor="password" className="etiqueta mb-0">
+              Contraseña
+            </label>
+            <Link to="/olvide-password" className="text-xs font-semibold text-orange-700 hover:underline">
+              ¿Te la olvidaste?
+            </Link>
+          </div>
           <input
             id="password"
             type="password"

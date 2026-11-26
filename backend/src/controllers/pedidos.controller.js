@@ -2,6 +2,7 @@ import * as Pedido from '../models/pedido.model.js';
 import { esTextoValido, esEnteroValido } from '../utils/validaciones.js';
 import { esProvinciaValida, METODOS_DE_ENTREGA } from '../utils/envios.js';
 import { config } from '../config.js';
+import { notificarPedido } from '../services/notificaciones.js';
 
 const ESTADOS = ['pendiente', 'pagado', 'enviado', 'entregado', 'cancelado'];
 
@@ -113,6 +114,9 @@ export async function actualizar(req, res) {
   }
 
   await Pedido.actualizar(pedido.id, { estado, direccionEnvio });
+  if (estado !== pedido.estado) {
+    notificarPedido(pedido.id);
+  }
   res.json(conAcciones(await Pedido.obtenerPorId(pedido.id)));
 }
 
@@ -137,6 +141,7 @@ export async function cancelar(req, res) {
     });
   }
 
+  notificarPedido(pedido.id, { motivo: esAdmin ? 'tienda' : 'cliente', estabaPagado: pedido.estado === 'pagado' });
   res.json(conAcciones(await Pedido.obtenerPorId(pedido.id)));
 }
 

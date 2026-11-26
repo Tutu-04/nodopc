@@ -13,6 +13,14 @@ export const config = {
     accessToken: process.env.MP_ACCESS_TOKEN || '',
     secretoWebhook: process.env.MP_WEBHOOK_SECRET || '',
   },
+  correo: {
+    host: process.env.SMTP_HOST || '',
+    puerto: Number(process.env.SMTP_PORT) || 587,
+    usuario: process.env.SMTP_USER || '',
+    password: process.env.SMTP_PASS || '',
+    remitente: process.env.MAIL_FROM || 'NodoPC <no-responder@nodopc.local>',
+    mostrarEnConsola: process.env.NODE_ENV !== 'test',
+  },
   uploadsDir: process.env.UPLOADS_DIR || fileURLToPath(new URL('../uploads', import.meta.url)),
   db: {
     host: process.env.DB_HOST,

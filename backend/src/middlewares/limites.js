@@ -29,3 +29,8 @@ export const limitarPagos = crearLimitador({
   soloFallidos: true,
   mensaje: 'Hubo demasiados pagos rechazados. Esperá 15 minutos y volvé a probar.',
 });
+
+export const limitarRecuperacion = crearLimitador({
+  maximo: 10,
+  mensaje: 'Ya pediste varios enlaces. Esperá 15 minutos y revisá tu correo, incluida la carpeta de spam.',
+});

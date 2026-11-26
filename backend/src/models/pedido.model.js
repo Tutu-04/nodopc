@@ -154,9 +154,9 @@ export async function cancelarVencidos() {
     "SELECT id FROM pedidos WHERE estado = 'pendiente' AND vence_en IS NOT NULL AND vence_en < NOW()"
   );
 
-  let cancelados = 0;
+  const cancelados = [];
   for (const fila of filas) {
-    if (await cancelar(fila.id, ['pendiente'])) cancelados++;
+    if (await cancelar(fila.id, ['pendiente'])) cancelados.push(fila.id);
   }
   return cancelados;
 }

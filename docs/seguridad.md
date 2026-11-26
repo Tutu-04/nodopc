@@ -20,6 +20,8 @@ Qué protecciones tiene NodoPC, dónde está cada una en el código y cómo comp
 | Pagos verificados en origen   | Marcar un pedido como pagado sin haber pagado, o pagando menos       | `controllers/pagos.controller.js`                          |
 | Firma de las notificaciones   | Que alguien se haga pasar por Mercado Pago                           | `utils/firmaWebhook.js`                                    |
 | Límite de pagos rechazados    | Usar el pago simulado para probar tarjetas                           | `middlewares/limites.js`                                   |
+| Enlaces de recuperación       | Tomar una cuenta con un enlace viejo, robado o adivinado             | `controllers/auth.controller.js`, `utils/tokens.js`        |
+| HTML escapado en los correos  | Inyectar HTML en un correo a través del nombre de usuario            | `correos/plantilla.js` → `escaparHtml`                     |
 | Usuario de MySQL propio       | Que la aplicación pueda tocar otras bases del servidor               | `docker-compose.yml`                                       |
 
 Todas las rutas son relativas a `backend/src/`, salvo `docker-compose.yml`.
@@ -49,6 +51,14 @@ Todas las rutas son relativas a `backend/src/`, salvo `docker-compose.yml`.
 - **Avisos repetidos.** `marcarPagado` solo cambia pedidos pendientes, así que un aviso que llega dos veces no tiene efecto. Si un pago se acredita sobre un pedido que ya se canceló, queda registrado en el log para devolver el dinero.
 - **Tarjetas.** El pago simulado valida los datos y los descarta: el pedido guarda solo el medio y un id de operación. Después de 10 pagos rechazados en 15 minutos desde la misma conexión, responde `429`.
 - **Credenciales.** `MP_ACCESS_TOKEN` y `MP_WEBHOOK_SECRET` viven solo en `backend/.env`, que no se sube al repositorio. El frontend nunca las ve.
+
+## Recuperación de contraseña
+
+- `POST /api/auth/olvide-password` responde siempre el mismo texto, y lo hace antes de buscar la cuenta. Así ni la respuesta ni el tiempo que tarda revelan si un email está registrado.
+- El enlace lleva un token al azar de 32 bytes (`crypto.randomBytes`). La base guarda solo su hash SHA-256: alguien que lea la tabla `recuperaciones_password` no puede usar los enlaces pendientes.
+- Cada enlace vence a los 60 minutos y sirve una sola vez. Al usarlo, se anulan todos los enlaces pendientes de esa cuenta.
+- Pedir enlaces tiene un límite de 10 cada 15 minutos por conexión, para que la ruta no sirva para llenar de correos a alguien. Los intentos con un token inválido cuentan como intentos fallidos de login.
+- Cada cambio de contraseña, por enlace o desde Mi cuenta, le avisa por correo al dueño de la cuenta, con el enlace para recuperarla si no fue él.
 
 ## Usuario de MySQL con permisos mínimos
 

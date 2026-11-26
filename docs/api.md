@@ -10,6 +10,8 @@ Todas las rutas empiezan con `http://localhost:3000/api`.
 | POST                   | `/auth/login`                    | Público       | Valida las credenciales, guarda la sesión en la cookie `nodopc_sesion` y devuelve el usuario                                                 |
 | GET                    | `/auth/yo`                       | Con sesión    | Devuelve el usuario de la sesión actual                                                                                                      |
 | POST                   | `/auth/salir`                    | Público       | Borra la cookie de sesión                                                                                                                    |
+| POST                   | `/auth/olvide-password`          | Público       | Manda por correo un enlace para elegir una contraseña nueva. Responde lo mismo exista o no la cuenta                                         |
+| POST                   | `/auth/restablecer-password`     | Público       | Recibe `{ token, password }`, cambia la contraseña y anula los demás enlaces de la cuenta                                                    |
 | GET                    | `/salud`                         | Público       | Confirma que la API y la base de datos responden                                                                                             |
 | GET                    | `/categorias`, `/categorias/:id` | Público       | Lista o devuelve una categoría                                                                                                               |
 | POST, PUT, DELETE      | `/categorias`, `/categorias/:id` | Admin         | Crea, edita o elimina                                                                                                                        |
@@ -100,6 +102,20 @@ Un pedido pendiente que no se paga en `MINUTOS_PARA_PAGAR` (30 por defecto) se c
 
 **Mercado Pago.** Con `MP_ACCESS_TOKEN` cargado, `POST /pagos/:pedidoId/mercadopago` devuelve el link del Checkout Pro. Al terminar, Mercado Pago vuelve a `/pedidos/:id?pago=aprobado` (o `pendiente`, o `rechazado`) y el frontend llama a `/pagos/:pedidoId/verificar`. Si la API tiene una URL pública (`API_PUBLICA_URL`), Mercado Pago además avisa a `/pagos/webhook`. Los pasos para probarlo están en la [guía de instalación](../GUIA_DE_INSTALACION.md#pagos-con-mercado-pago).
 
+### Correos
+
+La API avisa por correo:
+
+| Cuándo                                              | A quién               |
+| --------------------------------------------------- | --------------------- |
+| Se crea una cuenta                                  | Al usuario nuevo      |
+| Se acredita el pago de un pedido                    | Al dueño del pedido   |
+| El pedido sale, se entrega o se cancela             | Al dueño del pedido   |
+| Se pide recuperar la contraseña                     | Al dueño de la cuenta |
+| Cambia la contraseña (por enlace o desde Mi cuenta) | Al dueño de la cuenta |
+
+Sin `SMTP_HOST`, los correos se muestran en la terminal del backend. Con Docker van a Mailpit (<http://localhost:8025>).
+
 ### Imágenes
 
 Las imágenes subidas se sirven desde `http://localhost:3000/uploads/productos/...`, fuera de `/api`. El campo `imagen_url` de un producto puede ser una de esas rutas, una dirección externa (`https://...`) o una ruta de `frontend/public`.
@@ -127,6 +143,8 @@ Cualquier otra dirección muestra una página 404. La eliminación se hace desde
 | `/producto/:id`                                  | Detalle de un producto                                                                                                                     | Público                    |
 | `/carrito`                                       | Carrito                                                                                                                                    | Público                    |
 | `/login` y `/registro`                           | Inicio de sesión y registro                                                                                                                | Solo sin sesión            |
+| `/olvide-password`                               | Pedir el enlace para recuperar la contraseña                                                                                               | Solo sin sesión            |
+| `/restablecer-password?token=...`                | Elegir la contraseña nueva desde el enlace del correo                                                                                      | Solo sin sesión            |
 | `/dashboard`                                     | Panel principal (distinto según el rol)                                                                                                    | Con sesión                 |
 | `/cuenta`                                        | Mi cuenta: datos personales y contraseña                                                                                                   | Con sesión                 |
 | `/mis-pedidos`                                   | Listado de los pedidos propios                                                                                                             | Con sesión                 |

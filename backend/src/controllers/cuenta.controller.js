@@ -2,6 +2,8 @@ import bcrypt from 'bcrypt';
 import * as Usuario from '../models/usuario.model.js';
 import { esEmailValido, esTextoValido, validarPassword } from '../utils/validaciones.js';
 import { guardarSesion } from '../utils/sesion.js';
+import { enviarCorreo } from '../services/correo.js';
+import { passwordCambiada } from '../correos/mensajes.js';
 
 function datosPublicos(usuario) {
   return { id: usuario.id, nombre: usuario.nombre, email: usuario.email, rol: usuario.rol };
@@ -46,5 +48,9 @@ export async function cambiarPassword(req, res) {
   }
 
   await Usuario.actualizarPassword(req.usuario.id, await bcrypt.hash(nueva, 10));
+
+  const usuario = await Usuario.obtenerPorId(req.usuario.id);
+  enviarCorreo({ para: usuario.email, ...passwordCambiada(usuario) });
+
   res.json({ mensaje: 'Contraseña actualizada' });
 }
